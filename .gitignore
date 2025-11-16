@@ -1,0 +1,163 @@
+# ============================================
+# STUDYSPACE - GITIGNORE
+# ============================================
+
+# ============================================
+# PYTHON / BACKEND
+# ============================================
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Database
+*.db
+*.sqlite3
+
+# Alembic
+alembic/versions/*.pyc
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ============================================
+# NODE.JS / FRONTEND
+# ============================================
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Next.js
+.next/
+out/
+dist/
+build/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# Turbo
+.turbo
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ============================================
+# DOCKER
+# ============================================
+# Docker volumes
+postgres_data/
+pgadmin_data/
+
+# ============================================
+# DATABASE
+# ============================================
+# Database backups
+*.sql.backup
+*.dump
+
+# ============================================
+# OS
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ============================================
+# LOGS
+# ============================================
+logs/
+*.log
+
+# ============================================
+# TEMPORARY FILES
+# ============================================
+tmp/
+temp/
+*.tmp
+*.temp
+
+# ============================================
+# SECURITY
+# ============================================
+# Never commit these
+*.pem
+*.key
+*.cert
+secrets/
+credentials/
+
+# ============================================
+# PROJECT SPECIFIC
+# ============================================
+# Uploaded files (if any)
+uploads/
+media/
+
+# Generated documentation
+docs/_build/
+site/
+

@@ -1,0 +1,275 @@
+@startuml StudySpace_Database_Schema
+
+!define TABLE(name) class name << (T,#FFAAAA) >>
+!define PK(x) <b><color:red>PK:</color> x</b>
+!define FK(x) <color:blue>FK:</color> x
+!define NOT_NULL(x) <color:green>x</color>
+
+' ============================================
+' NHÓM 1: USER & AUTHENTICATION
+' ============================================
+TABLE(users) {
+  PK(id): UUID
+  NOT_NULL(email): VARCHAR(255) UNIQUE
+  NOT_NULL(password_hash): VARCHAR(255)
+  NOT_NULL(username): VARCHAR(100)
+  avatar_url: VARCHAR(500)
+  NOT_NULL(created_at): TIMESTAMP
+  updated_at: TIMESTAMP
+  last_login: TIMESTAMP
+  is_active: BOOLEAN DEFAULT TRUE
+  preferences: JSONB
+}
+
+TABLE(user_settings) {
+  PK(id): UUID
+  FK(user_id): UUID
+  theme_mode: VARCHAR(10) DEFAULT 'light'
+  pomodoro_work_duration: INTEGER DEFAULT 25
+  pomodoro_break_duration: INTEGER DEFAULT 5
+  pomodoro_long_break_duration: INTEGER DEFAULT 15
+  default_music_playlist: VARCHAR(50)
+  notification_enabled: BOOLEAN DEFAULT TRUE
+  language: VARCHAR(10) DEFAULT 'vi'
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+' ============================================
+' NHÓM 2: LEARNING SESSION & PROGRESS
+' ============================================
+TABLE(study_sessions) {
+  PK(id): UUID
+  FK(user_id): UUID
+  session_type: VARCHAR(20)
+  start_time: TIMESTAMP
+  end_time: TIMESTAMP
+  duration_minutes: INTEGER
+  FK(goal_id): UUID NULL
+  notes: TEXT
+  completed: BOOLEAN DEFAULT FALSE
+  created_at: TIMESTAMP
+}
+
+TABLE(daily_goals) {
+  PK(id): UUID
+  FK(user_id): UUID
+  goal_date: DATE
+  target_minutes: INTEGER
+  target_quiz_count: INTEGER
+  actual_minutes: INTEGER DEFAULT 0
+  actual_quiz_count: INTEGER DEFAULT 0
+  completed: BOOLEAN DEFAULT FALSE
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(user_achievements) {
+  PK(id): UUID
+  FK(user_id): UUID
+  achievement_type: VARCHAR(50)
+  achievement_name: VARCHAR(100)
+  description: TEXT
+  earned_at: TIMESTAMP
+  badge_icon: VARCHAR(100)
+}
+
+' ============================================
+' NHÓM 3: NOTES & TASKS
+' ============================================
+TABLE(categories) {
+  PK(id): UUID
+  FK(user_id): UUID
+  name: VARCHAR(100)
+  color: VARCHAR(7)
+  icon: VARCHAR(50)
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(notes) {
+  PK(id): UUID
+  FK(user_id): UUID
+  FK(category_id): UUID NULL
+  title: VARCHAR(255)
+  content: TEXT
+  is_pinned: BOOLEAN DEFAULT FALSE
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(note_tags) {
+  PK(id): UUID
+  FK(note_id): UUID
+  tag_name: VARCHAR(50)
+  created_at: TIMESTAMP
+}
+
+TABLE(tasks) {
+  PK(id): UUID
+  FK(user_id): UUID
+  FK(category_id): UUID NULL
+  title: VARCHAR(255)
+  description: TEXT
+  priority: VARCHAR(10)
+  due_date: DATE NULL
+  completed: BOOLEAN DEFAULT FALSE
+  completed_at: TIMESTAMP NULL
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+' ============================================
+' NHÓM 4: QUIZ & FLASHCARD
+' ============================================
+TABLE(quiz_sets) {
+  PK(id): UUID
+  FK(user_id): UUID
+  FK(category_id): UUID NULL
+  title: VARCHAR(255)
+  description: TEXT
+  is_public: BOOLEAN DEFAULT FALSE
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(quiz_questions) {
+  PK(id): UUID
+  FK(quiz_set_id): UUID
+  question_text: TEXT
+  question_type: VARCHAR(20)
+  options: JSONB
+  correct_answer: TEXT
+  explanation: TEXT
+  order_index: INTEGER
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(quiz_attempts) {
+  PK(id): UUID
+  FK(user_id): UUID
+  FK(quiz_set_id): UUID
+  score: DECIMAL(5,2)
+  total_questions: INTEGER
+  correct_answers: INTEGER
+  time_spent_seconds: INTEGER
+  completed_at: TIMESTAMP
+  answers: JSONB
+}
+
+TABLE(flashcard_decks) {
+  PK(id): UUID
+  FK(user_id): UUID
+  FK(category_id): UUID NULL
+  title: VARCHAR(255)
+  description: TEXT
+  is_public: BOOLEAN DEFAULT FALSE
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(flashcards) {
+  PK(id): UUID
+  FK(deck_id): UUID
+  question: TEXT
+  answer: TEXT
+  hint: TEXT NULL
+  order_index: INTEGER
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(flashcard_progress) {
+  PK(id): UUID
+  FK(user_id): UUID
+  FK(flashcard_id): UUID
+  confidence_level: INTEGER DEFAULT 0
+  last_reviewed: TIMESTAMP
+  next_review: TIMESTAMP
+  review_count: INTEGER DEFAULT 0
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+' ============================================
+' NHÓM 5: AI CHAT & CONVERSATIONS
+' ============================================
+TABLE(chat_conversations) {
+  PK(id): UUID
+  FK(user_id): UUID
+  title: VARCHAR(255)
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+  last_message_at: TIMESTAMP
+}
+
+TABLE(chat_messages) {
+  PK(id): UUID
+  FK(conversation_id): UUID
+  role: VARCHAR(20)
+  content: TEXT
+  tokens_used: INTEGER
+  created_at: TIMESTAMP
+}
+
+' ============================================
+' NHÓM 6: CONTENT & RESOURCES
+' ============================================
+TABLE(quotes) {
+  PK(id): UUID
+  quote_text: TEXT
+  author: VARCHAR(100)
+  category: VARCHAR(50)
+  language: VARCHAR(10) DEFAULT 'vi'
+  is_active: BOOLEAN DEFAULT TRUE
+  created_at: TIMESTAMP
+}
+
+TABLE(music_playlists) {
+  PK(id): UUID
+  name: VARCHAR(100)
+  description: TEXT
+  playlist_type: VARCHAR(50)
+  audio_url: VARCHAR(500)
+  thumbnail_url: VARCHAR(500)
+  duration_minutes: INTEGER
+  is_active: BOOLEAN DEFAULT TRUE
+  created_at: TIMESTAMP
+}
+
+' ============================================
+' RELATIONSHIPS
+' ============================================
+users ||--o{ user_settings : "has"
+users ||--o{ study_sessions : "has"
+users ||--o{ daily_goals : "has"
+users ||--o{ user_achievements : "earns"
+users ||--o{ categories : "creates"
+users ||--o{ notes : "creates"
+users ||--o{ tasks : "creates"
+users ||--o{ quiz_sets : "creates"
+users ||--o{ quiz_attempts : "takes"
+users ||--o{ flashcard_decks : "creates"
+users ||--o{ flashcard_progress : "tracks"
+users ||--o{ chat_conversations : "has"
+
+categories ||--o{ notes : "categorizes"
+categories ||--o{ tasks : "categorizes"
+categories ||--o{ quiz_sets : "categorizes"
+categories ||--o{ flashcard_decks : "categorizes"
+
+notes ||--o{ note_tags : "has"
+
+quiz_sets ||--o{ quiz_questions : "contains"
+quiz_sets ||--o{ quiz_attempts : "attempted_in"
+
+flashcard_decks ||--o{ flashcards : "contains"
+flashcards ||--o{ flashcard_progress : "tracked_by"
+
+chat_conversations ||--o{ chat_messages : "contains"
+
+daily_goals ||--o{ study_sessions : "contributes_to"
+
+@enduml
+
