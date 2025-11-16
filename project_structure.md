@@ -383,4 +383,11 @@ import { Note } from '@/features/notes/types/note.types'
 import { Note } from '@/shared/types'
 // OR use event bus for feature communication
 ```
-
+Config kết nối với database bằng DBeaver: 
+```
+Host: localhost (hoặc 127.0.0.1)
+Port: 5432
+Database: studyspace
+Username: admin
+Password:studyspace2024
+```
