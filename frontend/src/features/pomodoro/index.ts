@@ -3,12 +3,14 @@
  * Public API exports
  */
 
-// Components will be exported here
-// export { PomodoroTimer } from './components/PomodoroTimer'
+export { PomodoroTimer } from './components/PomodoroTimer'
+export { LoginModal } from './components/LoginModal'
+export { RegisterModal } from './components/RegisterModal'
+export { YouTubeBackground } from './components/YouTubeBackground'
+export { BackgroundSettings } from './components/BackgroundSettings'
 
-// Hooks will be exported here
-// export { usePomodoro } from './hooks/usePomodoro'
+export { useBackground } from './hooks/useBackground'
+export { usePomodoroTimer } from './hooks/usePomodoroTimer'
 
-// Types will be exported here
-// export type { PomodoroSession } from './types/pomodoro.types'
+export type { PomodoroSession, PomodoroSessionCreate, PomodoroStats, SessionType } from './types/pomodoro.types'
 
