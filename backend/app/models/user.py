@@ -1,9 +1,9 @@
 """
 User Model
-Placeholder - to be implemented
 """
-from sqlalchemy import Column, String, DateTime, Boolean
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, DateTime, Boolean, Text
+from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 
@@ -12,17 +12,21 @@ from app.core.database import Base
 
 class User(Base):
     """
-    User model
-    TODO: Implement full user model based on database schema
+    User model - matches database schema
     """
     __tablename__ = "users"
     
-    # Placeholder fields - update based on database schema
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String(255), unique=True, nullable=False)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
     username = Column(String(100), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    avatar_url = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    last_login = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    preferences = Column(JSONB, default={}, nullable=False)
     
-    # TODO: Add all fields from database schema
-    # password_hash, avatar_url, updated_at, last_login, is_active, preferences
+    # Relationships
+    settings = relationship("UserSettings", back_populates="user", uselist=False)
 
