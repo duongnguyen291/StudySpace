@@ -8,6 +8,7 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from app.repositories.music_repo import MusicPlaylistRepository
+from app.services.audio_loader_service import AudioLoaderService
 from app.schemas.music import (
     MusicPlaylistCreate,
     MusicPlaylistUpdate,
@@ -21,6 +22,7 @@ class MusicService:
     
     def __init__(self, db: Session):
         self.repo = MusicPlaylistRepository(db)
+        self.audio_loader = AudioLoaderService()
     
     def get_playlists(
         self,
@@ -56,6 +58,14 @@ class MusicService:
         playlist_data: MusicPlaylistCreate
     ) -> MusicPlaylistResponse:
         """Create a new playlist"""
+        # Validate audio URL if provided
+        if playlist_data.audio_url:
+            if not self.audio_loader.validate_audio_url(playlist_data.audio_url):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid audio URL format"
+                )
+        
         playlist_dict = playlist_data.model_dump()
         playlist = self.repo.create(playlist_dict)
         return MusicPlaylistResponse.model_validate(playlist)
@@ -72,6 +82,14 @@ class MusicService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Playlist not found"
             )
+        
+        # Validate audio URL if provided
+        if playlist_data.audio_url:
+            if not self.audio_loader.validate_audio_url(playlist_data.audio_url):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid audio URL format"
+                )
         
         update_dict = playlist_data.model_dump(exclude_unset=True)
         updated_playlist = self.repo.update(playlist, update_dict)

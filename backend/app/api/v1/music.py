@@ -1,13 +1,15 @@
 """
 Music Playlist API endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Header
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from uuid import UUID
 
 from app.api.deps import get_database
 from app.services.music_service import MusicService
+from app.services.audio_loader_service import AudioLoaderService
 from app.schemas.music import (
     MusicPlaylistCreate,
     MusicPlaylistUpdate,
@@ -107,3 +109,51 @@ async def delete_playlist(
     service = MusicService(db)
     service.delete_playlist(playlist_id)
     return None
+
+
+# ===== Audio Loader Endpoints =====
+
+@router.get("/audio/stream")
+async def stream_audio(
+    url: str = Query(..., description="Audio URL to stream"),
+    range_header: Optional[str] = Header(None, alias="Range"),
+    db: Session = Depends(get_database)
+):
+    """
+    Stream audio file (for local files only)
+    
+    - **url**: Audio URL to stream
+    - **Range**: HTTP Range header for partial content support
+    
+    Note: External URLs should be used directly in the frontend
+    """
+    audio_loader = AudioLoaderService()
+    return await audio_loader.stream_audio(url, range_header)
+
+
+@router.get("/audio/info")
+async def get_audio_info(
+    url: str = Query(..., description="Audio URL to get information"),
+    db: Session = Depends(get_database)
+):
+    """
+    Get audio file information
+    
+    - **url**: Audio URL to check
+    """
+    audio_loader = AudioLoaderService()
+    return audio_loader.get_audio_info(url)
+
+
+@router.get("/audio/check")
+async def check_audio_availability(
+    url: str = Query(..., description="Audio URL to check"),
+    db: Session = Depends(get_database)
+):
+    """
+    Check if audio URL is accessible
+    
+    - **url**: Audio URL to check
+    """
+    audio_loader = AudioLoaderService()
+    return await audio_loader.check_audio_availability(url)
