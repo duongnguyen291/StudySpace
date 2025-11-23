@@ -3,6 +3,7 @@
 /**
  * Music Player Component
  * Main music player UI with controls
+ * Supports both regular audio files and YouTube videos
  */
 import { useMusicPlayer } from '../hooks/useMusicPlayer'
 import { Button } from '@/shared/components/Button'
@@ -22,12 +23,22 @@ import type { MusicPlaylist } from '../types/music.types'
 
 interface MusicPlayerProps {
   playlist: MusicPlaylist | null
+  playlists?: MusicPlaylist[]  // ✅ Thêm playlists prop
   onPlaylistChange?: (playlist: MusicPlaylist | null) => void
   className?: string
 }
 
+/**
+ * Check if URL is YouTube
+ */
+const isYouTubeUrl = (url: string | null): boolean => {
+  if (!url) return false
+  return url.includes('youtube.com') || url.includes('youtu.be')
+}
+
 export const MusicPlayer = ({
   playlist,
+  playlists = [],  // ✅ Default empty array
   onPlaylistChange,
   className
 }: MusicPlayerProps) => {
@@ -43,12 +54,16 @@ export const MusicPlayer = ({
     togglePlayPause,
     stop,
     seek,
+    next,  // ✅ Thêm next
+    previous,  // ✅ Thêm previous
     setVolume,
     toggleLoop,
     toggleMute,
-    formatTime
+    formatTime,
+    youtubeIframeRef,  // ✅ Thêm YouTube iframe ref
   } = useMusicPlayer({
     initialPlaylist: playlist,
+    playlists,  // ✅ Truyền playlists vào hook
     autoPlay: false
   })
 
@@ -63,6 +78,8 @@ export const MusicPlayer = ({
   }
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0
+  const isYouTube = playlist ? isYouTubeUrl(playlist.audio_url) : false
+  const canNavigate = playlists.length > 1  // ✅ Check if can navigate
 
   if (!playlist) {
     return (
@@ -84,11 +101,26 @@ export const MusicPlayer = ({
         className
       )}
     >
+      {/* YouTube iframe - hiển thị video */}
+      {isYouTube && (
+        <div className="mb-4 rounded-lg overflow-hidden">
+          <div 
+            ref={youtubeIframeRef}
+            className="w-full aspect-video"  
+          />
+        </div>
+      )}
+
       {/* Playlist Info */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-white mb-1">{playlist.name}</h3>
         {playlist.description && (
           <p className="text-sm text-white/70">{playlist.description}</p>
+        )}
+        {canNavigate && (
+          <p className="text-xs text-white/50 mt-1">
+            {playlists.findIndex(p => p.id === playlist.id) + 1} of {playlists.length}
+          </p>
         )}
       </div>
 
@@ -137,9 +169,15 @@ export const MusicPlayer = ({
         {/* Center: Playback Controls */}
         <div className="flex items-center gap-2">
           <button
-            onClick={stop}
-            className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-            title="Stop"
+            onClick={previous}  // ✅ Thay đổi từ stop sang previous
+            disabled={!canNavigate}  // ✅ Disable nếu không có nhiều playlists
+            className={cn(
+              'p-2 rounded-lg transition-colors',
+              canNavigate
+                ? 'text-white/70 hover:text-white hover:bg-white/10'
+                : 'text-white/30 cursor-not-allowed'
+            )}
+            title="Previous"
           >
             <SkipBack className="w-5 h-5" />
           </button>
@@ -161,8 +199,14 @@ export const MusicPlayer = ({
           </Button>
 
           <button
-            onClick={stop}
-            className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            onClick={next}  // ✅ Thay đổi từ stop sang next
+            disabled={!canNavigate}  // ✅ Disable nếu không có nhiều playlists
+            className={cn(
+              'p-2 rounded-lg transition-colors',
+              canNavigate
+                ? 'text-white/70 hover:text-white hover:bg-white/10'
+                : 'text-white/30 cursor-not-allowed'
+            )}
             title="Next"
           >
             <SkipForward className="w-5 h-5" />
