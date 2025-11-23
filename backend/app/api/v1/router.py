@@ -5,7 +5,7 @@ Registers all feature routers
 from fastapi import APIRouter
 
 # Import feature routers
-from app.api.v1 import auth, pomodoro, notes
+from app.api.v1 import auth, pomodoro, notes, music
 
 api_router = APIRouter()
 
@@ -13,6 +13,7 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(pomodoro.router, prefix="/pomodoro", tags=["Pomodoro"])
 api_router.include_router(notes.router, prefix="/notes", tags=["Notes"])
+api_router.include_router(music.router, prefix="/music", tags=["Music"])
 
 # TODO: Uncomment when these modules are created
 # from app.api.v1 import tasks, quiz, flashcards, chat, profile, analytics
