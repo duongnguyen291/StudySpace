@@ -1,11 +1,17 @@
 /**
- * Pomodoro Timer Hook
- * Single source of truth = remainingSeconds
+ * Pomodoro Timer Hook (fixed logic)
+ * - Single interval
+ * - baselineSeconds lưu thời gian gốc phiên
+ * - remainingSeconds đếm lùi
+ * - Reset luôn trả về baseline
+ * - Custom timer có baseline riêng (giữ sau Apply)
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
-import { pomodoroService } from '../services/pomodoroService'
 import type { SessionType } from '../types/pomodoro.types'
+
+// (Nếu có service backend, giữ import; nếu không có thì bỏ)
+// import { pomodoroService } from '../services/pomodoroService'
 
 interface UsePomodoroTimerProps {
   workDuration?: number
@@ -22,33 +28,59 @@ export const usePomodoroTimer = ({
 }: UsePomodoroTimerProps = {}) => {
   const { isAuthenticated } = useAuth()
 
+  // Loại phiên
   const [sessionType, setSessionType] = useState<SessionType>('work')
+  // Số phiên work hoàn thành
   const [cycleCount, setCycleCount] = useState(0)
+
+  // Trạng thái chạy
   const [isActive, setIsActive] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
+  // Thời gian gốc của phiên hiện tại (giây)
+  const [baselineSeconds, setBaselineSeconds] = useState(workDuration * 60)
+  // Thời gian còn lại (giây)
   const [remainingSeconds, setRemainingSeconds] = useState(workDuration * 60)
+
+  // customApplied cho biết đã Apply custom để không ghi đè baseline khi chuyển sang custom_timer
+  const [customApplied, setCustomApplied] = useState(false)
+
+  // Ref interval
   const intervalRef = useRef<number | null>(null)
 
+  // Derived hiển thị
   const minutes = Math.floor(remainingSeconds / 60)
   const seconds = remainingSeconds % 60
 
-  const getTargetMinutes = useCallback(() => {
-    switch (sessionType) {
-      case 'work': return workDuration
-      case 'short_break': return shortBreakDuration
-      case 'long_break': return longBreakDuration
-      case 'custom_timer': return Math.max(1, Math.ceil(remainingSeconds / 60))
-      default: return workDuration
-    }
-  }, [sessionType, workDuration, shortBreakDuration, longBreakDuration, remainingSeconds])
+  // Lấy duration phút chuẩn theo sessionType (không gồm custom)
+  const getStandardDurationMinutes = useCallback(
+    (type: SessionType) => {
+      switch (type) {
+        case 'work': return workDuration
+        case 'short_break': return shortBreakDuration
+        case 'long_break': return longBreakDuration
+        default: return workDuration
+      }
+    },
+    [workDuration, shortBreakDuration, longBreakDuration]
+  )
 
+  // Khi đổi sessionType (preset), thiết lập baseline mới (trừ custom nếu đã apply)
   useEffect(() => {
-    if (sessionType === 'custom_timer') return
-    setRemainingSeconds(getTargetMinutes() * 60)
-  }, [sessionType, getTargetMinutes])
+    if (sessionType === 'custom_timer') {
+      // Nếu vào custom mà chưa Apply → giữ nguyên (chờ setMinutes bên ngoài)
+      if (!customApplied) return
+      // Đã apply custom: không tự thay baseline nữa
+      return
+    }
+    // Phiên preset: cập nhật baselineSeconds & remainingSeconds
+    const newBaseline = getStandardDurationMinutes(sessionType) * 60
+    setBaselineSeconds(newBaseline)
+    setRemainingSeconds(newBaseline)
+    setCustomApplied(false) // rời custom
+  }, [sessionType, getStandardDurationMinutes, customApplied])
 
+  // QUẢN LÝ INTERVAL
   useEffect(() => {
     if (!isActive || isPaused) {
       if (intervalRef.current) {
@@ -57,19 +89,21 @@ export const usePomodoroTimer = ({
       }
       return
     }
+
     if (!intervalRef.current) {
       intervalRef.current = window.setInterval(() => {
         setRemainingSeconds(prev => {
           if (prev <= 1) {
             clearInterval(intervalRef.current!)
             intervalRef.current = null
-            completeCurrentSession()
+            handleCompleteSession()
             return 0
           }
-            return prev - 1
+          return prev - 1
         })
       }, 1000)
     }
+
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
@@ -78,53 +112,50 @@ export const usePomodoroTimer = ({
     }
   }, [isActive, isPaused])
 
-  const completeCurrentSession = useCallback(async () => {
+  // Hoàn thành phiên
+  const handleCompleteSession = useCallback(() => {
     setIsActive(false)
     setIsPaused(false)
-    if (currentSessionId && isAuthenticated) {
-      pomodoroService.completeSession(currentSessionId).catch(() => {})
-    }
-    if (typeof window !== 'undefined' && 'Audio' in window) {
-      new Audio('/notification.mp3').play().catch(() => {})
-    }
+
+    // Backend (nếu có)
+    // if (isAuthenticated) { ... }
+
+    // Chuyển phiên
     if (sessionType === 'work') {
-      const newCount = cycleCount + 1
-      setCycleCount(newCount)
-      if (newCount % longBreakEvery === 0) {
+      const nextCount = cycleCount + 1
+      setCycleCount(nextCount)
+      if (nextCount % longBreakEvery === 0) {
         setSessionType('long_break')
       } else {
         setSessionType('short_break')
       }
-    } else {
+    } else if (sessionType === 'short_break' || sessionType === 'long_break') {
       setSessionType('work')
+    } else if (sessionType === 'custom_timer') {
+      // Sau custom quay về work
+      setSessionType('work')
+      setCustomApplied(false)
     }
-    setCurrentSessionId(null)
-  }, [currentSessionId, isAuthenticated, sessionType, cycleCount, longBreakEvery])
+  }, [sessionType, cycleCount, longBreakEvery])
 
-  const handleStart = useCallback(async () => {
+  // Start
+  const handleStart = useCallback(() => {
     if (isActive && isPaused) {
       setIsPaused(false)
       return
     }
     if (isActive) return
-    if (isAuthenticated && !currentSessionId) {
-      try {
-        const session = await pomodoroService.createSession({
-          session_type: sessionType,
-          duration_minutes: getTargetMinutes()
-        })
-        setCurrentSessionId(session.id)
-      } catch {}
-    }
     setIsActive(true)
     setIsPaused(false)
-  }, [isActive, isPaused, isAuthenticated, currentSessionId, sessionType, getTargetMinutes])
+  }, [isActive, isPaused])
 
+  // Pause
   const handlePause = useCallback(() => {
     if (!isActive) return
     setIsPaused(p => !p)
   }, [isActive])
 
+  // Reset: quay về baselineSeconds
   const handleReset = useCallback(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
@@ -132,15 +163,22 @@ export const usePomodoroTimer = ({
     }
     setIsActive(false)
     setIsPaused(false)
-    if (sessionType === 'custom_timer') return
-    setRemainingSeconds(getTargetMinutes() * 60)
-    setCurrentSessionId(null)
-  }, [getTargetMinutes, sessionType])
+    setRemainingSeconds(baselineSeconds)
+  }, [baselineSeconds])
 
+  // External setMinutes (preset hoặc custom Apply)
   const setMinutesExternal = useCallback((mins: number) => {
-    setRemainingSeconds(Math.max(0, Math.floor(mins) * 60))
-  }, [])
+    const sec = Math.max(0, Math.floor(mins) * 60)
+    setBaselineSeconds(sec)      // cập nhật baseline
+    setRemainingSeconds(sec)     // cập nhật còn lại
+    if (sessionType === 'custom_timer') {
+      setCustomApplied(true)
+    } else {
+      setCustomApplied(false)
+    }
+  }, [sessionType])
 
+  // External setSeconds (chỉ chỉnh phần giây, giữ nguyên baseline nếu không phải apply custom đầy đủ)
   const setSecondsExternal = useCallback((secs: number) => {
     setRemainingSeconds(prev => {
       const m = Math.floor(prev / 60)
@@ -148,6 +186,7 @@ export const usePomodoroTimer = ({
     })
   }, [])
 
+  // Nhãn
   const getSessionTypeLabel = useCallback(() => {
     switch (sessionType) {
       case 'work': return 'Làm việc'
