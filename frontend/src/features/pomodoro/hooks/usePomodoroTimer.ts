@@ -1,8 +1,7 @@
 /**
- * Pomodoro Timer Hook (refactored)
+ * Pomodoro Timer Hook
  * Single source of truth = remainingSeconds
  */
-
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { pomodoroService } from '../services/pomodoroService'
@@ -29,27 +28,27 @@ export const usePomodoroTimer = ({
   const [isPaused, setIsPaused] = useState(false)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
-  // ONE state for countdown
   const [remainingSeconds, setRemainingSeconds] = useState(workDuration * 60)
   const intervalRef = useRef<number | null>(null)
 
-  // Derived display values
   const minutes = Math.floor(remainingSeconds / 60)
   const seconds = remainingSeconds % 60
 
-  // Duration (minutes) for current type
   const getTargetMinutes = useCallback(() => {
-    if (sessionType === 'work') return workDuration
-    if (sessionType === 'short_break') return shortBreakDuration
-    return longBreakDuration
-  }, [sessionType, workDuration, shortBreakDuration, longBreakDuration])
+    switch (sessionType) {
+      case 'work': return workDuration
+      case 'short_break': return shortBreakDuration
+      case 'long_break': return longBreakDuration
+      case 'custom_timer': return Math.max(1, Math.ceil(remainingSeconds / 60))
+      default: return workDuration
+    }
+  }, [sessionType, workDuration, shortBreakDuration, longBreakDuration, remainingSeconds])
 
-  // Reset remainingSeconds whenever sessionType changes
   useEffect(() => {
+    if (sessionType === 'custom_timer') return
     setRemainingSeconds(getTargetMinutes() * 60)
   }, [sessionType, getTargetMinutes])
 
-  // Interval control
   useEffect(() => {
     if (!isActive || isPaused) {
       if (intervalRef.current) {
@@ -58,22 +57,19 @@ export const usePomodoroTimer = ({
       }
       return
     }
-
     if (!intervalRef.current) {
       intervalRef.current = window.setInterval(() => {
         setRemainingSeconds(prev => {
           if (prev <= 1) {
-            // Session finished
             clearInterval(intervalRef.current!)
             intervalRef.current = null
             completeCurrentSession()
             return 0
           }
-          return prev - 1
+            return prev - 1
         })
       }, 1000)
     }
-
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
@@ -82,21 +78,15 @@ export const usePomodoroTimer = ({
     }
   }, [isActive, isPaused])
 
-  // Complete + switch session
   const completeCurrentSession = useCallback(async () => {
     setIsActive(false)
     setIsPaused(false)
-
-    // Notify backend
     if (currentSessionId && isAuthenticated) {
-      pomodoroService.completeSession(currentSessionId).catch(console.error)
+      pomodoroService.completeSession(currentSessionId).catch(() => {})
     }
-
-    // Sound
     if (typeof window !== 'undefined' && 'Audio' in window) {
       new Audio('/notification.mp3').play().catch(() => {})
     }
-
     if (sessionType === 'work') {
       const newCount = cycleCount + 1
       setCycleCount(newCount)
@@ -113,14 +103,10 @@ export const usePomodoroTimer = ({
 
   const handleStart = useCallback(async () => {
     if (isActive && isPaused) {
-      // resume
       setIsPaused(false)
-      setIsActive(true)
       return
     }
     if (isActive) return
-
-    // Create session on backend
     if (isAuthenticated && !currentSessionId) {
       try {
         const session = await pomodoroService.createSession({
@@ -128,9 +114,7 @@ export const usePomodoroTimer = ({
           duration_minutes: getTargetMinutes()
         })
         setCurrentSessionId(session.id)
-      } catch (e) {
-        console.error('Failed to create session:', e)
-      }
+      } catch {}
     }
     setIsActive(true)
     setIsPaused(false)
@@ -148,11 +132,11 @@ export const usePomodoroTimer = ({
     }
     setIsActive(false)
     setIsPaused(false)
+    if (sessionType === 'custom_timer') return
     setRemainingSeconds(getTargetMinutes() * 60)
     setCurrentSessionId(null)
-  }, [getTargetMinutes])
+  }, [getTargetMinutes, sessionType])
 
-  // External setters (preserve old API)
   const setMinutesExternal = useCallback((mins: number) => {
     setRemainingSeconds(Math.max(0, Math.floor(mins) * 60))
   }, [])
@@ -169,7 +153,7 @@ export const usePomodoroTimer = ({
       case 'work': return 'Làm việc'
       case 'short_break': return 'Nghỉ ngắn'
       case 'long_break': return 'Nghỉ dài'
-      case 'custom_timer': return 'Tùy chỉnh'
+      case 'custom_timer': return 'Tùy chỉnh thời gian'
       default: return 'Làm việc'
     }
   }, [sessionType])

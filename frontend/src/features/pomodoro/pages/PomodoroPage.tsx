@@ -51,6 +51,7 @@ export default function PomodoroPage() {
     setSessionType,
     setMinutes,
     setSeconds,
+    sessionType
   } = usePomodoroTimer()
 
   if (isLoading) {
@@ -74,64 +75,56 @@ export default function PomodoroPage() {
             <h1 className="text-xl font-bold text-white">StudySpace</h1>
             <span className="text-sm text-white/70">Learning Core</span>
           </div>
-
-            <div className="flex items-center gap-4">
-              {isAuthenticated && (
-                <>
-                  <div className="flex items-center gap-2 text-white/90 text-sm">
-                    <span>0m</span>
+          <div className="flex items-center gap-4">
+            {isAuthenticated && (
+              <>
+                <BarChart3 className="w-5 h-5 text-white/90 cursor-pointer hover:text-white" />
+                <Video className="w-5 h-5 text-white/90 cursor-pointer hover:text-white" />
+              </>
+            )}
+            {isAuthenticated ? (
+              <div className="flex items-center gap-2">
+                {user?.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.username || 'User'}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                    {user?.username?.[0]?.toUpperCase() || 'U'}
                   </div>
-                  <BarChart3 className="w-5 h-5 text-white/90 cursor-pointer hover:text-white" />
-                  <Video className="w-5 h-5 text-white/90 cursor-pointer hover:text-white" />
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
-                    <span className="text-sm text-white/90">User's room</span>
-                  </div>
-                </>
-              )}
-
-              {isAuthenticated ? (
-                <div className="flex items-center gap-2">
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user.username || 'User'}
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                      {user?.username?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => logout()}
-                    className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowLogin(true)}
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-                  >
-                    Đăng nhập
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => setShowRegister(true)}
-                    className="bg-white text-gray-900 hover:bg-white/90"
-                  >
-                    Đăng ký
-                  </Button>
-                </div>
-              )}
-            </div>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={logout}
+                  className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLogin(true)}
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+                >
+                  Đăng nhập
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowRegister(true)}
+                  className="bg-white text-gray-900 hover:bg-white/90"
+                >
+                  Đăng ký
+                </Button>
+              </div>
+            )}
+          </div>
         </header>
 
         <main className="flex-1 flex items-center justify-center px-6 py-12">
@@ -182,13 +175,7 @@ export default function PomodoroPage() {
                     onClick={handlePause}
                     className="px-6 py-3 bg-white/20 border-white/30 text-white hover:bg-white/30 font-semibold flex items-center gap-2"
                   >
-                    {/* <Pause className="w-4 h-4" /> */}
-                    {/* {isPaused ? 'Resume' : 'Pause'} */}
-                    {isPaused ? (
-                      <Play className="w-4 h-4" /> // Resume icon ▶️
-                    ) : (
-                      <Pause className="w-4 h-4" />
-                    )}
+                    {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
                     {isPaused ? 'Resume' : 'Pause'}
                   </Button>
                   <Button
@@ -202,21 +189,7 @@ export default function PomodoroPage() {
                   </Button>
                 </div>
               )}
-              <button
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-lg backdrop-blur-sm transition-colors"
-                title="Toggle between Pomodoro or Stopwatch"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </button>
             </div>
-
-            {currentTask && (
-              <div className="mb-4 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
-                <p className="text-white/90 text-sm text-center">{currentTask}</p>
-              </div>
-            )}
 
             <div className="px-4 py-2 bg-black/30 backdrop-blur-sm rounded-lg mb-4">
               <p className="text-white/80 text-sm text-center">
@@ -230,14 +203,13 @@ export default function PomodoroPage() {
                 onClick={() => {
                   setShowCustomInput(false)
                   setSessionType('work')
-                  // setSessionType('custom_timer')
                   setMinutes(25)
                   setSeconds(0)
                   if (isActive) handleReset()
                 }}
                 className={`
                   w-4 h-4 rounded-full
-                  ${minutes === 25 && seconds === 0 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
                   cursor-pointer transition-all duration-200
                 `}
                 title="25 phút - Work"
@@ -256,7 +228,7 @@ export default function PomodoroPage() {
                 }}
                 className={`
                   w-4 h-4 rounded-full
-                  ${minutes === 5 && seconds === 0 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
                   cursor-pointer transition-all duration-200
                 `}
                 title="5 phút - Short Break"
@@ -275,7 +247,7 @@ export default function PomodoroPage() {
                 }}
                 className={`
                   w-4 h-4 rounded-full
-                  ${minutes === 15 && seconds === 0 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
                   cursor-pointer transition-all duration-200
                 `}
                 title="15 phút - Long Break"
@@ -285,20 +257,23 @@ export default function PomodoroPage() {
 
               <button
                 type="button"
-                onClick={() => setShowCustomInput((v) => !v)}
+                onClick={() => {
+                  setSessionType('custom_timer')
+                  setShowCustomInput(v => !v)
+                }}
                 className={`
                   w-4 h-4 rounded-full
-                  ${showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
                   cursor-pointer transition-all duration-200
                 `}
-                title="Custom time"
+                title="Tùy chỉnh thời gian"
               >
-                <span className="sr-only">Custom</span>
+                <span className="sr-only">Tùy chỉnh thời gian</span>
               </button>
             </div>
 
             {showCustomInput && (
-              <div className="flex flex-col items-center gap-4 mb-8 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex flex-col items-center gap-4 mb-8">
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col items-center">
                     <label className="text-xs text-white/70 mb-1">Giờ</label>
@@ -307,11 +282,7 @@ export default function PomodoroPage() {
                       min={0}
                       max={12}
                       value={customHours}
-                      onChange={(e) =>
-                        setCustomHours(
-                          Math.min(12, Math.max(0, Number(e.target.value)))
-                        )
-                      }
+                      onChange={(e) => setCustomHours(Math.min(12, Math.max(0, Number(e.target.value))))}
                       className="w-20 px-3 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
                     />
                   </div>
@@ -323,20 +294,14 @@ export default function PomodoroPage() {
                       min={0}
                       max={59}
                       value={customMinutes}
-                      onChange={(e) =>
-                        setCustomMinutes(
-                          Math.min(59, Math.max(0, Number(e.target.value)))
-                        )
-                      }
+                      onChange={(e) => setCustomMinutes(Math.min(59, Math.max(0, Number(e.target.value))))}
                       className="w-20 px-3 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
                     />
                   </div>
                 </div>
-
                 <div className="text-white/80 text-sm">
                   Thời gian: <span className="font-mono">{String(customHours).padStart(2, '0')}h {String(customMinutes).padStart(2, '0')}m</span>
                 </div>
-
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
@@ -355,7 +320,7 @@ export default function PomodoroPage() {
                     onClick={() => {
                       const total = customHours * 60 + customMinutes
                       if (total <= 0) return
-                      setSessionType('work')
+                      setSessionType('custom_timer')
                       setMinutes(total)
                       setSeconds(0)
                       if (isActive) handleReset()
@@ -390,7 +355,6 @@ export default function PomodoroPage() {
               <Grid3x3 className="w-5 h-5" />
             </button>
           </div>
-
           <div className="flex items-center gap-4">
             <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Group study">
               <Users className="w-5 h-5" />
@@ -419,7 +383,6 @@ export default function PomodoroPage() {
           }}
         />
       )}
-
       {showRegister && (
         <RegisterModal
           onClose={() => setShowRegister(false)}
@@ -429,7 +392,6 @@ export default function PomodoroPage() {
           }}
         />
       )}
-
       {showBackgroundSettings && (
         <BackgroundSettings
           currentUrl={youtubeUrl}
