@@ -2,6 +2,8 @@
  * Pomodoro Timer Hook
  * Manages timer state and logic
  */
+
+// Logic Pomodoro đầy đủ: đếm giờ, start/pause/reset, chuyển phiên, gọi API.
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { pomodoroService } from '../services/pomodoroService'
@@ -205,6 +207,10 @@ export const usePomodoroTimer = ({
     handlePause,
     handleReset,
     getSessionTypeLabel,
+    // Thêm 3 hàm này để PomodoroPage dùng được
+    setMinutes,
+    setSeconds,
+    setSessionType,
   }
 }
 

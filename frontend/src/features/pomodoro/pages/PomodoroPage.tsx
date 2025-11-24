@@ -32,6 +32,7 @@ export default function PomodoroPage() {
   const [showBackgroundSettings, setShowBackgroundSettings] = useState(false)
   const [currentTask, setCurrentTask] = useState('')
   const [selectedTag, setSelectedTag] = useState('')
+  const [customMinutes, setCustomMinutes] = useState(25)
 
   const {
     minutes,
@@ -43,6 +44,9 @@ export default function PomodoroPage() {
     handlePause,
     handleReset,
     getSessionTypeLabel,
+    setSessionType,
+    setMinutes,
+    setSeconds,
   } = usePomodoroTimer()
 
   if (isLoading) {
@@ -221,16 +225,101 @@ export default function PomodoroPage() {
               </p>
             </div>
 
-            {/* Cycle Indicators */}
-            <div className="flex justify-center gap-2 mb-8">
-              {[1, 2, 3, 4].map((num) => (
-                <div
-                  key={num}
-                  className={`w-2 h-2 rounded-full ${
-                    num === 1 ? 'bg-white' : 'bg-white/30'
-                  }`}
-                />
-              ))}
+            {/* Preset Timer Selector - 4 Nút */}
+            <div className="flex justify-center gap-4 mb-4">
+              {/* 25 phút */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Clicked 25 phút");
+                  setSessionType("work");
+                  setMinutes(25);
+                  setSeconds(0);
+                  if (isActive) handleReset();
+                }}
+                className={`
+                  w-4 h-4 rounded-full
+                  ${minutes === 25 && seconds === 0 && !isActive ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  cursor-pointer transition-all duration-200
+                `}
+                title="25 phút - Work"
+              >
+                <span className="sr-only">25 phút</span>
+              </button>
+
+              {/* 5 phút */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Clicked 5 phút");
+                  setSessionType("short_break");
+                  setMinutes(5);
+                  setSeconds(0);
+                  if (isActive) handleReset();
+                }}
+                className={`
+                  w-4 h-4 rounded-full
+                  ${minutes === 5 && seconds === 0 && !isActive ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  cursor-pointer transition-all duration-200
+                `}
+                title="5 phút - Short Break"
+              >
+                <span className="sr-only">5 phút</span>
+              </button>
+
+              {/* 15 phút */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Clicked 15 phút");
+                  setSessionType("long_break");
+                  setMinutes(15);
+                  setSeconds(0);
+                  if (isActive) handleReset();
+                }}
+                className={`
+                  w-4 h-4 rounded-full
+                  ${minutes === 15 && seconds === 0 && !isActive ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  cursor-pointer transition-all duration-200
+                `}
+                title="15 phút - Long Break"
+              >
+                <span className="sr-only">15 phút</span>
+              </button>
+
+              {/* Custom */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log("Clicked Custom", customMinutes);
+                  setSessionType("work");
+                  setMinutes(customMinutes);
+                  setSeconds(0);
+                  if (isActive) handleReset();
+                }}
+                className={`
+                  w-4 h-4 rounded-full
+                  ${minutes === customMinutes && seconds === 0 && !isActive ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                  cursor-pointer transition-all duration-200
+                `}
+                title={`${customMinutes} phút - Custom`}
+              >
+                <span className="sr-only">Custom</span>
+              </button>
+            </div>
+
+            {/* Custom Time Input */}
+            <div className="flex justify-center items-center gap-3 mb-8">
+              <input
+                type="number"
+                min={1}
+                max={120}
+                value={customMinutes}
+                onChange={(e) => setCustomMinutes(Number(e.target.value))}
+                className="w-20 px-3 py-2 rounded-lg bg-white/20 backdrop-blur-sm border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
+                placeholder="Min"
+              />
+              <span className="text-white/70 text-sm">phút (tuỳ chỉnh)</span>
             </div>
           </div>
         </main>
@@ -306,4 +395,3 @@ export default function PomodoroPage() {
     </div>
   )
 }
-
