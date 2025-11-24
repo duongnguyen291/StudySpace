@@ -1,10 +1,9 @@
 /**
- * Pomodoro Timer Hook
- * Manages timer state and logic
+ * Pomodoro Timer Hook (refactored)
+ * Single source of truth = remainingSeconds
  */
 
-// Logic Pomodoro đầy đủ: đếm giờ, start/pause/reset, chuyển phiên, gọi API.
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { pomodoroService } from '../services/pomodoroService'
 import type { SessionType } from '../types/pomodoro.types'
@@ -13,186 +12,165 @@ interface UsePomodoroTimerProps {
   workDuration?: number
   shortBreakDuration?: number
   longBreakDuration?: number
+  longBreakEvery?: number
 }
 
 export const usePomodoroTimer = ({
   workDuration = 25,
   shortBreakDuration = 5,
   longBreakDuration = 15,
+  longBreakEvery = 4
 }: UsePomodoroTimerProps = {}) => {
   const { isAuthenticated } = useAuth()
+
   const [sessionType, setSessionType] = useState<SessionType>('work')
-  const [minutes, setMinutes] = useState(workDuration)
-  const [seconds, setSeconds] = useState(0)
+  const [cycleCount, setCycleCount] = useState(0)
   const [isActive, setIsActive] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
-  const [completedCycles, setCompletedCycles] = useState(0)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
-  const getCurrentDuration = useCallback(() => {
-    switch (sessionType) {
-      case 'work':
-        return workDuration
-      case 'short_break':
-        return shortBreakDuration
-      case 'long_break':
-        return longBreakDuration
-      default:
-        return workDuration
-    }
+  // ONE state for countdown
+  const [remainingSeconds, setRemainingSeconds] = useState(workDuration * 60)
+  const intervalRef = useRef<number | null>(null)
+
+  // Derived display values
+  const minutes = Math.floor(remainingSeconds / 60)
+  const seconds = remainingSeconds % 60
+
+  // Duration (minutes) for current type
+  const getTargetMinutes = useCallback(() => {
+    if (sessionType === 'work') return workDuration
+    if (sessionType === 'short_break') return shortBreakDuration
+    return longBreakDuration
   }, [sessionType, workDuration, shortBreakDuration, longBreakDuration])
 
-  // Timer logic
+  // Reset remainingSeconds whenever sessionType changes
   useEffect(() => {
-    let interval: NodeJS.Timeout | null = null
+    setRemainingSeconds(getTargetMinutes() * 60)
+  }, [sessionType, getTargetMinutes])
 
-    if (isActive && !isPaused) {
-      interval = setInterval(() => {
-        setSeconds((prevSeconds) => {
-          if (prevSeconds === 0) {
-            setMinutes((prevMinutes) => {
-              if (prevMinutes === 0) {
-                // Timer completed
-                setIsActive(false)
-                setIsPaused(false)
-                
-                // Complete session if authenticated
-                if (currentSessionId && isAuthenticated) {
-                  pomodoroService.completeSession(currentSessionId).catch(console.error)
-                }
+  // Interval control
+  useEffect(() => {
+    if (!isActive || isPaused) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      return
+    }
 
-                // Play notification sound
-                if (typeof window !== 'undefined' && 'Audio' in window) {
-                  const audio = new Audio('/notification.mp3')
-                  audio.play().catch(() => {})
-                }
-
-                // Switch session type
-                setSessionType((prevType) => {
-                  if (prevType === 'work') {
-                    setCompletedCycles((prev) => {
-                      const newCycles = prev + 1
-                      if (newCycles % 4 === 0) {
-                        setMinutes(longBreakDuration)
-                        return newCycles
-                      } else {
-                        setMinutes(shortBreakDuration)
-                        return newCycles
-                      }
-                    })
-                    return 'short_break'
-                  } else {
-                    setMinutes(workDuration)
-                    return 'work'
-                  }
-                })
-                
-                setSeconds(0)
-                setCurrentSessionId(null)
-                return 0
-              }
-              return prevMinutes - 1
-            })
-            return 59
+    if (!intervalRef.current) {
+      intervalRef.current = window.setInterval(() => {
+        setRemainingSeconds(prev => {
+          if (prev <= 1) {
+            // Session finished
+            clearInterval(intervalRef.current!)
+            intervalRef.current = null
+            completeCurrentSession()
+            return 0
           }
-          return prevSeconds - 1
+          return prev - 1
         })
       }, 1000)
     }
 
     return () => {
-      if (interval) clearInterval(interval)
-    }
-  }, [isActive, isPaused, currentSessionId, isAuthenticated, workDuration, shortBreakDuration, longBreakDuration])
-
-  const handleStart = useCallback(async () => {
-    if (!isActive && !currentSessionId) {
-      // Start new session
-      if (isAuthenticated) {
-        try {
-          const session = await pomodoroService.createSession({
-            session_type: sessionType,
-            duration_minutes: getCurrentDuration(),
-          })
-          setCurrentSessionId(session.id)
-        } catch (error) {
-          console.error('Failed to create session:', error)
-        }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
       }
-      setIsActive(true)
-      setIsPaused(false)
-    } else if (isPaused) {
-      // Resume from pause
-      setIsPaused(false)
-      setIsActive(true)
     }
-  }, [isActive, currentSessionId, isAuthenticated, sessionType, getCurrentDuration])
+  }, [isActive, isPaused])
 
-  const handlePause = useCallback(() => {
-    setIsPaused(true)
-    setIsActive(false)
-  }, [])
-
-  const handleReset = useCallback(() => {
-    setIsActive(false)
-    setIsPaused(false)
-    setMinutes(getCurrentDuration())
-    setSeconds(0)
-    setCurrentSessionId(null)
-  }, [getCurrentDuration])
-
-  const handleComplete = useCallback(async () => {
+  // Complete + switch session
+  const completeCurrentSession = useCallback(async () => {
     setIsActive(false)
     setIsPaused(false)
 
-    // Complete session if authenticated
+    // Notify backend
     if (currentSessionId && isAuthenticated) {
-      try {
-        await pomodoroService.completeSession(currentSessionId)
-      } catch (error) {
-        console.error('Failed to complete session:', error)
-      }
+      pomodoroService.completeSession(currentSessionId).catch(console.error)
     }
 
-    // Play notification sound
+    // Sound
     if (typeof window !== 'undefined' && 'Audio' in window) {
-      const audio = new Audio('/notification.mp3')
-      audio.play().catch(() => {})
+      new Audio('/notification.mp3').play().catch(() => {})
     }
 
-    // Switch session type
     if (sessionType === 'work') {
-      const newCycles = completedCycles + 1
-      setCompletedCycles(newCycles)
-      
-      // After 4 work sessions, take long break
-      if (newCycles % 4 === 0) {
+      const newCount = cycleCount + 1
+      setCycleCount(newCount)
+      if (newCount % longBreakEvery === 0) {
         setSessionType('long_break')
-        setMinutes(longBreakDuration)
       } else {
         setSessionType('short_break')
-        setMinutes(shortBreakDuration)
       }
     } else {
-      // Break finished, back to work
       setSessionType('work')
-      setMinutes(workDuration)
     }
-    
-    setSeconds(0)
     setCurrentSessionId(null)
-  }, [currentSessionId, isAuthenticated, sessionType, completedCycles, workDuration, shortBreakDuration, longBreakDuration])
+  }, [currentSessionId, isAuthenticated, sessionType, cycleCount, longBreakEvery])
+
+  const handleStart = useCallback(async () => {
+    if (isActive && isPaused) {
+      // resume
+      setIsPaused(false)
+      setIsActive(true)
+      return
+    }
+    if (isActive) return
+
+    // Create session on backend
+    if (isAuthenticated && !currentSessionId) {
+      try {
+        const session = await pomodoroService.createSession({
+          session_type: sessionType,
+          duration_minutes: getTargetMinutes()
+        })
+        setCurrentSessionId(session.id)
+      } catch (e) {
+        console.error('Failed to create session:', e)
+      }
+    }
+    setIsActive(true)
+    setIsPaused(false)
+  }, [isActive, isPaused, isAuthenticated, currentSessionId, sessionType, getTargetMinutes])
+
+  const handlePause = useCallback(() => {
+    if (!isActive) return
+    setIsPaused(p => !p)
+  }, [isActive])
+
+  const handleReset = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+    setIsActive(false)
+    setIsPaused(false)
+    setRemainingSeconds(getTargetMinutes() * 60)
+    setCurrentSessionId(null)
+  }, [getTargetMinutes])
+
+  // External setters (preserve old API)
+  const setMinutesExternal = useCallback((mins: number) => {
+    setRemainingSeconds(Math.max(0, Math.floor(mins) * 60))
+  }, [])
+
+  const setSecondsExternal = useCallback((secs: number) => {
+    setRemainingSeconds(prev => {
+      const m = Math.floor(prev / 60)
+      return m * 60 + Math.min(59, Math.max(0, secs))
+    })
+  }, [])
 
   const getSessionTypeLabel = useCallback(() => {
     switch (sessionType) {
-      case 'work':
-        return 'Làm việc'
-      case 'short_break':
-        return 'Nghỉ ngắn'
-      case 'long_break':
-        return 'Nghỉ dài'
-      default:
-        return 'Làm việc'
+      case 'work': return 'Làm việc'
+      case 'short_break': return 'Nghỉ ngắn'
+      case 'long_break': return 'Nghỉ dài'
+      case 'custom_timer': return 'Tùy chỉnh'
+      default: return 'Làm việc'
     }
   }, [sessionType])
 
@@ -202,15 +180,13 @@ export const usePomodoroTimer = ({
     isActive,
     isPaused,
     sessionType,
-    completedCycles,
+    completedCycles: cycleCount,
     handleStart,
     handlePause,
     handleReset,
     getSessionTypeLabel,
-    // Thêm 3 hàm này để PomodoroPage dùng được
-    setMinutes,
-    setSeconds,
     setSessionType,
+    setMinutes: setMinutesExternal,
+    setSeconds: setSecondsExternal,
   }
 }
-
