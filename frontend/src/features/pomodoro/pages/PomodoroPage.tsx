@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { LoginModal } from '@/features/pomodoro/components/LoginModal'
 import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
@@ -37,6 +37,10 @@ export default function PomodoroPage() {
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [customHours, setCustomHours] = useState(0)
   const [customMinutes, setCustomMinutes] = useState(25)
+  
+  // State cho chế độ hiển thị: 'pomodoro' hoặc 'clock'
+  const [displayMode, setDisplayMode] = useState<'pomodoro' | 'clock'>('pomodoro')
+  const [currentTime, setCurrentTime] = useState(new Date())
 
   const {
     minutes,
@@ -53,6 +57,16 @@ export default function PomodoroPage() {
     setSeconds,
     sessionType
   } = usePomodoroTimer()
+
+  // Cập nhật đồng hồ thời gian thực mỗi giây
+  useEffect(() => {
+    if (displayMode === 'clock') {
+      const timer = setInterval(() => {
+        setCurrentTime(new Date())
+      }, 1000)
+      return () => clearInterval(timer)
+    }
+  }, [displayMode])
 
   if (isLoading) {
     return (
@@ -133,217 +147,235 @@ export default function PomodoroPage() {
         <main className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-2xl">
 
-            {/* Tag selector */}
-            <div className="mb-5">
-              <select
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value)}
-                className="w-full px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white/50"
-              >
-                <option value="">Chọn tag</option>
-                <option value="study">Học</option>
-                <option value="work">Làm việc</option>
-                <option value="reading">Đọc sách</option>
-                <option value="coding">Coding</option>
-              </select>
-            </div>
-
-            {/* Timer display */}
-            <div className="mb-8 flex items-center justify-center">
-              <div className="text-9xl font-mono font-bold text-white drop-shadow-lg">
-                {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
-              </div>
-            </div>
-
-            {/* Task + Controls */}
-            <div className="flex items-center gap-3 mb-4">
-              <input
-                type="text"
-                value={currentTask}
-                onChange={(e) => setCurrentTask(e.target.value)}
-                placeholder="Bạn đang làm gì?"
-                className="flex-1 px-4 py-3 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-white/50"
-                disabled={isActive}
-              />
-              {!isActive ? (
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleStart}
-                  className="px-8 py-3 bg-white text-gray-900 hover:bg-white/90 font-semibold"
-                >
-                  Start
-                </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handlePause}
-                    className="px-6 py-3 bg-white/20 border-white/30 text-white hover:bg-white/30 font-semibold flex items-center gap-2"
+            {displayMode === 'pomodoro' ? (
+              <>
+                {/* Tag selector */}
+                <div className="mb-5">
+                  <select
+                    value={selectedTag}
+                    onChange={(e) => setSelectedTag(e.target.value)}
+                    className="w-full px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white/50"
                   >
-                    {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-                    {isPaused ? 'Resume' : 'Pause'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    onClick={handleReset}
-                    className="px-6 py-3 bg-white/20 border-white/30 text-white hover:bg-white/30 font-semibold flex items-center gap-2"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    Reset
-                  </Button>
+                    <option value="">Chọn tag</option>
+                    <option value="study">Học</option>
+                    <option value="work">Làm việc</option>
+                    <option value="reading">Đọc sách</option>
+                    <option value="coding">Coding</option>
+                  </select>
                 </div>
-              )}
-            </div>
 
-            {currentTask && (
-              <div className="mb-4 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
-                <p className="text-white/90 text-sm text-center">{currentTask}</p>
-              </div>
-            )}
-
-            {/* Session label */}
-            <div className="px-4 py-2 bg-black/30 backdrop-blur-sm rounded-lg mb-4">
-              <p className="text-white/80 text-sm text-center">
-                {getSessionTypeLabel()} {completedCycles > 0 && `• Hoàn thành ${completedCycles} phiên`}
-              </p>
-            </div>
-
-            {/* Preset dots */}
-            <div className="flex justify-center gap-4 mb-6">
-              <button
-                type="button"
-                onClick={() => {
-                  setSessionType('work')
-                  setMinutes(25)
-                  setSeconds(0)
-                  if (isActive) handleReset()
-                  setShowCustomInput(false)
-                }}
-                className={`
-                  w-4 h-4 rounded-full
-                  ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                  transition-all
-                `}
-                title="25 phút - Làm việc"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setSessionType('short_break')
-                  setMinutes(5)
-                  setSeconds(0)
-                  if (isActive) handleReset()
-                  setShowCustomInput(false)
-                }}
-                className={`
-                  w-4 h-4 rounded-full
-                  ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                  transition-all
-                `}
-                title="5 phút - Nghỉ ngắn"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setSessionType('long_break')
-                  setMinutes(15)
-                  setSeconds(0)
-                  if (isActive) handleReset()
-                  setShowCustomInput(false)
-                }}
-                className={`
-                  w-4 h-4 rounded-full
-                  ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                  transition-all
-                `}
-                title="15 phút - Nghỉ dài"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setSessionType('custom_timer')
-                  setShowCustomInput(v => !v)
-                }}
-                className={`
-                  w-4 h-4 rounded-full
-                  ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                  transition-all
-                `}
-                title="Tùy chỉnh thời gian"
-              />
-            </div>
-
-            {/* Custom time panel */}
-            {showCustomInput && (
-              <div className="flex flex-col items-center gap-5 mb-10 animate-in fade-in">
-                <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center">
-                    <label className="text-xs text-white/70 mb-1">Giờ</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={12}
-                      value={customHours}
-                      onChange={(e) => setCustomHours(Math.min(12, Math.max(0, Number(e.target.value))))}
-                      className="w-20 px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
-                    />
-                  </div>
-                  <span className="text-white/60 font-mono text-xl">:</span>
-                  <div className="flex flex-col items-center">
-                    <label className="text-xs text-white/70 mb-1">Phút</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={59}
-                      value={customMinutes}
-                      onChange={(e) => setCustomMinutes(Math.min(59, Math.max(0, Number(e.target.value))))}
-                      className="w-20 px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
-                    />
+                {/* Timer display */}
+                <div className="mb-8 flex items-center justify-center">
+                  <div className="text-9xl font-mono font-bold text-white drop-shadow-lg">
+                    {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                   </div>
                 </div>
 
-                <div className="text-white/80 text-sm">
-                  Thời gian: <span className="font-mono">{String(customHours).padStart(2, '0')}h {String(customMinutes).padStart(2, '0')}m</span>
+                {/* Task + Controls */}
+                <div className="flex items-center gap-3 mb-4">
+                  <input
+                    type="text"
+                    value={currentTask}
+                    onChange={(e) => setCurrentTask(e.target.value)}
+                    placeholder="Bạn đang làm gì?"
+                    className="flex-1 px-4 py-3 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    disabled={isActive}
+                  />
+                  {!isActive ? (
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={handleStart}
+                      className="px-8 py-3 bg-white text-gray-900 hover:bg-white/90 font-semibold"
+                    >
+                      Start
+                    </Button>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={handlePause}
+                        className="px-6 py-3 bg-white/20 border-white/30 text-white hover:bg-white/30 font-semibold flex items-center gap-2"
+                      >
+                        {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+                        {isPaused ? 'Resume' : 'Pause'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        onClick={handleReset}
+                        className="px-6 py-3 bg-white/20 border-white/30 text-white hover:bg-white/30 font-semibold flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Reset
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                {currentTask && (
+                  <div className="mb-4 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
+                    <p className="text-white/90 text-sm text-center">{currentTask}</p>
+                  </div>
+                )}
+
+                {/* Session label */}
+                <div className="px-4 py-2 bg-black/30 backdrop-blur-sm rounded-lg mb-4">
+                  <p className="text-white/80 text-sm text-center">
+                    {getSessionTypeLabel()} {completedCycles > 0 && `• Hoàn thành ${completedCycles} phiên`}
+                  </p>
+                </div>
+
+                {/* Preset dots */}
+                <div className="flex justify-center gap-4 mb-6">
+                  <button
+                    type="button"
                     onClick={() => {
-                      setCustomHours(0)
-                      setCustomMinutes(25)
-                    }}
-                    className="px-4 py-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
-                  >
-                    Reset
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={() => {
-                      const total = customHours * 60 + customMinutes
-                      if (total <= 0) return
-                      setSessionType('custom_timer')
-                      setMinutes(total)
+                      setSessionType('work')
+                      setMinutes(25)
                       setSeconds(0)
                       if (isActive) handleReset()
                       setShowCustomInput(false)
                     }}
-                    className="px-4 py-2 bg-white text-gray-900 hover:bg-white/90 font-semibold"
-                  >
-                    Apply
-                  </Button>
+                    className={`
+                      w-4 h-4 rounded-full
+                      ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                      transition-all
+                    `}
+                    title="25 phút - Làm việc"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionType('short_break')
+                      setMinutes(5)
+                      setSeconds(0)
+                      if (isActive) handleReset()
+                      setShowCustomInput(false)
+                    }}
+                    className={`
+                      w-4 h-4 rounded-full
+                      ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                      transition-all
+                    `}
+                    title="5 phút - Nghỉ ngắn"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionType('long_break')
+                      setMinutes(15)
+                      setSeconds(0)
+                      if (isActive) handleReset()
+                      setShowCustomInput(false)
+                    }}
+                    className={`
+                      w-4 h-4 rounded-full
+                      ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                      transition-all
+                    `}
+                    title="15 phút - Nghỉ dài"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSessionType('custom_timer')
+                      setShowCustomInput(v => !v)
+                    }}
+                    className={`
+                      w-4 h-4 rounded-full
+                      ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
+                      transition-all
+                    `}
+                    title="Tùy chỉnh thời gian"
+                  />
+                </div>
+
+                {/* Custom time panel */}
+                {showCustomInput && (
+                  <div className="flex flex-col items-center gap-5 mb-10 animate-in fade-in">
+                    <div className="flex items-center gap-6">
+                      <div className="flex flex-col items-center">
+                        <label className="text-xs text-white/70 mb-1">Giờ</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={12}
+                          value={customHours}
+                          onChange={(e) => setCustomHours(Math.min(12, Math.max(0, Number(e.target.value))))}
+                          className="w-20 px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
+                        />
+                      </div>
+                      <span className="text-white/60 font-mono text-xl">:</span>
+                      <div className="flex flex-col items-center">
+                        <label className="text-xs text-white/70 mb-1">Phút</label>
+                        <input
+                          type="number"
+                          min={0}
+                          max={59}
+                          value={customMinutes}
+                          onChange={(e) => setCustomMinutes(Math.min(59, Math.max(0, Number(e.target.value))))}
+                          className="w-20 px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="text-white/80 text-sm">
+                      Thời gian: <span className="font-mono">{String(customHours).padStart(2, '0')}h {String(customMinutes).padStart(2, '0')}m</span>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setCustomHours(0)
+                          setCustomMinutes(25)
+                        }}
+                        className="px-4 py-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
+                      >
+                        Reset
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          const total = customHours * 60 + customMinutes
+                          if (total <= 0) return
+                          setSessionType('custom_timer')
+                          setMinutes(total)
+                          setSeconds(0)
+                          if (isActive) handleReset()
+                          setShowCustomInput(false)
+                        }}
+                        className="px-4 py-2 bg-white text-gray-900 hover:bg-white/90 font-semibold"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* CLOCK MODE */
+              <div className="flex flex-col items-center justify-center">
+                <div className="mb-8">
+                  <div className="text-9xl font-mono font-bold text-white drop-shadow-lg">
+                    {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </div>
+                </div>
+                <div className="px-6 py-3 bg-black/30 backdrop-blur-sm rounded-lg">
+                  <p className="text-white/80 text-lg">
+                    {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                  </p>
                 </div>
               </div>
             )}
           </div>
         </main>
 
-        {/* FOOTER với các nút phụ */}
+        {/* FOOTER */}
         <footer className="w-full px-6 py-4 flex justify-between items-center bg-black/25 backdrop-blur-sm">
           <div className="flex items-center gap-4">
             <button
@@ -374,27 +406,35 @@ export default function PomodoroPage() {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Ẩn nút Users và MessageCircle khi ở chế độ đồng hồ */}
+            {displayMode === 'pomodoro' && (
+              <>
+                <button
+                  className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  title="Học nhóm"
+                >
+                  <Users className="w-5 h-5" />
+                </button>
+                <button
+                  className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                  title="Chat"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </button>
+              </>
+            )}
+
             <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Học nhóm"
-            >
-              <Users className="w-5 h-5" />
-            </button>
-            <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Chat"
-            >
-              <MessageCircle className="w-5 h-5" />
-            </button>
-            <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Chế độ tập trung"
+              onClick={() => setDisplayMode('pomodoro')}
+              className={`p-2 ${displayMode === 'pomodoro' ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition-colors`}
+              title="Chế độ Pomodoro"
             >
               <Zap className="w-5 h-5" />
             </button>
             <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Cài đặt hẹn giờ"
+              onClick={() => setDisplayMode('clock')}
+              className={`p-2 ${displayMode === 'clock' ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition-colors`}
+              title="Đồng hồ thời gian thực"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
