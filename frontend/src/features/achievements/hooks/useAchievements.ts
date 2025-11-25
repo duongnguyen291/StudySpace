@@ -7,10 +7,10 @@ export function useAchievements() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    achievementsService.getUserAchievements().then((data) => {
-      setAchievements(data);
-      setLoading(false);
-    });
+    achievementsService
+      .getUserAchievements()
+      .then((data) => setAchievements(data))
+      .finally(() => setLoading(false));
   }, []);
 
   return { achievements, loading };

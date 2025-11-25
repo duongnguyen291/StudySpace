@@ -3,6 +3,7 @@ export interface Achievement {
   code: string;
   name: string;
   description: string;
-  icon_url: string;
+  url: string | null;
   active: boolean;
+  earned: boolean;
 }

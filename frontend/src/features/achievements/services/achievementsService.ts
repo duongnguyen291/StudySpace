@@ -1,14 +1,16 @@
+import { apiClient } from "@/shared/utils/api";
 import { Achievement } from "../types/achievements.types";
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const achievementsService = {
   async getUserAchievements(): Promise<Achievement[]> {
-    const res = await fetch(`${BASE_URL}/achievements/me`, {
-      credentials: "include",
-    });
+    try {
+      // Không cần BASE_URL và fetch nữa
+      const res = await apiClient.get("/achievements/me");
 
-    if (!res.ok) return [];
-    return res.json();
+      return res.data;
+    } catch (error) {
+      console.error("Error fetching achievements:", error);
+      return [];
+    }
   },
 };
