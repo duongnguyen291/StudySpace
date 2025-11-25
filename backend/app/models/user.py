@@ -29,4 +29,9 @@ class User(Base):
     
     # Relationships
     settings = relationship("UserSettings", back_populates="user", uselist=False)
+    chat_conversations = relationship(
+        "ChatConversation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
