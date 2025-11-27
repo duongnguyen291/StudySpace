@@ -14,6 +14,7 @@ class User(Base):
     """
     User model
     TODO: Implement full user model based on database schema
+    create to do list
     """
     __tablename__ = "users"
     
