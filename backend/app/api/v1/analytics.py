@@ -1,19 +1,31 @@
-"""
-Analytics API endpoints
-"""
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from app.core.database import get_db
+from app.services.analytics_service import (
+    get_study_minutes_last_7_days,
+    get_goal_completion_last_7_days,
+    get_dashboard_summary,
+    get_long_term_progress
+)
 
-router = APIRouter()
+router = APIRouter(prefix="/analytics", tags=["Analytics"])
+
+
+@router.get("/study-time")
+def study_time(user_id: str, db: Session = Depends(get_db)):
+    return get_study_minutes_last_7_days(db, user_id)
+
+
+@router.get("/goals")
+def goals(user_id: str, db: Session = Depends(get_db)):
+    return get_goal_completion_last_7_days(db, user_id)
 
 
 @router.get("/dashboard")
-async def get_dashboard_stats():
-    """Get dashboard statistics"""
-    return {"message": "Get dashboard stats endpoint - to be implemented"}
+def dashboard(user_id: str, db: Session = Depends(get_db)):
+    return get_dashboard_summary(db, user_id)
 
 
 @router.get("/progress")
-async def get_progress():
-    """Get learning progress"""
-    return {"message": "Get progress endpoint - to be implemented"}
-
+def progress(user_id: str, db: Session = Depends(get_db)):
+    return get_long_term_progress(db, user_id)

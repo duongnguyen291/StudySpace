@@ -2,10 +2,14 @@
 Main API Router
 Registers all feature routers
 """
+
 from fastapi import APIRouter
 
 # Import feature routers
 from app.api.v1 import auth, pomodoro, notes
+
+from .analytics import router as analytics_router
+api_router.include_router(analytics_router, prefix="/analytics")
 
 api_router = APIRouter()
 
