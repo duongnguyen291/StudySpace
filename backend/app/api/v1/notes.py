@@ -35,6 +35,7 @@ async def get_note(note_id: str):
 async def update_note(note_id: str):
     """Update a note"""
     # TODO: Implement update note
+    # CRUD node
     return {"message": "Update note endpoint - to be implemented"}
 
 

@@ -22,6 +22,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# qicknotes
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
