@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import { LoginModal } from '@/features/pomodoro/components/LoginModal'
 import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
@@ -22,7 +22,10 @@ import {
   Zap,
   Pause,
   RotateCcw,
-  Play
+  Play,
+  Droplets,
+  Bird,
+  Flame
 } from 'lucide-react'
 
 export default function PomodoroPage() {
@@ -41,6 +44,12 @@ export default function PomodoroPage() {
   // State cho chế độ hiển thị: 'pomodoro' hoặc 'clock'
   const [displayMode, setDisplayMode] = useState<'pomodoro' | 'clock'>('pomodoro')
   const [currentTime, setCurrentTime] = useState(new Date())
+
+  // State cho menu âm thanh môi trường
+  const [showSoundMenu, setShowSoundMenu] = useState(false)
+  const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
+  const soundMenuRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const {
     minutes,
@@ -67,6 +76,52 @@ export default function PomodoroPage() {
       return () => clearInterval(timer)
     }
   }, [displayMode])
+
+  // Đóng menu khi click bên ngoài
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (soundMenuRef.current && !soundMenuRef.current.contains(event.target as Node)) {
+        setShowSoundMenu(false)
+      }
+    }
+
+    if (showSoundMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showSoundMenu])
+
+  // Quản lý phát âm thanh
+  useEffect(() => {
+    if (selectedSound) {
+      const soundFiles = {
+        rain: '/sounds/rain.mp3',
+        birds: '/sounds/birds.mp3',
+        fire: '/sounds/fire.mp3'
+        
+      }
+
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+
+      audioRef.current = new Audio(soundFiles[selectedSound])
+      audioRef.current.loop = true
+      audioRef.current.volume = 0.5
+      audioRef.current.play().catch(console.error)
+    } else {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+      }
+    }
+  }, [selectedSound])
 
   if (isLoading) {
     return (
@@ -143,10 +198,9 @@ export default function PomodoroPage() {
           </div>
         </header>
 
-        {/* MAIN */}
+        {/* MAIN - giữ nguyên phần này từ code cũ */}
         <main className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-2xl">
-
             {displayMode === 'pomodoro' ? (
               <>
                 {/* Tag selector */}
@@ -238,11 +292,7 @@ export default function PomodoroPage() {
                       if (isActive) handleReset()
                       setShowCustomInput(false)
                     }}
-                    className={`
-                      w-4 h-4 rounded-full
-                      ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                      transition-all
-                    `}
+                    className={`w-4 h-4 rounded-full ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
                     title="25 phút - Làm việc"
                   />
                   <button
@@ -254,11 +304,7 @@ export default function PomodoroPage() {
                       if (isActive) handleReset()
                       setShowCustomInput(false)
                     }}
-                    className={`
-                      w-4 h-4 rounded-full
-                      ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                      transition-all
-                    `}
+                    className={`w-4 h-4 rounded-full ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
                     title="5 phút - Nghỉ ngắn"
                   />
                   <button
@@ -270,11 +316,7 @@ export default function PomodoroPage() {
                       if (isActive) handleReset()
                       setShowCustomInput(false)
                     }}
-                    className={`
-                      w-4 h-4 rounded-full
-                      ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                      transition-all
-                    `}
+                    className={`w-4 h-4 rounded-full ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
                     title="15 phút - Nghỉ dài"
                   />
                   <button
@@ -283,18 +325,14 @@ export default function PomodoroPage() {
                       setSessionType('custom_timer')
                       setShowCustomInput(v => !v)
                     }}
-                    className={`
-                      w-4 h-4 rounded-full
-                      ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'}
-                      transition-all
-                    `}
+                    className={`w-4 h-4 rounded-full ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
                     title="Tùy chỉnh thời gian"
                   />
                 </div>
 
                 {/* Custom time panel */}
                 {showCustomInput && (
-                  <div className="flex flex-col items-center gap-5 mb-10 animate-in fade-in">
+                  <div className="flex flex-col items-center gap-5 mb-10">
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col items-center">
                         <label className="text-xs text-white/70 mb-1">Giờ</label>
@@ -320,11 +358,9 @@ export default function PomodoroPage() {
                         />
                       </div>
                     </div>
-
                     <div className="text-white/80 text-sm">
                       Thời gian: <span className="font-mono">{String(customHours).padStart(2, '0')}h {String(customMinutes).padStart(2, '0')}m</span>
                     </div>
-
                     <div className="flex gap-3">
                       <Button
                         variant="outline"
@@ -358,7 +394,6 @@ export default function PomodoroPage() {
                 )}
               </>
             ) : (
-              /* CLOCK MODE */
               <div className="flex flex-col items-center justify-center">
                 <div className="mb-8">
                   <div className="text-9xl font-mono font-bold text-white drop-shadow-lg">
@@ -385,40 +420,68 @@ export default function PomodoroPage() {
             >
               <ImageIcon className="w-5 h-5" />
             </button>
-            <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Âm thanh mưa"
-            >
-              <CloudRain className="w-5 h-5" />
-            </button>
-            <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Nhạc"
-            >
+            
+            {/* Nút âm thanh với dropdown */}
+            <div className="relative" ref={soundMenuRef}>
+              <button
+                onClick={() => setShowSoundMenu(!showSoundMenu)}
+                className={`p-2 ${selectedSound ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition-colors`}
+                title="Âm thanh môi trường"
+              >
+                <CloudRain className="w-5 h-5" />
+              </button>
+
+              {showSoundMenu && (
+                <div className="absolute bottom-full left-0 mb-2 w-48 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-lg shadow-xl border border-white/20 overflow-hidden z-50">
+                  <button
+                    onClick={() => {
+                      setSelectedSound(selectedSound === 'rain' ? null : 'rain')
+                      setShowSoundMenu(false)
+                    }}
+                    className={`w-full px-4 py-3 flex items-center gap-3 ${selectedSound === 'rain' ? 'bg-blue-500/20 text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'} transition-colors`}
+                  >
+                    <Droplets className="w-5 h-5" />
+                    <span className="font-medium">Mưa rơi</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedSound(selectedSound === 'birds' ? null : 'birds')
+                      setShowSoundMenu(false)
+                    }}
+                    className={`w-full px-4 py-3 flex items-center gap-3 ${selectedSound === 'birds' ? 'bg-green-500/20 text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'} transition-colors`}
+                  >
+                    <Bird className="w-5 h-5" />
+                    <span className="font-medium">Chim hót</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setSelectedSound(selectedSound === 'fire' ? null : 'fire')
+                      setShowSoundMenu(false)
+                    }}
+                    className={`w-full px-4 py-3 flex items-center gap-3 ${selectedSound === 'fire' ? 'bg-orange-500/20 text-orange-600 dark:text-orange-400' : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'} transition-colors`}
+                  >
+                    <Flame className="w-5 h-5" />
+                    <span className="font-medium">Lửa cháy</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Nhạc">
               <Music className="w-5 h-5" />
             </button>
-            <button
-              className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              title="Menu"
-            >
+            <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Menu">
               <Grid3x3 className="w-5 h-5" />
             </button>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Ẩn nút Users và MessageCircle khi ở chế độ đồng hồ */}
             {displayMode === 'pomodoro' && (
               <>
-                <button
-                  className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                  title="Học nhóm"
-                >
+                <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Học nhóm">
                   <Users className="w-5 h-5" />
                 </button>
-                <button
-                  className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                  title="Chat"
-                >
+                <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Chat">
                   <MessageCircle className="w-5 h-5" />
                 </button>
               </>
