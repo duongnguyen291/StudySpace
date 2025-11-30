@@ -122,6 +122,20 @@ export default function PomodoroPage() {
     }
   }, [showSoundMenu])
 
+  // Ẩn custom input khi start
+  useEffect(() => {
+    if (isActive) {
+      setShowCustomInput(false)
+    }
+  }, [isActive])
+
+  // Hiện custom input khi reset và đang ở chế độ custom
+  useEffect(() => {
+    if (!isActive && sessionType === 'custom_timer') {
+      setShowCustomInput(true)
+    }
+  }, [isActive, sessionType])
+
   // Quản lý phát âm thanh
   useEffect(() => {
     if (selectedSound) {
@@ -348,9 +362,9 @@ export default function PomodoroPage() {
                   </div>
                 )}
 
-                {/* Timer display */}
+                {/* Timer display - ĐỔI FONT THÀNH MONTSERRAT EXTRABOLD */}
                 <div className="mb-8 flex items-center justify-center">
-                  <div className="text-9xl font-mono font-bold text-white drop-shadow-lg">
+                  <div className="text-9xl font-extrabold text-white drop-shadow-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                   </div>
                 </div>
@@ -437,57 +451,56 @@ export default function PomodoroPage() {
                   </div>
                 </div>
 
-                {/* Preset dots */}
-                <div className="flex justify-center gap-4 mb-6">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSessionType('work')
-                      setMinutes(25)
-                      setSeconds(0)
-                      if (isActive) handleReset()
-                      setShowCustomInput(false)
-                    }}
-                    className={`w-4 h-4 rounded-full ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
-                    title="25 phút - Làm việc"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSessionType('short_break')
-                      setMinutes(5)
-                      setSeconds(0)
-                      if (isActive) handleReset()
-                      setShowCustomInput(false)
-                    }}
-                    className={`w-4 h-4 rounded-full ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
-                    title="5 phút - Nghỉ ngắn"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSessionType('long_break')
-                      setMinutes(15)
-                      setSeconds(0)
-                      if (isActive) handleReset()
-                      setShowCustomInput(false)
-                    }}
-                    className={`w-4 h-4 rounded-full ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
-                    title="15 phút - Nghỉ dài"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSessionType('custom_timer')
-                      setShowCustomInput(v => !v)
-                    }}
-                    className={`w-4 h-4 rounded-full ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
-                    title="Tùy chỉnh thời gian"
-                  />
-                </div>
+                {/* Preset dots - CHỈ HIỂN THỊ KHI CHƯA START */}
+                {!isActive && (
+                  <div className="flex justify-center gap-4 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSessionType('work')
+                        setMinutes(25)
+                        setSeconds(0)
+                        setShowCustomInput(false)
+                      }}
+                      className={`w-4 h-4 rounded-full ${sessionType === 'work' && minutes === 25 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
+                      title="25 phút - Làm việc"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSessionType('short_break')
+                        setMinutes(5)
+                        setSeconds(0)
+                        setShowCustomInput(false)
+                      }}
+                      className={`w-4 h-4 rounded-full ${sessionType === 'short_break' && minutes === 5 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
+                      title="5 phút - Nghỉ ngắn"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSessionType('long_break')
+                        setMinutes(15)
+                        setSeconds(0)
+                        setShowCustomInput(false)
+                      }}
+                      className={`w-4 h-4 rounded-full ${sessionType === 'long_break' && minutes === 15 && !showCustomInput ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
+                      title="15 phút - Nghỉ dài"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSessionType('custom_timer')
+                        setShowCustomInput(v => !v)
+                      }}
+                      className={`w-4 h-4 rounded-full ${sessionType === 'custom_timer' ? 'bg-white scale-125 shadow-lg' : 'bg-white/40 hover:bg-white/60'} transition-all`}
+                      title="Tùy chỉnh thời gian"
+                    />
+                  </div>
+                )}
 
-                {/* Custom time panel */}
-                {showCustomInput && (
+                {/* Custom time panel - CHỈ HIỂN THỊ KHI CHƯA START */}
+                {!isActive && showCustomInput && (
                   <div className="flex flex-col items-center gap-5 mb-10">
                     <div className="flex items-center gap-6">
                       <div className="flex flex-col items-center">
@@ -497,7 +510,14 @@ export default function PomodoroPage() {
                           min={0}
                           max={12}
                           value={customHours}
-                          onChange={(e) => setCustomHours(Math.min(12, Math.max(0, Number(e.target.value))))}
+                          onChange={(e) => {
+                            const hours = Math.min(12, Math.max(0, Number(e.target.value)))
+                            setCustomHours(hours)
+                            // Cập nhật timer ngay lập tức
+                            const totalMinutes = hours * 60 + customMinutes
+                            setMinutes(totalMinutes)
+                            setSeconds(0)
+                          }}
                           className="w-20 px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
                         />
                       </div>
@@ -509,7 +529,14 @@ export default function PomodoroPage() {
                           min={0}
                           max={59}
                           value={customMinutes}
-                          onChange={(e) => setCustomMinutes(Math.min(59, Math.max(0, Number(e.target.value))))}
+                          onChange={(e) => {
+                            const mins = Math.min(59, Math.max(0, Number(e.target.value)))
+                            setCustomMinutes(mins)
+                            // Cập nhật timer ngay lập tức
+                            const totalMinutes = customHours * 60 + mins
+                            setMinutes(totalMinutes)
+                            setSeconds(0)
+                          }}
                           className="w-20 px-3 py-2 rounded-lg bg-white/20 border border-white/30 text-white text-center focus:outline-none focus:ring-2 focus:ring-white/50"
                         />
                       </div>
@@ -524,6 +551,8 @@ export default function PomodoroPage() {
                         onClick={() => {
                           setCustomHours(0)
                           setCustomMinutes(25)
+                          setMinutes(25)
+                          setSeconds(0)
                         }}
                         className="px-4 py-2 bg-white/10 border-white/30 text-white hover:bg-white/20"
                       >
@@ -536,9 +565,6 @@ export default function PomodoroPage() {
                           const total = customHours * 60 + customMinutes
                           if (total <= 0) return
                           setSessionType('custom_timer')
-                          setMinutes(total)
-                          setSeconds(0)
-                          if (isActive) handleReset()
                           setShowCustomInput(false)
                         }}
                         className="px-4 py-2 bg-white text-gray-900 hover:bg-white/90 font-semibold"
@@ -552,7 +578,7 @@ export default function PomodoroPage() {
             ) : (
               <div className="flex flex-col items-center justify-center">
                 <div className="mb-8">
-                  <div className="text-9xl font-mono font-bold text-white drop-shadow-lg">
+                  <div className="text-9xl font-extrabold text-white drop-shadow-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </div>
                 </div>
