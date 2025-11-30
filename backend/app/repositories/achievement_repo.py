@@ -67,3 +67,26 @@ class UserAchievementRepository:
         self.db.commit()
         self.db.refresh(record)
         return record
+    
+    
+    def add_achievement(self, user_id, achievement_id):
+        # tránh duplicate (nếu đã có rồi thì không insert nữa)
+        exists = (
+            self.db.query(UserAchievement)
+            .filter_by(user_id=user_id, achievement_id=achievement_id)
+            .first()
+        )
+
+        if exists:
+            return exists
+
+        new_ach = UserAchievement(
+            user_id=user_id,
+            achievement_id=achievement_id,
+        )
+
+        self.db.add(new_ach)
+        self.db.commit()
+        self.db.refresh(new_ach)
+
+        return new_ach

@@ -370,7 +370,6 @@ INSERT INTO achievements (code, name, description, url, active) VALUES
 ('quiz_100', '100 Quizzes', 'Hoàn thành 100 bài quiz', '/icons/achievements/quiz_100.png', TRUE),
 
 ('perfect_score', 'Hoàn Hảo', 'Đạt điểm tuyệt đối trong một quiz', '/icons/achievements/perfect_score.png', TRUE),
-('fast_solver', 'Tốc Độ Ánh Sáng', 'Hoàn thành quiz trong thời gian tối ưu', '/icons/achievements/fast_solver.png', TRUE),
 
 ('study_60', '60 Phút Tập Trung', 'Tích lũy 60 phút học', '/icons/achievements/study_60.png', TRUE),
 ('study_300', '5 Giờ Tập Trung', 'Tích lũy 300 phút học', '/icons/achievements/study_300.png', TRUE),
@@ -383,7 +382,6 @@ INSERT INTO achievements (code, name, description, url, active) VALUES
 ('flash_10', '10 Flashcards', 'Review 10 thẻ flashcard', '/icons/achievements/flash_10.png', TRUE),
 ('flash_50', '50 Flashcards', 'Review 50 thẻ flashcard', '/icons/achievements/flash_50.png', TRUE),
 ('flash_100', '100 Flashcards', 'Review 100 thẻ flashcard', '/icons/achievements/flash_100.png', TRUE),
-('flash_master', 'Flashcard Master', 'Review 300 thẻ flashcard với kết quả cao', '/icons/achievements/flash_master.png', TRUE);
 
 
 COMMENT ON DATABASE studyspace IS 'StudySpace - Personal Learning Platform Database';
