@@ -5,11 +5,3 @@
   { "id": "q4", "text": "Start. The rest becomes easier.", "author": "StudySpace" },
   { "id": "q5", "text": "Learn. Reflect. Iterate.", "author": "StudySpace" }
 ]
-```// filepath: d:\DAIHOC_D\namtu\Management_of_Software\StudySpace\StudySpace\frontend\src\features\quote\data\quotes.json
-[
-  { "id": "q1", "text": "Focus on one small win today.", "author": "StudySpace" },
-  { "id": "q2", "text": "Consistency beats intensity.", "author": "StudySpace" },
-  { "id": "q3", "text": "Short breaks protect deep focus.", "author": "StudySpace" },
-  { "id": "q4", "text": "Start. The rest becomes easier.", "author": "StudySpace" },
-  { "id": "q5", "text": "Learn. Reflect. Iterate.", "author": "StudySpace" }
-]
