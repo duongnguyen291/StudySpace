@@ -62,9 +62,19 @@ export const useAuth = () => {
         email,
         password,
       })
-      const { access_token } = response.data
+      const { access_token, user: userData } = response.data
       localStorage.setItem('access_token', access_token)
-      await fetchUser()
+      // Update user state immediately with response data
+      if (userData) {
+        setAuthState({
+          user: userData,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        })
+      } else {
+        await fetchUser()
+      }
       return { success: true }
     } catch (error: any) {
       return {
@@ -74,16 +84,26 @@ export const useAuth = () => {
     }
   }
 
-  const register = async (email: string, password: string, username: string) => {
+  const register = async (email: string, username: string, password: string) => {
     try {
       const response = await apiClient.post('/auth/register', {
         email,
-        password,
         username,
+        password,
       })
-      const { access_token } = response.data
+      const { access_token, user: userData } = response.data
       localStorage.setItem('access_token', access_token)
-      await fetchUser()
+      // Update user state immediately with response data
+      if (userData) {
+        setAuthState({
+          user: userData,
+          isAuthenticated: true,
+          isLoading: false,
+          error: null,
+        })
+      } else {
+        await fetchUser()
+      }
       return { success: true }
     } catch (error: any) {
       return {
