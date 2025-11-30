@@ -25,8 +25,35 @@ import {
   Play,
   Droplets,
   Bird,
-  Flame
+  Flame,
+  Plus,
+  BookOpen,
+  Code,
+  FileText,
+  PlayCircle,
+  Check
 } from 'lucide-react'
+
+interface Tag {
+  id: string
+  name: string
+  icon: string
+  color: string
+}
+
+const DEFAULT_TAGS: Tag[] = [
+  { id: '1', name: 'Học', icon: '📚', color: '#3B82F6' },
+  { id: '2', name: 'Làm việc', icon: '💼', color: '#8B5CF6' },
+  { id: '3', name: 'Đọc sách', icon: '📖', color: '#10B981' },
+  { id: '4', name: 'Coding', icon: '💻', color: '#F59E0B' },
+]
+
+const QUICK_SUGGESTIONS = [
+  { icon: '✍️', text: 'Viết báo cáo' },
+  { icon: '💻', text: 'Code' },
+  { icon: '🔎', text: 'Đọc tài liệu' },
+  { icon: '🎥', text: 'Học video' },
+]
 
 export default function PomodoroPage() {
   const { user, isAuthenticated, isLoading, logout } = useAuth()
@@ -36,20 +63,25 @@ export default function PomodoroPage() {
   const [showRegister, setShowRegister] = useState(false)
   const [showBackgroundSettings, setShowBackgroundSettings] = useState(false)
   const [currentTask, setCurrentTask] = useState('')
-  const [selectedTag, setSelectedTag] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
   const [customHours, setCustomHours] = useState(0)
   const [customMinutes, setCustomMinutes] = useState(25)
   
-  // State cho chế độ hiển thị: 'pomodoro' hoặc 'clock'
+  // State cho chế độ hiển thị
   const [displayMode, setDisplayMode] = useState<'pomodoro' | 'clock'>('pomodoro')
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  // State cho menu âm thanh môi trường
+  // State cho menu âm thanh
   const [showSoundMenu, setShowSoundMenu] = useState(false)
   const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // State cho Tags
+  const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS)
+  const [selectedTag, setSelectedTag] = useState<string>('')
+  const [showNewTagForm, setShowNewTagForm] = useState(false)
+  const [newTag, setNewTag] = useState({ name: '', icon: '', color: '#3B82F6' })
 
   const {
     minutes,
@@ -67,7 +99,7 @@ export default function PomodoroPage() {
     sessionType
   } = usePomodoroTimer()
 
-  // Cập nhật đồng hồ thời gian thực mỗi giây
+  // Cập nhật đồng hồ
   useEffect(() => {
     if (displayMode === 'clock') {
       const timer = setInterval(() => {
@@ -84,7 +116,6 @@ export default function PomodoroPage() {
         setShowSoundMenu(false)
       }
     }
-
     if (showSoundMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
@@ -98,7 +129,6 @@ export default function PomodoroPage() {
         rain: '/sounds/rain.mp3',
         birds: '/sounds/birds.mp3',
         fire: '/sounds/fire.mp3'
-        
       }
 
       if (audioRef.current) {
@@ -108,7 +138,9 @@ export default function PomodoroPage() {
       audioRef.current = new Audio(soundFiles[selectedSound])
       audioRef.current.loop = true
       audioRef.current.volume = 0.5
-      audioRef.current.play().catch(console.error)
+      audioRef.current.play().catch(err => {
+        console.error('❌ Lỗi phát âm thanh:', err)
+      })
     } else {
       if (audioRef.current) {
         audioRef.current.pause()
@@ -122,6 +154,30 @@ export default function PomodoroPage() {
       }
     }
   }, [selectedSound])
+
+  // Handle thêm tag mới
+  const handleAddTag = () => {
+    if (newTag.name && newTag.icon) {
+      const tag: Tag = {
+        id: Date.now().toString(),
+        name: newTag.name,
+        icon: newTag.icon,
+        color: newTag.color
+      }
+      setTags([...tags, tag])
+      setSelectedTag(tag.id)
+      setNewTag({ name: '', icon: '', color: '#3B82F6' })
+      setShowNewTagForm(false)
+    }
+  }
+
+  // Handle quick suggestion
+  const handleQuickSuggestion = (text: string) => {
+    setCurrentTask(currentTask ? `${currentTask} • ${text}` : text)
+  }
+
+  // Lấy tag hiện tại
+  const currentTagObj = tags.find(tag => tag.id === selectedTag)
 
   if (isLoading) {
     return (
@@ -198,25 +254,99 @@ export default function PomodoroPage() {
           </div>
         </header>
 
-        {/* MAIN - giữ nguyên phần này từ code cũ */}
+        {/* MAIN */}
         <main className="flex-1 flex items-center justify-center px-6 py-12">
           <div className="w-full max-w-2xl">
             {displayMode === 'pomodoro' ? (
               <>
-                {/* Tag selector */}
-                <div className="mb-5">
-                  <select
-                    value={selectedTag}
-                    onChange={(e) => setSelectedTag(e.target.value)}
-                    className="w-full px-4 py-2 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-white/50"
-                  >
-                    <option value="">Chọn tag</option>
-                    <option value="study">Học</option>
-                    <option value="work">Làm việc</option>
-                    <option value="reading">Đọc sách</option>
-                    <option value="coding">Coding</option>
-                  </select>
-                </div>
+                {/* Tag selector - chỉ hiển thị khi chưa start */}
+                {!isActive && (
+                  <div className="mb-5">
+                    <select
+                      value={selectedTag}
+                      onChange={(e) => {
+                        if (e.target.value === 'add_new') {
+                          setShowNewTagForm(true)
+                        } else {
+                          setSelectedTag(e.target.value)
+                        }
+                      }}
+                      className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
+                    >
+                      <option value="" className="bg-gray-900 text-white">Chọn tag</option>
+                      {tags.map(tag => (
+                        <option key={tag.id} value={tag.id} className="bg-gray-900 text-white">
+                          {tag.icon} {tag.name}
+                        </option>
+                      ))}
+                      <option value="add_new" className="bg-gray-900 text-white">➕ Thêm tag mới</option>
+                    </select>
+
+                    {/* Form thêm tag mới */}
+                    {showNewTagForm && (
+                      <div className="mt-3 p-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
+                        <h4 className="text-white font-semibold mb-3">Tạo tag mới</h4>
+                        <div className="space-y-3">
+                          <input
+                            type="text"
+                            placeholder="Tên tag"
+                            value={newTag.name}
+                            onChange={(e) => setNewTag({ ...newTag, name: e.target.value })}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Icon (emoji)"
+                            value={newTag.icon}
+                            onChange={(e) => setNewTag({ ...newTag, icon: e.target.value })}
+                            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30"
+                          />
+                          <div className="flex items-center gap-2">
+                            <label className="text-white/70 text-sm">Màu:</label>
+                            <input
+                              type="color"
+                              value={newTag.color}
+                              onChange={(e) => setNewTag({ ...newTag, color: e.target.value })}
+                              className="w-16 h-10 rounded cursor-pointer"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={handleAddTag}
+                              className="flex-1 bg-white text-gray-900 hover:bg-white/90"
+                            >
+                              <Check className="w-4 h-4 mr-1" />
+                              Lưu
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setShowNewTagForm(false)
+                                setNewTag({ name: '', icon: '', color: '#3B82F6' })
+                              }}
+                              className="flex-1 bg-white/10 border-white/20 text-white hover:bg-white/20"
+                            >
+                              Hủy
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Hiển thị tag đã chọn khi đang chạy - căn giữa */}
+                {isActive && currentTagObj && (
+                  <div className="mb-5 flex justify-center">
+                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full">
+                      <span className="text-lg">{currentTagObj.icon}</span>
+                      <span className="text-white font-medium">{currentTagObj.name}</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Timer display */}
                 <div className="mb-8 flex items-center justify-center">
@@ -225,16 +355,46 @@ export default function PomodoroPage() {
                   </div>
                 </div>
 
-                {/* Task + Controls */}
-                <div className="flex items-center gap-3 mb-4">
-                  <input
-                    type="text"
-                    value={currentTask}
-                    onChange={(e) => setCurrentTask(e.target.value)}
-                    placeholder="Bạn đang làm gì?"
-                    className="flex-1 px-4 py-3 bg-white/90 backdrop-blur-sm border border-white/30 rounded-lg text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    disabled={isActive}
-                  />
+                {/* Task input - chỉ hiển thị khi chưa start */}
+                {!isActive && (
+                  <>
+                    <div className="mb-3">
+                      <input
+                        type="text"
+                        value={currentTask}
+                        onChange={(e) => setCurrentTask(e.target.value)}
+                        placeholder="Bạn đang làm gì?"
+                        className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30"
+                      />
+                    </div>
+
+                    {/* Quick suggestions */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {QUICK_SUGGESTIONS.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleQuickSuggestion(suggestion.text)}
+                          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 rounded-full text-white/90 text-sm transition-colors flex items-center gap-1"
+                        >
+                          <span>{suggestion.icon}</span>
+                          <span>{suggestion.text}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {/* Hiển thị task khi đang chạy - căn giữa */}
+                {isActive && currentTask && (
+                  <div className="mb-5 flex justify-center">
+                    <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
+                      <p className="text-white/90 text-base">{currentTask}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Controls */}
+                <div className="flex justify-center gap-3 mb-4">
                   {!isActive ? (
                     <Button
                       variant="primary"
@@ -245,7 +405,7 @@ export default function PomodoroPage() {
                       Start
                     </Button>
                   ) : (
-                    <div className="flex gap-2">
+                    <>
                       <Button
                         variant="outline"
                         size="lg"
@@ -264,21 +424,17 @@ export default function PomodoroPage() {
                         <RotateCcw className="w-4 h-4" />
                         Reset
                       </Button>
-                    </div>
+                    </>
                   )}
                 </div>
 
-                {currentTask && (
-                  <div className="mb-4 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-lg">
-                    <p className="text-white/90 text-sm text-center">{currentTask}</p>
+                {/* Session label - căn giữa và thu gọn */}
+                <div className="flex justify-center mb-4">
+                  <div className="inline-block px-4 py-2 bg-black/30 backdrop-blur-sm rounded-lg">
+                    <p className="text-white/80 text-sm text-center">
+                      {getSessionTypeLabel()} {completedCycles > 0 && `• Hoàn thành ${completedCycles} phiên`}
+                    </p>
                   </div>
-                )}
-
-                {/* Session label */}
-                <div className="px-4 py-2 bg-black/30 backdrop-blur-sm rounded-lg mb-4">
-                  <p className="text-white/80 text-sm text-center">
-                    {getSessionTypeLabel()} {completedCycles > 0 && `• Hoàn thành ${completedCycles} phiên`}
-                  </p>
                 </div>
 
                 {/* Preset dots */}
@@ -421,7 +577,6 @@ export default function PomodoroPage() {
               <ImageIcon className="w-5 h-5" />
             </button>
             
-            {/* Nút âm thanh với dropdown */}
             <div className="relative" ref={soundMenuRef}>
               <button
                 onClick={() => setShowSoundMenu(!showSoundMenu)}
@@ -476,17 +631,6 @@ export default function PomodoroPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            {displayMode === 'pomodoro' && (
-              <>
-                <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Học nhóm">
-                  <Users className="w-5 h-5" />
-                </button>
-                <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Chat">
-                  <MessageCircle className="w-5 h-5" />
-                </button>
-              </>
-            )}
-
             <button
               onClick={() => setDisplayMode('pomodoro')}
               className={`p-2 ${displayMode === 'pomodoro' ? 'text-white bg-white/20' : 'text-white/70 hover:text-white hover:bg-white/10'} rounded-lg transition-colors`}
