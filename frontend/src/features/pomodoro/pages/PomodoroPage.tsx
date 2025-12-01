@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/hooks/useAuth'
-import { LoginModal } from '@/features/pomodoro/components/LoginModal'
-import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
 import { YouTubeBackground } from '@/features/pomodoro/components/YouTubeBackground'
 import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSettings'
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
@@ -56,11 +55,9 @@ const QUICK_SUGGESTIONS = [
 ]
 
 export default function PomodoroPage() {
+  const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
   const { youtubeUrl, updateBackground } = useBackground()
-
-  const [showLogin, setShowLogin] = useState(false)
-  const [showRegister, setShowRegister] = useState(false)
   const [showBackgroundSettings, setShowBackgroundSettings] = useState(false)
   const [currentTask, setCurrentTask] = useState('')
   const [showCustomInput, setShowCustomInput] = useState(false)
@@ -250,7 +247,7 @@ export default function PomodoroPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowLogin(true)}
+                  onClick={() => router.push('/login')}
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
                   Đăng nhập
@@ -258,7 +255,7 @@ export default function PomodoroPage() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={() => setShowRegister(true)}
+                  onClick={() => router.push('/register')}
                   className="bg-white text-gray-900 hover:bg-white/90"
                 >
                   Đăng ký
@@ -677,25 +674,6 @@ export default function PomodoroPage() {
         </footer>
       </div>
 
-      {/* MODALS */}
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onSwitchToRegister={() => {
-            setShowLogin(false)
-            setShowRegister(true)
-          }}
-        />
-      )}
-      {showRegister && (
-        <RegisterModal
-          onClose={() => setShowRegister(false)}
-          onSwitchToLogin={() => {
-            setShowRegister(false)
-            setShowLogin(true)
-          }}
-        />
-      )}
       {showBackgroundSettings && (
         <BackgroundSettings
           currentUrl={youtubeUrl}
