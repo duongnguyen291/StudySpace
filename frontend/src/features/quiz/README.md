@@ -1,15 +1,13 @@
-# Quiz feature (feature/quiz)
+# Quiz feature
 
-FE – Import/export UI
-FE – File parsing/validation logic
-BE – CSV parser & formatter
-BE – Import/export service
-Testing
-Documentation
+Location: frontend/src/features/quiz
 
-FE – Shuffle toggle UI
-FE – Shuffle logic (seeded)
-BE – Question ordering handler
-BE – Session shuffle service
-Testing
-Documentation
+Contains:
+- components: UI components (QuizImportExport)
+- services: API helpers (uploadCsv, formatCsvForDownload)
+- hooks: small hooks for interaction (useQuiz)
+- types: shared TypeScript types
+
+Notes:
+- App route page: /quiz (frontend/src/app/quiz/page.tsx)
+- Backend endpoints expected: POST /api/v1/quiz/import
