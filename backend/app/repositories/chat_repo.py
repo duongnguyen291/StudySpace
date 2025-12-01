@@ -49,6 +49,16 @@ class ChatRepository:
         self.db.commit()
 
     # Message operations
+    def get_messages(self, conversation_id: UUID, limit: int = 50) -> List[ChatMessage]:
+        """Get messages for a conversation, ordered by created_at."""
+        return (
+            self.db.query(ChatMessage)
+            .filter(ChatMessage.conversation_id == conversation_id)
+            .order_by(ChatMessage.created_at.asc())
+            .limit(limit)
+            .all()
+        )
+
     def add_message(
         self,
         *,
