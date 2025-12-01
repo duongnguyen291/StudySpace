@@ -48,6 +48,14 @@ class ChatRepository:
         self.db.delete(conversation)
         self.db.commit()
 
+    def update_conversation(self, conversation: ChatConversation, **fields) -> ChatConversation:
+        """Update conversation fields."""
+        for key, value in fields.items():
+            setattr(conversation, key, value)
+        self.db.commit()
+        self.db.refresh(conversation)
+        return conversation
+
     # Message operations
     def get_messages(self, conversation_id: UUID, limit: int = 50) -> List[ChatMessage]:
         """Get messages for a conversation, ordered by created_at."""
