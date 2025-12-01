@@ -92,8 +92,20 @@ class AIChatService:
             content=payload.message,
         )
 
-        # Generate AI reply (placeholder)
-        ai_reply, tokens_used = self._generate_ai_reply(payload.message)
+        # Check predefined responses first
+        predefined_reply = self._get_predefined_reply(payload.message)
+        if predefined_reply:
+            ai_reply = predefined_reply
+            tokens_used = len(ai_reply) // 4
+        else:
+            # Load conversation history để AI có context
+            conversation_history = self.repo.get_messages(conversation.id)
+
+            # Generate AI reply với conversation history
+            ai_reply, tokens_used = self._generate_ai_reply(
+                message=payload.message,
+                conversation_history=conversation_history
+            )
 
         # Save assistant message
         assistant_message = self.repo.add_message(
@@ -140,17 +152,100 @@ class AIChatService:
             )
         return conversation
 
-    def _generate_ai_reply(self, message: str) -> Tuple[str, int]:
+    def _generate_ai_reply(self, message: str, conversation_history: list = None) -> Tuple[str, int]:
         """
-        Placeholder AI response generator.
+        Generate AI reply using Google Gemini API.
+        Falls back to stub response if API key is not configured.
+        """
+        from app.core.config import settings
+        
+        # Nếu chưa có API key, trả về stub response
+        if not settings.GEMINI_API_KEY:
+            reply = (
+                "AI Assistant: I received your message "
+                f'"{message}". I will provide smarter answers once the AI integration is configured. '
+                "Please set GEMINI_API_KEY in your .env file."
+            )
+            tokens_used = max(len(reply) // 4, 1)
+            return reply, tokens_used
+        
+        try:
+            import google.generativeai as genai
+            
+            # Cấu hình Gemini API
+            genai.configure(api_key=settings.GEMINI_API_KEY)
+            
+            system_instruction = (
+                "Bạn là một AI Learning Assistant thông minh, giúp học sinh và sinh viên học tập hiệu quả. "
+                "Bạn có thể giải thích khái niệm, trả lời câu hỏi, gợi ý phương pháp học tập, "
+                "và hỗ trợ tạo quiz/flashcards. Hãy trả lời bằng tiếng Việt, ngắn gọn và dễ hiểu."
+            )
+            
+            # Chọn model Gemini 1.5 Pro (hoặc thay bằng gemini-2.0-flash-exp nếu bạn có quyền truy cập)
+            model = genai.GenerativeModel('gemini-2.0-flash-exp')
+            
+            # Chuẩn bị conversation history
+            chat_history = []
+            
+            # Thêm conversation history (nếu có)
+            if conversation_history:
+                for msg in conversation_history[-10:]:  # Chỉ lấy 10 messages gần nhất
+                    if msg.role == "user":
+                        chat_history.append({"role": "user", "parts": [msg.content]})
+                    elif msg.role == "assistant":
+                        chat_history.append({"role": "model", "parts": [msg.content]})
+            
+            # Tạo chat session với history
+            chat = model.start_chat(history=chat_history)
+            
+            # Gửi message (kèm system instruction)
+            prompt = f"{system_instruction}\n\nNgười dùng: {message}"
+            response = chat.send_message(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.7,
+                    max_output_tokens=1000,
+                )
+            )
+            
+            # Xử lý response để ghép tất cả phần text
+            reply_parts = []
+            if getattr(response, "text", None):
+                reply_parts.append(response.text)
+            elif getattr(response, "candidates", None):
+                for candidate in response.candidates:
+                    content = getattr(candidate, "content", None)
+                    if not content:
+                        continue
+                    for part in getattr(content, "parts", []):
+                        part_text = getattr(part, "text", None)
+                        if part_text:
+                            reply_parts.append(part_text)
+            reply = "\n".join(reply_parts).strip() or "Xin lỗi, tôi chưa có câu trả lời phù hợp."
+            
+            # Gemini không trả về token count trực tiếp, ước tính
+            tokens_used = max(len(reply) // 4, 1)
+            
+            return reply, tokens_used
+            
+        except Exception as e:
+            # Nếu có lỗi, trả về stub response với thông báo lỗi
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Gemini API error: {str(e)}")
+            
+            reply = (
+                f"Xin lỗi, tôi gặp lỗi khi xử lý câu hỏi của bạn. "
+                f"Lỗi: {str(e)}. Vui lòng thử lại sau."
+            )
+            tokens_used = max(len(reply) // 4, 1)
+            return reply, tokens_used
 
-        TODO: Replace with real LLM integration (OpenAI, Gemini, etc.).
-        """
-        reply = (
-            "AI Assistant: I received your message "
-            f'"{message}". I will provide smarter answers once the AI integration is configured.'
-        )
-        tokens_used = max(len(reply) // 4, 1)
-        return reply, tokens_used
+    def _get_predefined_reply(self, message: str) -> str | None:
+        """Return predefined reply for specific prompts."""
+        normalized = message.strip().lower()
+        if normalized in {"bạn là ai", "ban la ai", "who are you"}:
+            return "Tôi là StudySpace Artificial Intelligence Learning Assistant, giúp bạn học tập hiệu quả hơn."
+        return None
 
 
