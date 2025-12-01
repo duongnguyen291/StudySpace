@@ -9,3 +9,13 @@ from app.models.quiz_attempt import QuizAttempt
 
 __all__ = ["Base", "User", "UserSettings", "StudySession", "QuizAttempt"]
 
+from app.models.user_achievement import UserAchievement
+from app.models.achievement import Achievement
+
+__all__ = [
+    "Base",
+    "User",
+    "UserSettings",
+    "UserAchievement",
+    "Achievement",
+]
