@@ -7,14 +7,19 @@ from app.schemas.user import (
     UserResponse,
     UserLogin,
     TokenResponse,
-    UserUpdate
+    UserUpdate,
 )
 from app.schemas.progress import (
     DailyProgress,
     SessionTypeStats,
     ProgressSummary,
     WeeklyProgressResponse,
-    ProgressFilter
+    ProgressFilter,
+)
+from app.schemas.pomodoro import (
+    PomodoroSession,
+    PomodoroSessionCreate,
+    PomodoroStats,
 )
 
 __all__ = [
@@ -29,4 +34,7 @@ __all__ = [
     "ProgressSummary",
     "WeeklyProgressResponse",
     "ProgressFilter",
+    "PomodoroSession",
+    "PomodoroSessionCreate",
+    "PomodoroStats",
 ]

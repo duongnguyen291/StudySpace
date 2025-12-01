@@ -131,7 +131,7 @@ export default function ProgressPage() {
           </h2>
           <ProgressSummaryCard
             summary={progressData.summary}
-            isWeekly={weekOffset >= -1}
+            isWeekly
           />
         </div>
 

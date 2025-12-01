@@ -110,9 +110,9 @@ export const ProgressPieChart = ({
           label: function (context: any) {
             const label = context.label || ''
             const value = context.parsed || 0
-            const percentage = context.percent || 0
             const dataIndex = context.dataIndex
             const sessions = data[dataIndex]?.session_count || 0
+            const percentage = data[dataIndex]?.percentage ?? 0
             return [
               `${label}: ${value} phút (${percentage.toFixed(1)}%)`,
               `Số sessions: ${sessions}`,

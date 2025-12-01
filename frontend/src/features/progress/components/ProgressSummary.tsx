@@ -12,33 +12,46 @@ export const ProgressSummaryCard = ({
   summary,
   isWeekly = false,
 }: ProgressSummaryProps) => {
+  const timeLabel = isWeekly ? 'Tuần này' : 'Tổng thời gian'
+  const timeMinutes = isWeekly ? summary.week_minutes : summary.total_minutes
+
+  const quizLabel = isWeekly ? 'Quiz tuần này' : 'Tổng quiz'
+  const quizCount = isWeekly ? summary.week_quizzes : summary.total_quizzes
+
+  const sessionLabel = isWeekly ? 'Sessions tuần này' : 'Tổng sessions'
+  const sessionCount = isWeekly ? summary.week_sessions : summary.total_sessions
+
+  const averageLabel = isWeekly ? 'Trung bình/ngày (tuần này)' : 'Trung bình/ngày'
+  const averageMinutes =
+    isWeekly && summary.average_daily_minutes > 0
+      ? summary.average_daily_minutes
+      : summary.average_daily_minutes
+
   const stats = [
     {
-      label: isWeekly ? 'Tuần này' : 'Tổng thời gian',
-      value: formatMinutes(summary.week_minutes || summary.total_minutes),
+      label: timeLabel,
+      value: formatMinutes(timeMinutes),
       icon: Clock,
       color: 'text-blue-500',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
     },
     {
-      label: isWeekly ? 'Quiz tuần này' : 'Tổng quiz',
-      value: (summary.week_quizzes || summary.total_quizzes).toString(),
+      label: quizLabel,
+      value: quizCount.toString(),
       icon: CheckCircle2,
       color: 'text-green-500',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
     },
     {
-      label: isWeekly ? 'Sessions tuần này' : 'Tổng sessions',
-      value: (summary.week_sessions || summary.total_sessions).toString(),
+      label: sessionLabel,
+      value: sessionCount.toString(),
       icon: BookOpen,
       color: 'text-purple-500',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20',
     },
     {
-      label: 'Trung bình/ngày',
-      value: formatMinutes(
-        summary.average_daily_minutes || summary.total_minutes / 30
-      ),
+      label: averageLabel,
+      value: formatMinutes(averageMinutes),
       icon: TrendingUp,
       color: 'text-orange-500',
       bgColor: 'bg-orange-50 dark:bg-orange-900/20',

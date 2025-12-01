@@ -5,7 +5,15 @@ Registers all feature routers
 from fastapi import APIRouter
 
 # Import feature routers
-from app.api.v1 import auth, pomodoro, notes, progress, achievements, test_achievements
+from app.api.v1 import (
+    auth,
+    pomodoro,
+    notes,
+    progress,
+    achievements,
+    test_achievements,
+    test_progress,
+)
 
 api_router = APIRouter()
 
@@ -16,6 +24,7 @@ api_router.include_router(notes.router, prefix="/notes", tags=["Notes"])
 api_router.include_router(progress.router, prefix="/progress", tags=["Progress Tracker"])
 api_router.include_router(achievements.router)
 api_router.include_router(test_achievements.router)
+api_router.include_router(test_progress.router)
 
 
 # TODO: Uncomment when these modules are created
