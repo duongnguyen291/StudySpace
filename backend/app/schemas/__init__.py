@@ -9,7 +9,7 @@ from app.schemas.user import (
     TokenResponse,
     UserUpdate
 )
-from app.schemas.analytics import (
+from app.schemas.progress import (
     DailyProgress,
     SessionTypeStats,
     ProgressSummary,

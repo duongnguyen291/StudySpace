@@ -1,5 +1,6 @@
 """
-Analytics API endpoints
+Progress Tracker API endpoints
+Tính năng theo dõi tiến độ học tập theo tuần/ngày
 """
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
@@ -7,8 +8,8 @@ from typing import Optional
 from datetime import date
 
 from app.api.deps import get_database, get_current_user
-from app.services.analytics_service import AnalyticsService
-from app.schemas.analytics import (
+from app.services.progress_service import ProgressService
+from app.schemas.progress import (
     WeeklyProgressResponse,
     ProgressSummary,
     ProgressFilter
@@ -31,7 +32,7 @@ async def get_dashboard_stats(
     - Average daily metrics
     """
     from uuid import UUID
-    service = AnalyticsService(db)
+    service = ProgressService(db)
     
     summary = service.get_progress_summary(
         user_id=UUID(current_user_id),
@@ -41,15 +42,19 @@ async def get_dashboard_stats(
     return summary
 
 
-@router.get("/progress", response_model=WeeklyProgressResponse)
+@router.get("/", response_model=WeeklyProgressResponse)
 async def get_progress(
     filter_week: bool = Query(
         default=True,
-        description="Filter by current week. If False, returns all-time data."
+        description="Filter by week. If False, returns all-time data."
+    ),
+    week_offset: int = Query(
+        default=0,
+        description="Week offset: 0=current week, -1=previous week, 1=next week"
     ),
     start_date: Optional[date] = Query(
         default=None,
-        description="Start date for custom date range (YYYY-MM-DD)"
+        description="Start date for custom date range (YYYY-MM-DD). Overrides week_offset if provided."
     ),
     end_date: Optional[date] = Query(
         default=None,
@@ -65,24 +70,28 @@ async def get_progress(
     """
     Get learning progress with charts data
     
+    Progress Tracker endpoint - Hiển thị tiến độ học tập theo tuần/ngày
+    
     Returns:
     - Progress summary (total minutes/quizzes/sessions)
-    - Daily progress data for bar charts
-    - Session type statistics for pie charts
+    - Daily progress data for bar charts (biểu đồ cột)
+    - Session type statistics for pie charts (biểu đồ tròn)
     - Week range information
     
     Query Parameters:
-    - filter_week: Filter by current week (default: True)
-    - start_date: Custom start date (optional)
+    - filter_week: Filter by week (default: True)
+    - week_offset: 0=current week, -1=previous week (default: 0)
+    - start_date: Custom start date (optional, overrides week_offset)
     - end_date: Custom end date (optional)
     - session_type: Filter by session type (optional)
     """
     from uuid import UUID
-    service = AnalyticsService(db)
+    service = ProgressService(db)
     
     # Create filter object
     progress_filter = ProgressFilter(
         filter_week=filter_week,
+        week_offset=week_offset,
         start_date=start_date,
         end_date=end_date,
         session_type=session_type
@@ -97,7 +106,7 @@ async def get_progress(
     return progress_data
 
 
-@router.get("/progress/summary", response_model=ProgressSummary)
+@router.get("/summary", response_model=ProgressSummary)
 async def get_progress_summary(
     filter_week: bool = Query(
         default=False,
@@ -112,7 +121,7 @@ async def get_progress_summary(
     Useful for quick overview without loading full chart data.
     """
     from uuid import UUID
-    service = AnalyticsService(db)
+    service = ProgressService(db)
     
     summary = service.get_progress_summary(
         user_id=UUID(current_user_id),

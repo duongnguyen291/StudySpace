@@ -1,6 +1,7 @@
 """
-Analytics Schemas
-Pydantic models for analytics and progress tracking
+Progress Schemas
+Pydantic models for progress tracking
+Tính năng theo dõi tiến độ học tập
 """
 from pydantic import BaseModel, Field
 from datetime import date, datetime
@@ -51,6 +52,7 @@ class ProgressFilter(BaseModel):
     """Filter parameters for progress queries"""
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    filter_week: bool = Field(default=False, description="Filter by current week")
+    filter_week: bool = Field(default=False, description="Filter by week")
+    week_offset: int = Field(default=0, description="Week offset: 0=current week, -1=previous week, 1=next week")
     session_type: Optional[str] = None  # 'pomodoro', 'free_study', 'quiz'
 

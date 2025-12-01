@@ -1,6 +1,7 @@
 """
-Analytics Service
-Business logic for analytics and progress tracking
+Progress Service
+Business logic for progress tracking and statistics
+Tính năng theo dõi tiến độ học tập: số phút học, số quiz, thống kê theo tuần/ngày
 """
 from sqlalchemy.orm import Session
 from typing import Optional, Tuple
@@ -9,7 +10,7 @@ from datetime import date, timedelta
 
 from app.repositories.study_session_repo import StudySessionRepository
 from app.repositories.quiz_attempt_repo import QuizAttemptRepository
-from app.schemas.analytics import (
+from app.schemas.progress import (
     ProgressSummary,
     WeeklyProgressResponse,
     DailyProgress,
@@ -18,20 +19,28 @@ from app.schemas.analytics import (
 )
 
 
-class AnalyticsService:
-    """Service for analytics and progress tracking business logic"""
+class ProgressService:
+    """Service for progress tracking business logic"""
     
     def __init__(self, db: Session):
         self.study_session_repo = StudySessionRepository(db)
         self.quiz_attempt_repo = QuizAttemptRepository(db)
     
-    def _get_week_range(self, filter_week: bool = False) -> Tuple[date, date]:
-        """Get start and end date for current week or all time"""
+    def _get_week_range(self, filter_week: bool = False, week_offset: int = 0) -> Tuple[date, date]:
+        """
+        Get start and end date for a specific week or all time
+        
+        Args:
+            filter_week: If True, filter by week. If False, returns all-time range
+            week_offset: 0 for current week, -1 for previous week, 1 for next week, etc.
+        """
         if filter_week:
             today = date.today()
             # Get Monday of current week
             days_since_monday = today.weekday()
             week_start = today - timedelta(days=days_since_monday)
+            # Apply offset to get previous/next week
+            week_start = week_start + timedelta(weeks=week_offset)
             week_end = week_start + timedelta(days=6)
             return week_start, week_end
         else:
@@ -186,13 +195,19 @@ class AnalyticsService:
         """Get progress with custom filters"""
         # Determine date range
         if progress_filter.filter_week:
-            week_start, week_end = self._get_week_range(filter_week=True)
+            week_start, week_end = self._get_week_range(
+                filter_week=True, 
+                week_offset=progress_filter.week_offset
+            )
         elif progress_filter.start_date and progress_filter.end_date:
             week_start = progress_filter.start_date
             week_end = progress_filter.end_date
         else:
             # Default to current week
-            week_start, week_end = self._get_week_range(filter_week=True)
+            week_start, week_end = self._get_week_range(
+                filter_week=True,
+                week_offset=progress_filter.week_offset
+            )
         
         # Get summary (respecting filter_week flag)
         summary = self.get_progress_summary(

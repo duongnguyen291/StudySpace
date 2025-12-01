@@ -2,9 +2,9 @@
 Services
 """
 from app.services.user_service import UserService
-from app.services.analytics_service import AnalyticsService
+from app.services.progress_service import ProgressService
 
 __all__ = [
     "UserService",
-    "AnalyticsService",
+    "ProgressService",
 ]
