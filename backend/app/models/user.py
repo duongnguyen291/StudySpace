@@ -29,4 +29,10 @@ class User(Base):
     
     # Relationships
     settings = relationship("UserSettings", back_populates="user", uselist=False)
+    achievements = relationship(
+        "UserAchievement",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
 
