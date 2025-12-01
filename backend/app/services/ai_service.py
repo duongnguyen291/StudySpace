@@ -92,6 +92,12 @@ class AIChatService:
             content=payload.message,
         )
 
+        # If conversation has default title, update it using first user message
+        if not conversation.title or conversation.title.lower().startswith("new conversation"):
+            cleaned_title = payload.message.strip().splitlines()[0][:60]
+            if cleaned_title:
+                self.repo.update_conversation(conversation, title=cleaned_title)
+
         # Check predefined responses first
         predefined_reply = self._get_predefined_reply(payload.message)
         if predefined_reply:
@@ -179,6 +185,7 @@ class AIChatService:
                 "Bạn là một AI Learning Assistant thông minh, giúp học sinh và sinh viên học tập hiệu quả. "
                 "Bạn có thể giải thích khái niệm, trả lời câu hỏi, gợi ý phương pháp học tập, "
                 "và hỗ trợ tạo quiz/flashcards. Hãy trả lời bằng tiếng Việt, ngắn gọn và dễ hiểu."
+                "không dùng các ký hiệu như **,-,#,..."
             )
             
             # Chọn model Gemini 1.5 Pro (hoặc thay bằng gemini-2.0-flash-exp nếu bạn có quyền truy cập)
