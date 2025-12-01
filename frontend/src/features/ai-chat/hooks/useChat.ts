@@ -70,6 +70,7 @@ export function useChat(options: UseChatOptions = {}) {
       setError(null)
 
       try {
+        // Đảm bảo có conversation trước khi gửi message
         const conversationId = currentConversation?.id ?? (await ensureConversation())
 
         // Optimistic UI: thêm message user tạm thời
@@ -88,9 +89,10 @@ export function useChat(options: UseChatOptions = {}) {
             : { ...(prev as any), messages: [optimisticUser] }
         )
 
+        // Dùng conversationId đã đảm bảo, không dùng currentConversation?.id vì state có thể chưa update
         const res = await aiChatService.sendMessage({
           message: content,
-          conversation_id: currentConversation?.id
+          conversation_id: conversationId
         })
 
         setCurrentConversation((prev) => {
@@ -170,6 +172,24 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [initialConversationId, loadConversation])
 
+  const createNewConversation = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      const created = await aiChatService.createConversation()
+      setConversations((prev) => [created, ...prev])
+      const detail: ChatConversationDetail = { ...created, messages: [] }
+      setCurrentConversation(detail)
+      return created.id
+    } catch (err) {
+      console.error(err)
+      setError('Tạo cuộc hội thoại mới thất bại')
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   return {
     conversations,
     currentConversation,
@@ -179,6 +199,7 @@ export function useChat(options: UseChatOptions = {}) {
     sendMessage,
     selectConversation,
     deleteConversation,
+    createNewConversation,
     reloadConversations: loadConversations
   }
 }
