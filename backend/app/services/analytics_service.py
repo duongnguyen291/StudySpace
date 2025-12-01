@@ -7,47 +7,64 @@ from app.models.daily_goals import DailyGoal
 def get_study_minutes_last_7_days(db: Session, user_id: str):
     today = date.today()
     week_ago = today - timedelta(days=6)
+    day_col = cast(StudySession.start_time, Date).label("day")
 
     rows = (
         db.query(
-            cast(StudySession.start_time, Date).label("day"),
-            func.sum(StudySession.duration_minutes).label("minutes")
+            day_col,
+            func.coalesce(func.sum(StudySession.duration_minutes), 0).label("minutes")
         )
         .filter(
             StudySession.user_id == user_id,
-            StudySession.start_time >= week_ago
+            StudySession.start_time >= week_ago,
+            StudySession.start_time < today + timedelta(days=1),
         )
-        .group_by("day")
-        .order_by("day")
+        .group_by(day_col)
+        .order_by(day_col)
         .all()
     )
 
+    row_map = {r.day: int(r.minutes) for r in rows}
+    dates = [week_ago + timedelta(days=i) for i in range(7)]
+
     return {
-        "labels": [r.day.strftime("%d/%m") for r in rows],
-        "values": [r.minutes for r in rows],
+        "labels": [d.strftime("%d/%m") for d in dates],
+        "values": [row_map.get(d, 0) for d in dates],
     }
 
 def get_goal_completion_last_7_days(db: Session, user_id: str):
+    today = date.today()
+    week_ago = today - timedelta(days=6)
+
     rows = (
         db.query(
             DailyGoal.goal_date,
             DailyGoal.target_minutes,
             DailyGoal.actual_minutes
         )
-        .filter(DailyGoal.user_id == user_id)
-        .order_by(DailyGoal.goal_date.desc())
-        .limit(7)
+        .filter(
+            DailyGoal.user_id == user_id,
+            DailyGoal.goal_date >= week_ago,
+            DailyGoal.goal_date <= today
+        )
+        .order_by(DailyGoal.goal_date.asc())
         .all()
     )
 
-    rows = rows[::-1]
-
-    labels = [r.goal_date.strftime("%d/%m") for r in rows]
-    values = [
-        round((r.actual_minutes / r.target_minutes) * 100, 2)
-        if r.target_minutes > 0 else 0
+    row_map = {
+        r.goal_date: (r.target_minutes or 0, r.actual_minutes or 0)
         for r in rows
-    ]
+    }
+
+    dates = [week_ago + timedelta(days=i) for i in range(7)]
+    labels = [d.strftime("%d/%m") for d in dates]
+    values = []
+    for d in dates:
+        target, actual = row_map.get(d, (0, 0))
+        if target > 0:
+            values.append(round((actual / target) * 100, 2))
+        else:
+            values.append(0)
 
     return {"labels": labels, "values": values}
 
@@ -56,10 +73,11 @@ def get_dashboard_summary(db: Session, user_id: str):
     week_ago = today - timedelta(days=6)
 
     total_week_minutes = (
-        db.query(func.sum(StudySession.duration_minutes))
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
         .filter(
             StudySession.user_id == user_id,
-            StudySession.start_time >= week_ago
+            StudySession.start_time >= week_ago,
+            StudySession.start_time < today + timedelta(days=1),
         )
         .scalar()
     ) or 0
@@ -73,33 +91,39 @@ def get_dashboard_summary(db: Session, user_id: str):
         .first()
     )
 
-    if today_goal and today_goal.target_minutes > 0:
-        today_percentage = (today_goal.actual_minutes / today_goal.target_minutes) * 100
-    else:
-        today_percentage = 0
+    target = today_goal.target_minutes or 0
+    actual = today_goal.actual_minutes or 0
+    today_percentage = (actual / target) * 100 if target > 0 else 0
 
     return {
-        "weekly_minutes": total_week_minutes,
-        "today_target_minutes": today_goal.target_minutes if today_goal else 0,
-        "today_actual_minutes": today_goal.actual_minutes if today_goal else 0,
+        "weekly_minutes": int(total_week_minutes),
+        "today_target_minutes": target,
+        "today_actual_minutes": actual,
         "today_completion_percent": round(today_percentage, 2),
     }
 
 def get_long_term_progress(db: Session, user_id: str):
+    today = date.today()
+    start = today - timedelta(days=29)
+
     rows = (
         db.query(
             DailyGoal.goal_date,
             DailyGoal.actual_minutes
         )
-        .filter(DailyGoal.user_id == user_id)
-        .order_by(DailyGoal.goal_date.desc())
-        .limit(30)
+        .filter(
+            DailyGoal.user_id == user_id,
+            DailyGoal.goal_date >= start,
+            DailyGoal.goal_date <= today
+        )
+        .order_by(DailyGoal.goal_date.asc())
         .all()
     )
 
-    rows = rows[::-1]
+    row_map = {r.goal_date: (r.actual_minutes or 0) for r in rows}
+    dates = [start + timedelta(days=i) for i in range(30)]
 
-    labels = [r.goal_date.strftime("%d/%m") for r in rows]
-    values = [r.actual_minutes for r in rows]
+    labels = [d.strftime("%d/%m") for d in dates]
+    values = [row_map.get(d, 0) for d in dates]
 
     return {"labels": labels, "values": values}
