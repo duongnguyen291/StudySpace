@@ -368,20 +368,16 @@ INSERT INTO achievements (code, name, description, url, active) VALUES
 ('quiz_10', '10 Quizzes', 'Hoàn thành 10 bài quiz', '/icons/achievements/quiz_10.png', TRUE),
 ('quiz_50', '50 Quizzes', 'Hoàn thành 50 bài quiz', '/icons/achievements/quiz_50.png', TRUE),
 ('quiz_100', '100 Quizzes', 'Hoàn thành 100 bài quiz', '/icons/achievements/quiz_100.png', TRUE),
-
 ('perfect_score', 'Hoàn Hảo', 'Đạt điểm tuyệt đối trong một quiz', '/icons/achievements/perfect_score.png', TRUE),
-
 ('study_60', '60 Phút Tập Trung', 'Tích lũy 60 phút học', '/icons/achievements/study_60.png', TRUE),
 ('study_300', '5 Giờ Tập Trung', 'Tích lũy 300 phút học', '/icons/achievements/study_300.png', TRUE),
 ('study_1000', '1000 Phút Tập Trung', 'Tích lũy 1000 phút học', '/icons/achievements/study_1000.png', TRUE),
 ('study_2000', '2000 Phút Tập Trung', 'Tích lũy 2000 phút học', '/icons/achievements/study_2000.png', TRUE),
-
 ('pomodoro_10', '10 Pomodoro', 'Hoàn thành 10 phiên Pomodoro', '/icons/achievements/pomodoro_10.png', TRUE),
 ('pomodoro_50', '50 Pomodoro', 'Hoàn thành 50 phiên Pomodoro', '/icons/achievements/pomodoro_50.png', TRUE),
-
 ('flash_10', '10 Flashcards', 'Review 10 thẻ flashcard', '/icons/achievements/flash_10.png', TRUE),
 ('flash_50', '50 Flashcards', 'Review 50 thẻ flashcard', '/icons/achievements/flash_50.png', TRUE),
-('flash_100', '100 Flashcards', 'Review 100 thẻ flashcard', '/icons/achievements/flash_100.png', TRUE),
+('flash_100', '100 Flashcards', 'Review 100 thẻ flashcard', '/icons/achievements/flash_100.png', TRUE);
 
 
 COMMENT ON DATABASE studyspace IS 'StudySpace - Personal Learning Platform Database';

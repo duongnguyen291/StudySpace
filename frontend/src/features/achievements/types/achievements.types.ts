@@ -7,3 +7,8 @@ export interface Achievement {
   active: boolean;
   earned: boolean;
 }
+
+export interface AchievementUnauthorized {
+  unauthorized: true;
+}
+export type AchievementResponse = Achievement[] | AchievementUnauthorized;
