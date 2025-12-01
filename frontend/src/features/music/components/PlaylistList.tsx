@@ -102,18 +102,13 @@ export const PlaylistList = ({
               {playlist.description && (
                 <p className="text-sm text-white/70 line-clamp-2">{playlist.description}</p>
               )}
-              <div className="flex items-center gap-2 mt-2">
-                {playlist.playlist_type && (
+              {playlist.playlist_type && (
+                <div className="mt-2">
                   <span className="text-xs px-2 py-1 bg-white/10 rounded text-white/80">
                     {playlist.playlist_type}
                   </span>
-                )}
-                {playlist.duration_minutes && (
-                  <span className="text-xs text-white/60">
-                    {playlist.duration_minutes} min
-                  </span>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </button>
