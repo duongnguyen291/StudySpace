@@ -5,7 +5,7 @@ Registers all feature routers
 from fastapi import APIRouter
 
 # Import feature routers
-from app.api.v1 import auth, pomodoro, achievements, test_achievements, tasks, categories
+from app.api.v1 import auth, pomodoro, achievements, test_achievements, tasks, categories, daily_goals
 
 api_router = APIRouter()
 
@@ -17,6 +17,7 @@ api_router.include_router(achievements.router)
 api_router.include_router(test_achievements.router)
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
+api_router.include_router(daily_goals.router, prefix="/dailygoals")
 
 # TODO: Uncomment when these modules are created
 # from app.api.v1 import quiz, flashcards, chat, profile, analytics
