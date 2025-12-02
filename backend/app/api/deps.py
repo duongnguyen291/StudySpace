@@ -11,3 +11,7 @@ from app.core.security import get_current_user_id
 get_database = get_db
 get_current_user = get_current_user_id
 
+def get_current_user_id_only(
+    user_id: str = Depends(get_current_user_id)
+):
+    return user_id
