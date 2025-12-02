@@ -21,6 +21,8 @@ from app.schemas.pomodoro import (
     PomodoroSessionCreate,
     PomodoroStats,
 )
+from app.schemas.user import UserBase, UserCreate, UserResponse, TokenResponse
+from app.schemas.music import MusicPlaylistBase, MusicPlaylistCreate, MusicPlaylistResponse
 
 __all__ = [
     "UserBase",
@@ -37,4 +39,7 @@ __all__ = [
     "PomodoroSession",
     "PomodoroSessionCreate",
     "PomodoroStats",
+    "MusicPlaylistBase",
+    "MusicPlaylistCreate", 
+    "MusicPlaylistResponse"
 ]
