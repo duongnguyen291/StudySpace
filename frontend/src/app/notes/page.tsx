@@ -7,6 +7,7 @@ import type { Note } from '@/features/notes/types/note.types'
 import { Button } from '@/shared/components/Button'
 import { useAuth } from '@/shared/hooks/useAuth'
 import NoteEditor from '@/features/notes/components/NoteEditor'
+import { ExportButton } from '@/features/notes/components/ExportButton'
 import { sanitizeHtml, stripHtml } from '@/features/notes/utils/sanitizeHtml'
 
 export default function NotesPage() {
@@ -121,23 +122,42 @@ export default function NotesPage() {
           {notes.map((note) => (
             <div
               key={note.id}
-              className="bg-gray-900 border border-gray-800 rounded-lg p-3 flex flex-col gap-1 cursor-pointer"
+              className="bg-gray-900 border border-gray-800 rounded-lg p-3 flex flex-col gap-1 cursor-pointer relative group"
               onClick={() => { setEditingNote(note); setEditorOpen(true) }}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
                   {note.is_quick_note && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30">
                       ⚡ Quick
                     </span>
                   )}
-                  <h2 className="text-sm font-semibold truncate max-w-xs">
+                  <h2 className="text-sm font-semibold truncate">
                     {note.title || '(Không tiêu đề)'}
                   </h2>
                 </div>
-                <span className="text-[10px] text-gray-500">
-                  {new Date(note.created_at).toLocaleString('vi-VN')}
-                </span>
+                <div className="flex items-center gap-2">
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation()
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <ExportButton
+                      note={{
+                        title: note.title || 'Untitled Note',
+                        content: note.content || '',
+                        tags: note.tags,
+                        createdAt: note.created_at,
+                      }}
+                      variant="ghost"
+                      size="sm"
+                    />
+                  </div>
+                  <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                    {new Date(note.created_at).toLocaleString('vi-VN')}
+                  </span>
+                </div>
               </div>
               {note.tags && note.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1">

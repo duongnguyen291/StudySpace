@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/Button'
 import { RichTextEditor } from './RichTextEditor'
+import { ExportButton } from './ExportButton'
 import type { Note, NoteCreate, NoteUpdate } from '../types/note.types'
 
 interface Props {
@@ -100,6 +101,18 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
                 <Button variant="danger" size="sm" onClick={handleDelete} isLoading={deleting}>
                   Delete
                 </Button>
+              )}
+              {initial && (
+                <ExportButton
+                  note={{
+                    title: title || initial.title || 'Untitled Note',
+                    content: content || initial.content || '',
+                    tags: parseTags(tagsInput).length > 0 ? parseTags(tagsInput) : initial.tags,
+                    createdAt: initial.created_at,
+                  }}
+                  variant="outline"
+                  size="sm"
+                />
               )}
             </div>
 
