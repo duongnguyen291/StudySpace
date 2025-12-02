@@ -8,6 +8,7 @@ from typing import Optional
 from datetime import date
 
 from app.api.deps import get_database, get_current_user
+from app.models.user import User
 from app.services.progress_service import ProgressService
 from app.schemas.progress import (
     WeeklyProgressResponse,
@@ -20,7 +21,7 @@ router = APIRouter()
 
 @router.get("/dashboard", response_model=ProgressSummary)
 async def get_dashboard_stats(
-    current_user_id: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_database)
 ):
     """
@@ -31,11 +32,10 @@ async def get_dashboard_stats(
     - Week statistics
     - Average daily metrics
     """
-    from uuid import UUID
     service = ProgressService(db)
     
     summary = service.get_progress_summary(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         filter_week=False  # Get all-time summary for dashboard
     )
     
@@ -64,7 +64,7 @@ async def get_progress(
         default=None,
         description="Filter by session type: 'pomodoro', 'free_study', or 'quiz'"
     ),
-    current_user_id: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_database)
 ):
     """
@@ -85,7 +85,6 @@ async def get_progress(
     - end_date: Custom end date (optional)
     - session_type: Filter by session type (optional)
     """
-    from uuid import UUID
     service = ProgressService(db)
     
     # Create filter object
@@ -99,7 +98,7 @@ async def get_progress(
     
     # Get progress data
     progress_data = service.get_progress_with_filter(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         progress_filter=progress_filter
     )
     
@@ -112,7 +111,7 @@ async def get_progress_summary(
         default=False,
         description="Filter by current week. If False, returns all-time summary."
     ),
-    current_user_id: str = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_database)
 ):
     """
@@ -120,11 +119,10 @@ async def get_progress_summary(
     
     Useful for quick overview without loading full chart data.
     """
-    from uuid import UUID
     service = ProgressService(db)
     
     summary = service.get_progress_summary(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         filter_week=filter_week
     )
     
