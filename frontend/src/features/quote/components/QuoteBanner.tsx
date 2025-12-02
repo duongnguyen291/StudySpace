@@ -33,70 +33,91 @@ export function QuoteBanner() {
   }
 
   return (
-    <div className="relative flex w-full items-center justify-center bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 px-4 py-2 text-sm text-white">
-      {quote ? (
-        <div className="max-w-3xl text-center">
-          <span className="italic">&ldquo;{quote.text}&rdquo;</span>
-          {quote.author && <span className="ml-2 opacity-80">— {quote.author}</span>}
-        </div>
-      ) : (
-        <span>Loading quote...</span>
-      )}
-
-      {user && (
-        <button
-          type="button"
-          onClick={() => setOpenForm((o) => !o)}
-          className="absolute right-3 rounded bg-white/20 px-2 py-1 text-xs hover:bg-white/30"
-        >
-          {openForm ? 'Đóng' : 'Thêm'}
-        </button>
-      )}
-
-      {openForm && (
-        <form
-          onSubmit={handleAdd}
-          className="absolute top-full z-20 mt-2 w-full max-w-md rounded-md border border-white/30 bg-black/70 p-4 text-white backdrop-blur"
-        >
-          <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-white/80">
-            Thêm Quote
-          </h4>
-          <div className="mb-2">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Nội dung truyền cảm hứng..."
-              className="w-full rounded bg-white/10 p-2 text-xs outline-none"
-              rows={3}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <input
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Tác giả (tuỳ chọn)"
-              className="w-full rounded bg-white/10 p-2 text-xs outline-none"
-            />
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <button
-              type="button"
-              onClick={() => setOpenForm(false)}
-              className="rounded bg-white/10 px-3 py-1 text-xs hover:bg-white/20"
+    <div className="relative w-full max-w-2xl">
+      <div
+        className="
+          relative rounded-2xl
+          bg-white/10 backdrop-blur-md border border-white/20 shadow-lg
+          px-6 py-3 text-center
+        "
+      >
+        {quote ? (
+          <div>
+            <p
+              className="
+                mb-1 text-sm md:text-base leading-snug tracking-wide
+                text-white drop-shadow
+              "
+              style={{ fontFamily: "'Noto Serif', serif" }}
             >
-              Huỷ
-            </button>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded bg-blue-500 px-3 py-1 text-xs font-medium hover:bg-blue-600 disabled:opacity-50"
-            >
-              {submitting ? 'Đang lưu...' : 'Lưu'}
-            </button>
+              "{quote.text}"
+            </p>
+            {quote.author && (
+              <p className="text-xs text-white/70">— {quote.author}</p>
+            )}
           </div>
-        </form>
-      )}
+        ) : (
+          <span className="text-xs text-white/70">Đang tải...</span>
+        )}
+
+        {user && (
+          <button
+            type="button"
+            onClick={() => setOpenForm(o => !o)}
+            className="absolute right-2 top-2 rounded-md bg-white/15 px-2 py-1 text-xs text-white hover:bg-white/25 transition"
+          >
+            {openForm ? '✕' : '+'}
+          </button>
+        )}
+
+        {openForm && (
+          <form
+            onSubmit={handleAdd}
+            className="
+              absolute left-1/2 top-full z-50 mt-2 w-[340px] -translate-x-1/2
+              rounded-xl border border-white/25 bg-black/80 p-4 backdrop-blur
+            "
+          >
+            <h4 className="mb-2 text-xs font-semibold tracking-wider text-white/80 uppercase">
+              Thêm Quote
+            </h4>
+            <div className="mb-2">
+              <textarea
+                value={text}
+                onChange={e => setText(e.target.value)}
+                placeholder="Nội dung truyền cảm hứng..."
+                className="w-full rounded-md bg-white/10 p-2 text-xs text-white outline-none focus:ring focus:ring-blue-400/40"
+                rows={3}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <input
+                value={author}
+                onChange={e => setAuthor(e.target.value)}
+                placeholder="Tác giả (tuỳ chọn)"
+                className="w-full rounded-md bg-white/10 p-2 text-xs text-white outline-none focus:ring focus:ring-blue-400/40"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setOpenForm(false)}
+                className="rounded bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
+              >
+                Huỷ
+              </button>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="rounded bg-blue-500 px-4 py-1 text-xs font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+              >
+                {submitting ? 'Đang lưu...' : 'Lưu'}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
