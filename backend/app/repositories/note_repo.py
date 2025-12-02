@@ -23,6 +23,7 @@ class NoteRepository:
         is_pinned: bool,
         is_quick_note: bool,
         source_context: str | None,
+        theme: str = "standard",
         tags: list[str] | None,
     ) -> Note:
         note = Note(
@@ -33,6 +34,7 @@ class NoteRepository:
             is_pinned=is_pinned,
             is_quick_note=is_quick_note,
             source_context=source_context,
+            theme=theme,
         )
         self.db.add(note)
         self.db.flush()  # ensure note.id is available

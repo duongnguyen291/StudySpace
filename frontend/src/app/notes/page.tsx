@@ -10,6 +10,7 @@ import { useAuth } from '@/shared/hooks/useAuth'
 import NoteEditor from '@/features/notes/components/NoteEditor'
 import { ExportButton } from '@/features/notes/components/ExportButton'
 import { stripHtml } from '@/features/notes/utils/sanitizeHtml'
+import { NOTE_THEMES, DEFAULT_THEME, type NoteTheme } from '@/features/notes/constants/note-themes'
 
 export default function NotesPage() {
   const router = useRouter()
@@ -89,10 +90,10 @@ export default function NotesPage() {
             <span className="text-sm text-white/70">/ Ghi chú</span>
           </div>
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push('/')}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push('/')}
               className="bg-white/10 border-white/20 text-white hover:bg-white/20 flex items-center gap-2"
             >
               <Home className="w-4 h-4" />
@@ -116,7 +117,7 @@ export default function NotesPage() {
                   size="sm"
                   onClick={logout}
                   className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
-                >
+          >
                   <LogOut className="w-4 h-4" />
                 </Button>
               </div>
@@ -146,36 +147,36 @@ export default function NotesPage() {
               >
                 <Plus className="w-4 h-4" />
                 <span>Tạo ghi chú mới</span>
-              </Button>
-            </div>
+          </Button>
+        </div>
 
-            {/* Tabs: All / Quick Notes */}
+        {/* Tabs: All / Quick Notes */}
             <div className="flex gap-2 mb-6">
-              <button
-                type="button"
-                onClick={() => router.push('/notes')}
+          <button
+            type="button"
+            onClick={() => router.push('/notes')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  activeTab === 'all'
+              activeTab === 'all'
                     ? 'bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg'
                     : 'bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20'
-                }`}
-              >
+            }`}
+          >
                 <BookOpen className="w-4 h-4" />
                 <span>Tất cả</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => router.push('/notes?filter=quick')}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/notes?filter=quick')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-                  activeTab === 'quick'
+              activeTab === 'quick'
                     ? 'bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg'
                     : 'bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20'
-                }`}
-              >
+            }`}
+          >
                 <Zap className="w-4 h-4" />
-                <span>Quick Notes</span>
-              </button>
-            </div>
+            <span>Quick Notes</span>
+          </button>
+        </div>
 
             {/* Error Message */}
             {error && (
@@ -212,37 +213,83 @@ export default function NotesPage() {
                 >
                   <Plus className="w-4 h-4" />
                   Tạo ghi chú mới
-                </Button>
-              </div>
+            </Button>
+          </div>
             )}
 
             {/* Notes Grid */}
             {!loading && notes.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {notes.map((note) => (
-                  <div
-                    key={note.id}
-                    className="group bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-5 flex flex-col gap-3 cursor-pointer hover:bg-white/10 hover:border-white/20 hover:shadow-lg transition-all relative"
+          {notes.map((note) => {
+            // Quick notes và standard theme dùng màu đen như ban đầu
+            const isQuickNote = note.is_quick_note
+            const noteTheme = note.theme || DEFAULT_THEME
+            const isStandardTheme = noteTheme === 'standard'
+            
+            // Nếu là quick note hoặc standard theme, dùng màu đen
+            const useDarkTheme = isQuickNote || isStandardTheme
+            
+            const themeConfig = useDarkTheme 
+              ? {
+                  bgColorHex: '#111827',
+                  borderColorHex: '#374151',
+                  textColorHex: '#ffffff',
+                }
+              : (NOTE_THEMES[noteTheme as NoteTheme] || NOTE_THEMES[DEFAULT_THEME])
+            
+            return (
+            <div
+              key={note.id}
+                    className="group backdrop-blur-xl rounded-xl border-4 p-5 flex flex-col gap-3 cursor-pointer hover:shadow-2xl transition-all relative overflow-hidden"
+                    style={{
+                      background: useDarkTheme 
+                        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(30, 41, 59, 0.4) 100%)'
+                        : `linear-gradient(135deg, ${themeConfig.bgColorHex}95 0%, ${themeConfig.bgColorHex}85 100%)`,
+                      borderColor: useDarkTheme
+                        ? 'rgba(255, 255, 255, 0.25)'
+                        : `${themeConfig.borderColorHex}dd`,
+                      boxShadow: useDarkTheme 
+                        ? '0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 4px 16px 0 rgba(0, 0, 0, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.15)'
+                        : `0 8px 32px 0 ${themeConfig.borderColorHex}50, 0 4px 16px 0 ${themeConfig.borderColorHex}30, inset 0 1px 0 0 rgba(255, 255, 255, 0.2)`,
+                      backdropFilter: useDarkTheme
+                        ? 'blur(20px) saturate(180%)'
+                        : 'blur(12px) saturate(150%)',
+                      WebkitBackdropFilter: useDarkTheme
+                        ? 'blur(20px) saturate(180%)'
+                        : 'blur(12px) saturate(150%)',
+                    }}
                     onClick={() => {
                       setEditingNote(note)
                       setEditorOpen(true)
                     }}
-                  >
+            >
+              {/* Subtle gradient overlay - chỉ cho theme không phải standard/quick */}
+              {!useDarkTheme && (
+                <div 
+                  className="absolute inset-0 pointer-events-none opacity-20"
+                  style={{
+                    background: `linear-gradient(135deg, ${themeConfig.borderColorHex}33 0%, transparent 100%)`,
+                  }}
+                />
+              )}
                     {/* Header */}
-                    <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3 relative z-10">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
-                          {note.is_quick_note && (
+                  {note.is_quick_note && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30 text-xs font-medium">
                               <Zap className="w-3 h-3" />
                               Quick
-                            </span>
-                          )}
+                    </span>
+                  )}
                         </div>
-                        <h2 className="text-base font-semibold text-white mb-1 line-clamp-2">
-                          {note.title || '(Không tiêu đề)'}
-                        </h2>
-                      </div>
+                        <h2 
+                          className="text-lg font-bold mb-1 line-clamp-2"
+                          style={{ color: themeConfig.textColorHex }}
+                        >
+                    {note.title || '(Không tiêu đề)'}
+                  </h2>
+                </div>
                       <div
                         onClick={(e) => {
                           e.stopPropagation()
@@ -260,91 +307,104 @@ export default function NotesPage() {
                           size="sm"
                         />
                       </div>
-                    </div>
+              </div>
 
                     {/* Tags */}
-                    {note.tags && note.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {note.tags.map((tag) => (
-                          <span
-                            key={tag}
+              {note.tags && note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 relative z-10">
+                  {note.tags.map((tag) => (
+                    <span
+                      key={tag}
                             className="px-2 py-1 rounded-md bg-blue-500/10 text-blue-300 border border-blue-500/30 text-xs font-medium"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
 
                     {/* Content Preview */}
-                    {note.content && (
-                      <p className="text-sm text-white/70 line-clamp-1">
+              {note.content && (
+                      <p 
+                        className="text-sm line-clamp-1 relative z-10"
+                        style={{ color: `${themeConfig.textColorHex}b3` }}
+                      >
                         {stripHtml(note.content).trim() || 'Không có nội dung'}
-                      </p>
-                    )}
+                </p>
+              )}
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
-                      <span className="text-xs text-white/50">
+                    <div 
+                      className="flex items-center justify-between pt-2 border-t relative z-10"
+                      style={{ borderColor: `${themeConfig.borderColorHex}4d` }}
+                    >
+                      <span 
+                        className="text-xs"
+                        style={{ color: `${themeConfig.textColorHex}80` }}
+                      >
                         {new Date(note.created_at).toLocaleDateString('vi-VN', {
                           day: 'numeric',
                           month: 'short',
                           year: 'numeric',
                         })}
                       </span>
-                      <span className="text-xs text-white/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      <span 
+                        className="text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                        style={{ color: `${themeConfig.textColorHex}80` }}
+                      >
                         Click để chỉnh sửa
                         <ArrowRight className="w-3 h-3" />
                       </span>
                     </div>
-                  </div>
-                ))}
-              </div>
+            </div>
+            )
+          })}
+        </div>
             )}
 
-            {/* Note Editor modal */}
-            <NoteEditor
-              open={editorOpen}
-              initial={editingNote}
-              onClose={() => setEditorOpen(false)}
-              onSubmit={async (payload) => {
-                try {
-                  if (editingNote) {
-                    await noteService.update(editingNote.id, payload as any)
-                  } else {
-                    await noteService.create({ ...(payload as any), is_quick_note: false })
-                  }
-                  // reload
-                  setLoading(true)
+        {/* Note Editor modal */}
+        <NoteEditor
+          open={editorOpen}
+          initial={editingNote}
+          onClose={() => setEditorOpen(false)}
+          onSubmit={async (payload) => {
+            try {
+              if (editingNote) {
+                await noteService.update(editingNote.id, payload as any)
+              } else {
+                await noteService.create({ ...(payload as any), is_quick_note: false })
+              }
+              // reload
+              setLoading(true)
                   const isQuick = filter === 'quick' ? true : undefined
                   const data = await noteService.getAll(
                     isQuick !== undefined ? { is_quick_note: isQuick } : undefined,
                   )
-                  setNotes(data)
+              setNotes(data)
                   setError(null)
-                } catch (err) {
-                  console.error(err)
-                  setError('Lưu ghi chú thất bại')
-                } finally {
-                  setLoading(false)
-                }
-              }}
-              onDelete={async () => {
-                if (!editingNote) return
-                try {
-                  await noteService.delete(editingNote.id)
+            } catch (err) {
+              console.error(err)
+              setError('Lưu ghi chú thất bại')
+            } finally {
+              setLoading(false)
+            }
+          }}
+          onDelete={async () => {
+            if (!editingNote) return
+            try {
+              await noteService.delete(editingNote.id)
                   const isQuick = filter === 'quick' ? true : undefined
                   const data = await noteService.getAll(
                     isQuick !== undefined ? { is_quick_note: isQuick } : undefined,
                   )
-                  setNotes(data)
+              setNotes(data)
                   setError(null)
-                } catch (err) {
-                  console.error(err)
-                  setError('Xóa ghi chú thất bại')
-                }
-              }}
-            />
+            } catch (err) {
+              console.error(err)
+              setError('Xóa ghi chú thất bại')
+            }
+          }}
+        />
           </div>
         </main>
       </div>

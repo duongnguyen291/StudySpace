@@ -13,6 +13,7 @@ interface RichTextEditorProps {
   onChange: (value: string) => void
   placeholder?: string
   readOnly?: boolean
+  themeColor?: string // Màu chữ mặc định theo theme
 }
 
 export const RichTextEditor = ({
@@ -20,6 +21,7 @@ export const RichTextEditor = ({
   onChange,
   placeholder = 'Nhập nội dung...',
   readOnly = false,
+  themeColor,
 }: RichTextEditorProps) => {
   const modules = useMemo(
     () => ({
@@ -67,7 +69,12 @@ export const RichTextEditor = ({
   ]
 
   return (
-    <div className="rich-text-editor-wrapper">
+    <div 
+      className="rich-text-editor-wrapper"
+      style={themeColor ? {
+        '--theme-text-color': themeColor,
+      } as React.CSSProperties : undefined}
+    >
       <ReactQuill
         theme="snow"
         value={value}

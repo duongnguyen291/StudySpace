@@ -4,41 +4,46 @@
 }
 
 .rich-text-editor-wrapper .ql-container {
-  @apply bg-gray-800 text-white border-gray-700 rounded-b-md;
+  @apply bg-transparent rounded-b-md;
   font-family: inherit;
   font-size: 14px;
   min-height: 200px;
+  border: none;
+  color: var(--theme-text-color, #ffffff);
 }
 
 .rich-text-editor-wrapper .ql-editor {
-  @apply text-white min-h-[200px];
+  @apply min-h-[200px];
   padding: 12px 15px;
+  color: var(--theme-text-color, #ffffff);
 }
 
 .rich-text-editor-wrapper .ql-editor.ql-blank::before {
-  @apply text-gray-500 italic;
+  color: var(--theme-text-color, rgba(255, 255, 255, 0.5));
   font-style: italic;
+  opacity: 0.6;
 }
 
 .rich-text-editor-wrapper .ql-toolbar {
-  @apply bg-gray-800 border-gray-700 rounded-t-md border-b;
+  @apply bg-white/10 backdrop-blur-sm rounded-t-md border-b;
   padding: 8px;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .rich-text-editor-wrapper .ql-toolbar .ql-stroke {
-  @apply stroke-gray-300;
+  stroke: var(--theme-text-color, rgba(255, 255, 255, 0.7));
 }
 
 .rich-text-editor-wrapper .ql-toolbar .ql-fill {
-  @apply fill-gray-300;
+  fill: var(--theme-text-color, rgba(255, 255, 255, 0.7));
 }
 
 .rich-text-editor-wrapper .ql-toolbar .ql-picker-label {
-  @apply text-gray-300;
+  color: var(--theme-text-color, rgba(255, 255, 255, 0.7));
 }
 
 .rich-text-editor-wrapper .ql-toolbar .ql-picker-options {
-  @apply bg-gray-800 border-gray-700;
+  @apply bg-gray-900/95 backdrop-blur-md border-gray-700;
 }
 
 .rich-text-editor-wrapper .ql-toolbar button:hover,

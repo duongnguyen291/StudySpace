@@ -26,6 +26,7 @@ class NoteService:
             is_pinned=note.is_pinned,
             is_quick_note=note.is_quick_note,
             source_context=note.source_context,
+            theme=note.theme,
             created_at=note.created_at,
             updated_at=note.updated_at,
             tags=[t.tag_name for t in note.tags],
@@ -47,6 +48,7 @@ class NoteService:
             is_pinned=data.is_pinned,
             is_quick_note=data.is_quick_note,
             source_context=data.source_context,
+            theme=data.theme or "standard",
             tags=data.tags or [],
         )
         return self._to_response(note)

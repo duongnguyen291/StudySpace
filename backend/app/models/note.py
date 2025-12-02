@@ -25,6 +25,7 @@ class Note(Base):
     # Quick note flag + optional context (e.g. from Pomodoro, Quiz, etc.)
     is_quick_note = Column(Boolean, default=False, nullable=False)
     source_context = Column(Text, nullable=True)
+    theme = Column(String(50), default="standard", nullable=False)
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)

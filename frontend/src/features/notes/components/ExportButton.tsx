@@ -10,9 +10,19 @@ interface ExportButtonProps {
   note: ExportNoteData
   variant?: 'default' | 'outline' | 'ghost'
   size?: 'sm' | 'md'
+  themeColor?: string
+  themeBorderColor?: string
+  themeBgColor?: string
 }
 
-export const ExportButton = ({ note, variant = 'outline', size = 'sm' }: ExportButtonProps) => {
+export const ExportButton = ({ 
+  note, 
+  variant = 'outline', 
+  size = 'sm',
+  themeColor,
+  themeBorderColor,
+  themeBgColor,
+}: ExportButtonProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [isExporting, setIsExporting] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -83,11 +93,47 @@ export const ExportButton = ({ note, variant = 'outline', size = 'sm' }: ExportB
     }
   }
 
-  const buttonClasses = {
-    default: 'bg-white text-gray-900 hover:bg-white/90',
-    outline: 'bg-white/10 border-white/20 text-white hover:bg-white/20',
-    ghost: 'text-white/70 hover:text-white hover:bg-white/10',
+  const getButtonStyles = () => {
+    if (themeColor && themeBorderColor && themeBgColor) {
+      return {
+        default: {
+          backgroundColor: themeBorderColor,
+          color: themeColor,
+          borderColor: themeBorderColor,
+        },
+        outline: {
+          backgroundColor: `${themeBgColor}60`,
+          borderColor: themeBorderColor,
+          color: themeColor,
+          boxShadow: `0 2px 8px 0 ${themeBorderColor}40, inset 0 1px 0 0 rgba(255, 255, 255, 0.1)`,
+        },
+        ghost: {
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          borderColor: 'rgba(255, 255, 255, 0.2)',
+          color: '#ffffff',
+          boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.2)',
+        },
+      }
+    }
+    // Default styles khi không có theme props (cho note list)
+    return {
+      default: {},
+      outline: {
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+        color: '#ffffff',
+        boxShadow: '0 2px 8px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.1)',
+      },
+      ghost: {
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: 'rgba(255, 255, 255, 0.2)',
+        color: '#ffffff',
+        boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.2)',
+      },
+    }
   }
+
+  const buttonStyles = getButtonStyles()
 
   const sizeClasses = {
     sm: 'px-3 py-1.5 text-sm',
@@ -149,13 +195,44 @@ export const ExportButton = ({ note, variant = 'outline', size = 'sm' }: ExportB
           onClick={() => setIsOpen(!isOpen)}
           disabled={isExporting !== null}
           className={`
-            ${buttonClasses[variant]}
             ${sizeClasses[size]}
             rounded-md
             flex items-center gap-2
-            transition-colors
+            transition-all
             disabled:opacity-50 disabled:cursor-not-allowed
+            border
           `}
+          style={buttonStyles[variant]}
+          onMouseEnter={(e) => {
+            if (variant === 'outline' && themeBgColor) {
+              e.currentTarget.style.backgroundColor = `${themeBgColor}80`
+              e.currentTarget.style.boxShadow = `0 4px 12px 0 ${themeBorderColor}60, inset 0 1px 0 0 rgba(255, 255, 255, 0.15)`
+            } else if (variant === 'ghost') {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'
+              e.currentTarget.style.boxShadow = '0 4px 8px 0 rgba(0, 0, 0, 0.3)'
+            } else if (variant === 'default' && themeBorderColor) {
+              e.currentTarget.style.opacity = '0.9'
+            } else if (variant === 'outline' && !themeBgColor) {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)'
+            } else if (variant === 'ghost' && !themeBgColor) {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (variant === 'outline' && themeBgColor) {
+              e.currentTarget.style.backgroundColor = `${themeBgColor}60`
+              e.currentTarget.style.boxShadow = `0 2px 8px 0 ${themeBorderColor}40, inset 0 1px 0 0 rgba(255, 255, 255, 0.1)`
+            } else if (variant === 'ghost') {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'
+              e.currentTarget.style.boxShadow = '0 2px 4px 0 rgba(0, 0, 0, 0.2)'
+            } else if (variant === 'default') {
+              e.currentTarget.style.opacity = '1'
+            } else if (variant === 'outline' && !themeBgColor) {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'
+            } else if (variant === 'ghost' && !themeBgColor) {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.1)'
+            }
+          }}
         >
           {isExporting ? (
             <>

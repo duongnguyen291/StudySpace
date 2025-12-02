@@ -15,6 +15,7 @@ class NoteBase(BaseModel):
     is_pinned: bool = False
     is_quick_note: bool = False
     source_context: Optional[str] = None
+    theme: str = Field(default="standard", max_length=50)
     tags: List[str] = []
 
 
@@ -33,6 +34,7 @@ class NoteUpdate(BaseModel):
     is_pinned: Optional[bool] = None
     is_quick_note: Optional[bool] = None
     source_context: Optional[str] = None
+    theme: Optional[str] = Field(None, max_length=50)
     tags: Optional[List[str]] = None
 
 
