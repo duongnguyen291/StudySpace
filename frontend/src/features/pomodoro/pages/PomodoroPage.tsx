@@ -6,6 +6,7 @@ import { useAuth } from '@/shared/hooks/useAuth'
 import { YouTubeBackground } from '@/features/pomodoro/components/YouTubeBackground'
 import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSettings'
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
+import { MusicWidget } from '@/features/pomodoro/components/MusicWidget'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
 import {
@@ -70,6 +71,7 @@ export default function PomodoroPage() {
 
   // State cho menu âm thanh
   const [showSoundMenu, setShowSoundMenu] = useState(false)
+  const [showMusicWidget, setShowMusicWidget] = useState(false)
   const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -267,9 +269,12 @@ export default function PomodoroPage() {
 
         {/* MAIN */}
         <main className="flex-1 flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-2xl">
-            {displayMode === 'pomodoro' ? (
-              <>
+          <div className="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,2.2fr)] gap-8">
+            {/* Khu vực Pomodoro chính */}
+            <div className={`w-full ${showMusicWidget ? '' : 'lg:col-span-2 flex justify-center'}`}>
+              <div className={showMusicWidget ? '' : 'w-full max-w-2xl'}>
+                {displayMode === 'pomodoro' ? (
+                  <>
                 {/* Tag selector - chỉ hiển thị khi chưa start */}
                 {!isActive && (
                   <div className="mb-5">
@@ -575,17 +580,36 @@ export default function PomodoroPage() {
             ) : (
               <div className="flex flex-col items-center justify-center">
                 <div className="mb-8">
-                  <div className="text-9xl font-extrabold text-white drop-shadow-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                    {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  <div
+                    className="text-9xl font-extrabold text-white drop-shadow-lg"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}
+                  >
+                    {currentTime.toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit'
+                    })}
                   </div>
                 </div>
                 <div className="px-6 py-3 bg-black/30 backdrop-blur-sm rounded-lg">
                   <p className="text-white/80 text-lg">
-                    {currentTime.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                    {currentTime.toLocaleDateString('vi-VN', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
                   </p>
                 </div>
               </div>
             )}
+              </div>
+            </div>
+
+            {/* Music Playlist widget - luôn được mount, chỉ ẩn/hiện bằng CSS để không ngắt nhạc */}
+            <div className={`lg:self-stretch ${showMusicWidget ? 'block' : 'hidden'}`}>
+              <MusicWidget />
+            </div>
           </div>
         </main>
 
@@ -645,7 +669,15 @@ export default function PomodoroPage() {
               )}
             </div>
 
-            <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Nhạc">
+            <button
+              onClick={() => setShowMusicWidget((v) => !v)}
+              className={`p-2 rounded-lg transition-colors ${
+                showMusicWidget
+                  ? 'text-white bg-white/20'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+              title="Nhạc nền học tập"
+            >
               <Music className="w-5 h-5" />
             </button>
             <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Menu">

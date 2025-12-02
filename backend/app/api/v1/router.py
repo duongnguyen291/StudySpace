@@ -5,13 +5,15 @@ Registers all feature routers
 from fastapi import APIRouter
 
 # Import feature routers
-from app.api.v1 import auth, pomodoro, achievements, test_achievements, tasks, categories
+from app.api.v1 import auth, pomodoro, achievements, test_achievements, tasks, categories, music, notes
 
 api_router = APIRouter()
 
 # Register routers
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(pomodoro.router, prefix="/pomodoro", tags=["Pomodoro"])
+api_router.include_router(notes.router, prefix="/notes", tags=["Notes"])
+api_router.include_router(music.router, prefix="/music", tags=["Music"])
 # api_router.include_router(notes.router, prefix="/notes", tags=["Notes"])
 api_router.include_router(achievements.router)
 api_router.include_router(test_achievements.router)
