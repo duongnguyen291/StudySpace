@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/Button'
 import { RichTextEditor } from './RichTextEditor'
 import { ExportButton } from './ExportButton'
+import { X, Save, Trash2 } from 'lucide-react'
 import type { Note, NoteCreate, NoteUpdate } from '../types/note.types'
 
 interface Props {
@@ -65,41 +66,79 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-4xl bg-gray-900 text-white rounded-lg p-5 border border-gray-800 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">{initial ? 'Edit Note' : 'New Note'}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="w-full max-w-4xl bg-gray-900/95 backdrop-blur-md text-white rounded-xl p-6 border border-white/20 max-h-[90vh] overflow-y-auto shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-2xl font-bold text-white">{initial ? 'Chỉnh sửa ghi chú' : 'Tạo ghi chú mới'}</h3>
+            <p className="text-sm text-white/70 mt-1">
+              {initial ? 'Cập nhật nội dung ghi chú của bạn' : 'Viết và định dạng ghi chú với đầy đủ tính năng'}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            aria-label="Đóng"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        <div className="space-y-3">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Tiêu đề (tùy chọn)"
-            className="w-full bg-gray-800 rounded-md px-3 py-2 text-sm outline-none border border-gray-700"
-          />
-
-          <div className="min-h-[300px]">
-            <RichTextEditor
-              value={content}
-              onChange={setContent}
-              placeholder="Nhập nội dung ghi chú với đầy đủ định dạng..."
+        <div className="space-y-4">
+          {/* Title Input */}
+          <div>
+            <label className="block text-sm font-medium text-white/90 mb-2">
+              Tiêu đề (tùy chọn)
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Nhập tiêu đề cho ghi chú..."
+              className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
             />
           </div>
 
-          <input
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            placeholder="Tags (phân tách bằng dấu phẩy)"
-            className="w-full bg-gray-800 rounded-md px-3 py-2 text-sm outline-none border border-gray-700"
-          />
+          {/* Content Editor */}
+          <div>
+            <label className="block text-sm font-medium text-white/90 mb-2">
+              Nội dung
+            </label>
+            <div className="min-h-[350px] bg-white/5 backdrop-blur-sm rounded-lg border border-white/10 overflow-hidden">
+              <RichTextEditor
+                value={content}
+                onChange={setContent}
+                placeholder="Nhập nội dung ghi chú với đầy đủ định dạng..."
+              />
+            </div>
+          </div>
 
-          <div className="flex justify-between items-center">
+          {/* Tags Input */}
+          <div>
+            <label className="block text-sm font-medium text-white/90 mb-2">
+              Tags (phân tách bằng dấu phẩy)
+            </label>
+            <input
+              value={tagsInput}
+              onChange={(e) => setTagsInput(e.target.value)}
+              placeholder="ví dụ: toán, lập trình, học tập"
+              className="w-full px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all"
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-between items-center pt-4 border-t border-white/10">
             <div className="flex gap-2">
               {onDelete && (
-                <Button variant="danger" size="sm" onClick={handleDelete} isLoading={deleting}>
-                  Delete
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={handleDelete}
+                  isLoading={deleting}
+                  className="flex items-center gap-2 bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Xóa</span>
                 </Button>
               )}
               {initial && (
@@ -116,12 +155,24 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
               )}
             </div>
 
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={onClose}>
-                Cancel
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onClose}
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+              >
+                Hủy
               </Button>
-              <Button size="sm" onClick={handleSave} isLoading={saving}>
-                Save
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSave}
+                isLoading={saving}
+                className="bg-white text-gray-900 hover:bg-white/90 font-semibold flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>{saving ? 'Đang lưu...' : 'Lưu ghi chú'}</span>
               </Button>
             </div>
           </div>
