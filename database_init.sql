@@ -350,14 +350,20 @@ INSERT INTO quotes (quote_text, author, category, language) VALUES
 -- ============================================
 -- SEED DATA: Music Playlists
 -- ============================================
-INSERT INTO music_playlists (name, description, playlist_type, duration_minutes, is_active) VALUES
-('Lofi Study Beats', 'Nhạc lofi thư giãn giúp tập trung học tập', 'lofi', 60, TRUE),
-('Piano Classical', 'Nhạc piano cổ điển êm dịu', 'piano', 45, TRUE),
-('Rain Sounds', 'Tiếng mưa giúp thư giãn và tập trung', 'rain', 30, TRUE),
-('Nature Ambience', 'Âm thanh thiên nhiên', 'nature', 40, TRUE),
-('White Noise', 'Tiếng ồn trắng giúp tập trung', 'ambient', 60, TRUE);
-
--- ====================
+INSERT INTO music_playlists (name, description, playlist_type, audio_url, duration_minutes, is_active) VALUES
+('Lofi Hip Hop Radio', 'Nhạc lofi chill để học bài và thư giãn', 'lofi', 'https://www.youtube.com/watch?v=jfKfPfyJRdk', 0, TRUE),
+('Lofi Chill Vibes', 'Lofi beats nhẹ nhàng cho buổi học đêm', 'lofi', 'https://www.youtube.com/watch?v=lTRiuFIWV54', 0, TRUE),
+('Coffee Shop Lofi', 'Không khí quán cà phê với nhạc lofi', 'lofi', 'https://www.youtube.com/watch?v=h2zkV-l_TbY', 0, TRUE),
+('Piano Relaxing Music', 'Nhạc piano thư giãn giúp tập trung', 'piano', 'https://www.youtube.com/watch?v=77ZozI0rw7w', 0, TRUE),
+('Classical Piano', 'Nhạc piano cổ điển - Chopin, Debussy', 'piano', 'https://www.youtube.com/watch?v=9E6b3swbnWg', 0, TRUE),
+('Study Piano', 'Piano nhẹ nhàng cho giờ học', 'piano', 'https://www.youtube.com/watch?v=lCOF9LN_Zxs', 0, TRUE),
+('Rain on Window', 'Tiếng mưa rơi trên cửa kính', 'rain', 'https://www.youtube.com/watch?v=mPZkdNFkNps', 0, TRUE),
+('Thunderstorm Sounds', 'Tiếng mưa bão và sấm sét', 'rain', 'https://www.youtube.com/watch?v=nMfPqeZjc2c', 0, TRUE),
+('Rain in Forest', 'Tiếng mưa trong rừng', 'rain', 'https://www.youtube.com/watch?v=q76bMs-NwRk', 0, TRUE),
+('Forest Birds', 'Tiếng chim hót trong rừng', 'nature', 'https://www.youtube.com/watch?v=xNN7iTA57jM', 0, TRUE),
+('River Stream', 'Tiếng suối chảy róc rách', 'nature', 'https://www.youtube.com/watch?v=IvjMgVS6kng', 0, TRUE),
+('Deep Focus Music', 'Nhạc ambient giúp tập trung sâu', 'ambient', 'https://www.youtube.com/watch?v=ceqgwo7U28Y', 0, TRUE),
+('Space Ambient', 'Âm thanh vũ trụ thư giãn', 'ambient', 'https://www.youtube.com/watch?v=tNkZsRW7h2c', 0, TRUE);
 
 -- ============================================
 -- SEED DATA: Achievements
