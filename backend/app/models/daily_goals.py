@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Date, Integer, Boolean, TIMESTAMP, func
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
-from app.database import Base
+from app.core.database import Base
 
 class DailyGoal(Base):
     __tablename__ = "daily_goals"
