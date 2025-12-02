@@ -8,11 +8,15 @@ from uuid import UUID
 
 from app.core.database import get_db
 from app.core.security import get_current_user_id
+
 from app.models.user import User
 
-# Alias for convenience
 get_database = get_db
 
+def get_current_user_id_only(
+    user_id: str = Depends(get_current_user_id)
+):
+    return user_id
 
 async def get_current_user(
     current_user_id: str = Depends(get_current_user_id),
@@ -32,4 +36,3 @@ async def get_current_user(
         )
     
     return user
-
