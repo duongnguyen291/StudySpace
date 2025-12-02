@@ -11,7 +11,7 @@ router = APIRouter(prefix="/achievements", tags=["Achievements"])
 
 @router.get("/me", response_model=List[AchievementResponse])
 def get_my_achievements(
-    current_user_id: str = Depends(get_current_user),
+    get_current_user_id_only: str = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     service = AchievementsService(db)
