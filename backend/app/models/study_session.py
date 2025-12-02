@@ -22,7 +22,9 @@ class StudySession(Base):
     start_time = Column(DateTime, nullable=False, index=True)
     end_time = Column(DateTime, nullable=True)
     duration_minutes = Column(Integer, nullable=True)
-    goal_id = Column(UUID(as_uuid=True), ForeignKey("daily_goals.id", ondelete="SET NULL"), nullable=True)
+    # TODO: Re-enable ForeignKey when daily_goals table is implemented
+    # goal_id = Column(UUID(as_uuid=True), ForeignKey("daily_goals.id", ondelete="SET NULL"), nullable=True)
+    goal_id = Column(UUID(as_uuid=True), nullable=True)
     notes = Column(Text, nullable=True)
     completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
