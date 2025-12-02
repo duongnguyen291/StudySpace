@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/shared/components/Button'
+import { RichTextEditor } from './RichTextEditor'
 import type { Note, NoteCreate, NoteUpdate } from '../types/note.types'
 
 interface Props {
@@ -63,8 +64,8 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-2xl bg-gray-900 text-white rounded-lg p-5 border border-gray-800">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-4xl bg-gray-900 text-white rounded-lg p-5 border border-gray-800 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold">{initial ? 'Edit Note' : 'New Note'}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
@@ -78,12 +79,13 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
             className="w-full bg-gray-800 rounded-md px-3 py-2 text-sm outline-none border border-gray-700"
           />
 
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder="Nội dung ghi chú"
-            className="w-full bg-gray-800 rounded-md px-3 py-2 text-sm outline-none border border-gray-700 min-h-[140px]"
-          />
+          <div className="min-h-[300px]">
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              placeholder="Nhập nội dung ghi chú với đầy đủ định dạng..."
+            />
+          </div>
 
           <input
             value={tagsInput}

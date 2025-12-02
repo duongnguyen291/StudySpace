@@ -7,6 +7,7 @@ import type { Note } from '@/features/notes/types/note.types'
 import { Button } from '@/shared/components/Button'
 import { useAuth } from '@/shared/hooks/useAuth'
 import NoteEditor from '@/features/notes/components/NoteEditor'
+import { sanitizeHtml, stripHtml } from '@/features/notes/utils/sanitizeHtml'
 
 export default function NotesPage() {
   const router = useRouter()
@@ -151,9 +152,12 @@ export default function NotesPage() {
                 </div>
               )}
               {note.content && (
-                <p className="text-xs text-gray-300 mt-1 line-clamp-3 whitespace-pre-wrap">
-                  {note.content}
-                </p>
+                <div
+                  className="text-xs text-gray-300 mt-1 line-clamp-3 prose prose-invert prose-sm max-w-none [&>*]:line-clamp-2 [&>*]:overflow-hidden"
+                  dangerouslySetInnerHTML={{
+                    __html: sanitizeHtml(note.content),
+                  }}
+                />
               )}
             </div>
           ))}
