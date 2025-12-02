@@ -11,6 +11,6 @@ def get_current_user_id_only(
 ):
 # Alias for convenience
 get_database = get_db
-get_current_user_id_only = get_current_user_id
+get_current_user = get_current_user_id_only
 
     return user_id
