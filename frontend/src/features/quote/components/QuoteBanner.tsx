@@ -44,7 +44,9 @@ export function QuoteBanner() {
 
   return (
     <div 
-      className="relative w-full max-w-2xl mx-auto flex flex-col items-center justify-center py-2"
+      // relative: để làm mốc cho nút absolute
+      // pb-8: dành sẵn khoảng trống cố định bên dưới cho các nút (tránh giật layout)
+      className="relative w-full max-w-2xl mx-auto flex flex-col items-center justify-center pt-2 pb-8"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -53,23 +55,23 @@ export function QuoteBanner() {
           {/* NỘI DUNG QUOTE */}
           <p
             className="
-              text-base md:text-lg          /* Giảm size: Mobile dùng base, PC dùng lg */
+              text-base md:text-lg          
               font-light italic leading-relaxed
-              text-white/95                 /* Màu trắng sáng hơn chút để tương phản */
-              tracking-wide                 /* Giãn chữ nhẹ cho thoáng */
+              text-white/95                 
+              tracking-wide                 
             "
             style={{ 
               fontFamily: "'Merriweather', 'Noto Serif', serif",
-              // Hiệu ứng đổ bóng mềm (Glow effect) thay vì bóng đen cứng
+              // Hiệu ứng đổ bóng mềm giúp chữ nổi trên nền video
               textShadow: "0 2px 10px rgba(0,0,0,0.6)" 
             }}
           >
             "{quote.text}"
           </p>
           
-          {/* Tác giả - Nhỏ và mờ hơn */}
+          {/* Tác giả */}
           <div className="mt-2 flex items-center justify-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
-             <span className="text-xs font-medium tracking-widest text-white shadow-sm uppercase">
+             <span className="text-[10px] md:text-xs font-medium tracking-widest text-white shadow-sm uppercase">
                — {quote.author || 'Khuyết danh'}
              </span>
           </div>
@@ -78,11 +80,12 @@ export function QuoteBanner() {
         <span className="text-xs text-white/50 animate-pulse">...</span>
       )}
 
-      {/* NÚT ĐIỀU KHIỂN - GIỮ NGUYÊN LOGIC CŨ */}
+      {/* NÚT ĐIỀU KHIỂN - Vị trí Absolute */}
       <div 
         className={`
-          mt-2 flex gap-3 transition-all duration-300 transform
-          ${isHovered || openForm ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
+          absolute bottom-1 left-1/2 -translate-x-1/2
+          flex gap-3 transition-all duration-300 transform
+          ${isHovered || openForm ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
         `}
       >
         <button

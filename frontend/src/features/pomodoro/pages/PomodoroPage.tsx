@@ -6,7 +6,7 @@ import { LoginModal } from '@/features/pomodoro/components/LoginModal'
 import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
 import { YouTubeBackground } from '@/features/pomodoro/components/YouTubeBackground'
 import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSettings'
-import { QuoteBanner } from '@/features/quote' // Đảm bảo bạn đã cập nhật file này như bước trước
+import { QuoteBanner } from '@/features/quote' 
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
@@ -196,7 +196,7 @@ export default function PomodoroPage() {
             <span className="text-sm text-white/70">Learning</span>
           </div>
 
-          {/* Đã xóa QuoteBanner ở đây */}
+          {/* Spacer để đẩy các phần tử header sang 2 bên */}
           <div className="flex-1"></div>
 
           <div className="flex items-center gap-4">
@@ -347,7 +347,7 @@ export default function PomodoroPage() {
                 )}
 
                 {/* --- ĐỒNG HỒ TIMER --- */}
-                {/* Giảm mb-8 thành mb-2 để gần Quote hơn */}
+                {/* Giảm mb-8 xuống mb-2 để gần Quote */}
                 <div className="mb-2 flex items-center justify-center"> 
                   <div className="text-9xl font-extrabold text-white drop-shadow-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
@@ -355,8 +355,8 @@ export default function PomodoroPage() {
                 </div>
 
                 {/* --- QUOTE BANNER MỚI --- */}
-                {/* Đặt ở đây, ngay dưới Timer */}
-                <div className="mb-6 px-4">
+                {/* Cách lề dưới mb-2 để gần input bên dưới hơn */}
+                <div className="mb-2 px-4">
                   <QuoteBanner />
                 </div>
                 {/* ------------------------ */}
