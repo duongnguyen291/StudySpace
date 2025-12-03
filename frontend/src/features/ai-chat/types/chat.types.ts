@@ -28,6 +28,7 @@ export interface ChatConversationDetail extends ChatConversationSummary {
 export interface ChatSendMessageRequest {
   message: string
   conversation_id?: string
+  step_by_step_mode?: boolean
 }
 
 export interface ChatSendMessageResponse {

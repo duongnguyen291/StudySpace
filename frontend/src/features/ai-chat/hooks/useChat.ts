@@ -22,6 +22,7 @@ export function useChat(options: UseChatOptions = {}) {
   const [isLoading, setIsLoading] = useState(false)
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [stepByStepMode, setStepByStepMode] = useState(false)
 
   const loadConversations = useCallback(async () => {
     try {
@@ -92,7 +93,8 @@ export function useChat(options: UseChatOptions = {}) {
         // Dùng conversationId đã đảm bảo, không dùng currentConversation?.id vì state có thể chưa update
         const res = await aiChatService.sendMessage({
           message: content,
-          conversation_id: conversationId
+          conversation_id: conversationId,
+          step_by_step_mode: stepByStepMode
         })
 
         setCurrentConversation((prev) => {
@@ -136,12 +138,14 @@ export function useChat(options: UseChatOptions = {}) {
         setIsSending(false)
       }
     },
-    [currentConversation, ensureConversation]
+    [currentConversation, ensureConversation, stepByStepMode]
   )
 
   const selectConversation = useCallback(
     async (conversationId: string) => {
       await loadConversation(conversationId)
+      // Reset step-by-step mode khi chuyển conversation
+      setStepByStepMode(false)
     },
     [loadConversation]
   )
@@ -180,6 +184,8 @@ export function useChat(options: UseChatOptions = {}) {
       setConversations((prev) => [created, ...prev])
       const detail: ChatConversationDetail = { ...created, messages: [] }
       setCurrentConversation(detail)
+      // Reset step-by-step mode khi tạo conversation mới
+      setStepByStepMode(false)
       return created.id
     } catch (err) {
       console.error(err)
@@ -190,16 +196,22 @@ export function useChat(options: UseChatOptions = {}) {
     }
   }, [])
 
+  const toggleStepByStepMode = useCallback((enabled: boolean) => {
+    setStepByStepMode(enabled)
+  }, [])
+
   return {
     conversations,
     currentConversation,
     isLoading,
     isSending,
     error,
+    stepByStepMode,
     sendMessage,
     selectConversation,
     deleteConversation,
     createNewConversation,
+    toggleStepByStepMode,
     reloadConversations: loadConversations
   }
 }

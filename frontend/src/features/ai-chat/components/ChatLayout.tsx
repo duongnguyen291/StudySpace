@@ -7,9 +7,11 @@ interface ChatLayoutProps {
   messages: ChatMessage[]
   isSending: boolean
   error?: string | null
+  stepByStepMode?: boolean
   onSelectConversation: (id: string) => void
   onDeleteConversation: (id: string) => void
   onSendMessage: (content: string) => void
+  onToggleStepByStepMode?: (enabled: boolean) => void
   onCreateNewConversation?: () => void
 }
 
@@ -19,12 +21,42 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   messages,
   isSending,
   error,
+  stepByStepMode = false,
   onSelectConversation,
   onDeleteConversation,
   onSendMessage,
+  onToggleStepByStepMode,
   onCreateNewConversation
 }) => {
   const [input, setInput] = React.useState('')
+
+  // Parse step-by-step content
+  const parseSteps = (content: string): string[] => {
+    // Match lines starting with -, •, *, or numbered (1., 2., etc.)
+    const stepPattern = /^[-•*]\s+(.+)$|^\d+\.\s+(.+)$/gm
+    const matches = content.matchAll(stepPattern)
+    const steps: string[] = []
+    
+    for (const match of matches) {
+      const step = match[1] || match[2]
+      if (step) steps.push(step.trim())
+    }
+    
+    // If no steps found but content has multiple lines, split by newlines
+    if (steps.length === 0 && content.includes('\n')) {
+      return content.split('\n').filter(line => line.trim().length > 0)
+    }
+    
+    return steps.length > 0 ? steps : [content]
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,6 +123,33 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             <h2 className="font-semibold text-slate-100 text-sm">AI Learning Assistant</h2>
             <p className="text-xs text-slate-500">Hỏi bài, giải thích, gợi ý học tập...</p>
           </div>
+          {currentConversationId && onToggleStepByStepMode && (
+            <button
+              onClick={() => onToggleStepByStepMode(!stepByStepMode)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 ${
+                stepByStepMode
+                  ? 'bg-blue-600 text-white hover:bg-blue-500'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+              title="Bật/tắt chế độ giải thích từng bước"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+              <span>Step-by-step</span>
+            </button>
+          )}
         </header>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
@@ -106,19 +165,87 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             </div>
           )}
 
-          {messages.map((msg) => (
-            <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                  msg.role === 'user'
-                    ? 'bg-blue-600 text-white rounded-br-sm'
-                    : 'bg-slate-800/90 text-slate-50 rounded-bl-sm border border-slate-700/80'
-                }`}
-              >
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+          {messages.map((msg) => {
+            const isAssistant = msg.role === 'assistant'
+            const shouldRenderSteps = isAssistant && stepByStepMode
+            const steps = shouldRenderSteps ? parseSteps(msg.content) : null
+
+            return (
+              <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div
+                  className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                    msg.role === 'user'
+                      ? 'bg-blue-600 text-white rounded-br-sm'
+                      : 'bg-slate-800/90 text-slate-50 rounded-bl-sm border border-slate-700/80'
+                  }`}
+                >
+                  {shouldRenderSteps && steps && steps.length > 1 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-slate-400">Giải thích từng bước:</span>
+                        <button
+                          onClick={() => copyToClipboard(msg.content)}
+                          className="text-xs text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+                          title="Copy toàn bộ"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-3.5 w-3.5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Copy tất cả
+                        </button>
+                      </div>
+                      <ol className="space-y-2 list-none">
+                        {steps.map((step, index) => (
+                          <li
+                            key={index}
+                            className="flex items-start gap-2 group/step bg-slate-900/50 rounded-lg px-2 py-1.5 border border-slate-700/50"
+                          >
+                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600/20 text-blue-400 text-xs font-medium flex items-center justify-center mt-0.5">
+                              {index + 1}
+                            </span>
+                            <span className="flex-1 text-slate-100">{step}</span>
+                            <button
+                              onClick={() => copyToClipboard(step)}
+                              className="flex-shrink-0 opacity-0 group-hover/step:opacity-100 transition-opacity text-slate-400 hover:text-slate-200"
+                              title="Copy bước này"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-3.5 w-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </button>
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Composer */}

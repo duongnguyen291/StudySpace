@@ -5,7 +5,7 @@ import { ChatLayout } from '@/features/ai-chat'
 import { useChat } from '@/features/ai-chat'
 
 export default function AIChatPage() {
-  const { conversations, currentConversation, isSending, error, sendMessage, selectConversation, deleteConversation, createNewConversation } =
+  const { conversations, currentConversation, isSending, error, stepByStepMode, sendMessage, selectConversation, deleteConversation, createNewConversation, toggleStepByStepMode } =
     useChat()
 
   return (
@@ -24,9 +24,11 @@ export default function AIChatPage() {
           messages={currentConversation?.messages ?? []}
           isSending={isSending}
           error={error}
+          stepByStepMode={stepByStepMode}
           onSelectConversation={selectConversation}
           onDeleteConversation={deleteConversation}
           onSendMessage={sendMessage}
+          onToggleStepByStepMode={toggleStepByStepMode}
           onCreateNewConversation={createNewConversation}
         />
       </div>
