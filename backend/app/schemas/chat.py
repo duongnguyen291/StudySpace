@@ -55,6 +55,10 @@ class ChatSendMessageRequest(BaseModel):
         default=None,
         description="Existing conversation to append to. Creates a new conversation when omitted.",
     )
+    step_by_step_mode: bool = Field(
+        default=False,
+        description="Enable step-by-step explanation mode for this message",
+    )
 
 
 class ChatSendMessageResponse(BaseModel):
