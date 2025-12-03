@@ -30,7 +30,7 @@ export const Button = ({
     danger:
       'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
     outline:
-      'border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800',
+      'border-2 border-gray-300 text-white hover:bg-gray-50/10 focus:ring-gray-500 dark:border-gray-600 dark:hover:bg-gray-800/50',
   }
 
   const sizes = {

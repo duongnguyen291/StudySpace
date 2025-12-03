@@ -436,6 +436,7 @@ Xem chi tiết trong [project_structure.md](./project_structure.md)
 - **[Setup Guide](./SETUP_GUIDE.md)** - Hướng dẫn setup chi tiết cho developers
 - **[Project Structure](./project_structure.md)** - Cấu trúc dự án và quy ước
 - **[Database Schema](./database_schema.puml)** - Schema database (PlantUML)
+- **[Flashcards Documentation](./FLASHCARDS_DOCUMENTATION.md)** - Complete flashcard feature documentation
 - **[API Documentation](http://localhost:8000/docs)** - Swagger UI (sau khi chạy backend)
 
 ---

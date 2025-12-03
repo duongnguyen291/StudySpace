@@ -29,6 +29,15 @@ export const API_ENDPOINTS = {
     BASE: '/categories',
     BY_ID: (id: string) => `/categories/${id}`,
   },
+  FLASHCARDS: {
+    DECKS: '/flashcards/decks',
+    DECK_BY_ID: (id: string) => `/flashcards/decks/${id}`,
+    DECK_FLASHCARDS: (deckId: string) => `/flashcards/decks/${deckId}/flashcards`,
+    DECK_FLASHCARDS_BULK: (deckId: string) => `/flashcards/decks/${deckId}/flashcards/bulk`,
+    FLASHCARD_BY_ID: (id: string) => `/flashcards/flashcards/${id}`,
+    REVIEW_START: '/flashcards/review/start',
+    REVIEW_SUBMIT: '/flashcards/review/submit',
+  },
 } as const
 
 export const APP_NAME = 'StudySpace'

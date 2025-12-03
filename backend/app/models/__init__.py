@@ -11,6 +11,9 @@ from app.models.user_achievement import UserAchievement
 from app.models.achievement import Achievement
 from app.models.category import Category
 from app.models.task import Task
+from app.models.flashcard_deck import FlashcardDeck
+from app.models.flashcard import Flashcard
+from app.models.flashcard_progress import FlashcardProgress
 
 __all__ = [
     "Base",
@@ -22,5 +25,8 @@ __all__ = [
     "Category",
     "Task",
     "StudySession",
-    "QuizAttempt"
+    "QuizAttempt",
+    "FlashcardDeck",
+    "Flashcard",
+    "FlashcardProgress"
 ]
