@@ -7,6 +7,7 @@ import { YouTubeBackground } from '@/features/pomodoro/components/YouTubeBackgro
 import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSettings'
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
 import { MusicWidget } from '@/features/pomodoro/components/MusicWidget'
+import { TaskWidget } from '@/features/tasks/components/TaskWidget'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
 import {
@@ -713,6 +714,9 @@ export default function PomodoroPage() {
           onSave={updateBackground}
         />
       )}
+
+      {/* Task Widget - Floating button + popup */}
+      <TaskWidget />
     </div>
   )
 }
