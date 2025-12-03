@@ -19,9 +19,7 @@ export function QuoteBanner() {
   const [author, setAuthor] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Hàm lấy quote (có thể gọi lại để refresh)
   const refreshQuote = () => {
-    // Vì hàm getDailyQuote hiện tại random mỗi lần gọi, ta chỉ cần gọi lại nó
     setQuote(getDailyQuote())
   }
 
@@ -35,7 +33,7 @@ export function QuoteBanner() {
     setSubmitting(true)
     try {
       addQuote({ text, author })
-      refreshQuote() // Refresh để có cơ hội hiện câu vừa thêm
+      refreshQuote()
       setText('')
       setAuthor('')
       setOpenForm(false)
@@ -46,48 +44,50 @@ export function QuoteBanner() {
 
   return (
     <div 
-      className="relative w-full max-w-3xl mx-auto flex flex-col items-center justify-center py-2"
+      className="relative w-full max-w-2xl mx-auto flex flex-col items-center justify-center py-2"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {quote ? (
-        <div className="text-center transition-all duration-300">
+        <div className="text-center transition-all duration-500 ease-in-out">
+          {/* NỘI DUNG QUOTE */}
           <p
             className="
-              text-lg md:text-xl lg:text-2xl font-light italic leading-relaxed
-              text-white/90 drop-shadow-md selection:bg-white/30
+              text-base md:text-lg          /* Giảm size: Mobile dùng base, PC dùng lg */
+              font-light italic leading-relaxed
+              text-white/95                 /* Màu trắng sáng hơn chút để tương phản */
+              tracking-wide                 /* Giãn chữ nhẹ cho thoáng */
             "
             style={{ 
               fontFamily: "'Merriweather', 'Noto Serif', serif",
-              textShadow: "0 2px 4px rgba(0,0,0,0.3)" 
+              // Hiệu ứng đổ bóng mềm (Glow effect) thay vì bóng đen cứng
+              textShadow: "0 2px 10px rgba(0,0,0,0.6)" 
             }}
           >
             "{quote.text}"
           </p>
           
-          {/* Tác giả nhỏ gọn bên dưới */}
-          <div className="mt-2 flex items-center justify-center gap-2 opacity-80">
-             <span className="h-[1px] w-6 bg-white/50 inline-block"></span>
-             <span className="text-xs md:text-sm font-medium tracking-widest text-white/80 uppercase">
-               {quote.author || 'Khuyết danh'}
+          {/* Tác giả - Nhỏ và mờ hơn */}
+          <div className="mt-2 flex items-center justify-center gap-2 opacity-70 hover:opacity-100 transition-opacity">
+             <span className="text-xs font-medium tracking-widest text-white shadow-sm uppercase">
+               — {quote.author || 'Khuyết danh'}
              </span>
-             <span className="h-[1px] w-6 bg-white/50 inline-block"></span>
           </div>
         </div>
       ) : (
-        <span className="text-sm text-white/50 animate-pulse">Loading inspiration...</span>
+        <span className="text-xs text-white/50 animate-pulse">...</span>
       )}
 
-      {/* Các nút điều khiển - Chỉ hiện khi Hover */}
+      {/* NÚT ĐIỀU KHIỂN - GIỮ NGUYÊN LOGIC CŨ */}
       <div 
         className={`
-          mt-3 flex gap-3 transition-opacity duration-300
-          ${isHovered || openForm ? 'opacity-100' : 'opacity-0'}
+          mt-2 flex gap-3 transition-all duration-300 transform
+          ${isHovered || openForm ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
         `}
       >
         <button
           onClick={refreshQuote}
-          className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors backdrop-blur-sm"
           title="Đổi câu khác"
         >
           <RefreshCw size={14} />
@@ -96,7 +96,7 @@ export function QuoteBanner() {
         {user && (
           <button
             onClick={() => setOpenForm(true)}
-            className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-1.5 rounded-full text-white/60 hover:text-white hover:bg-white/10 transition-colors backdrop-blur-sm"
             title="Thêm quote mới"
           >
             <Plus size={16} />
@@ -104,34 +104,34 @@ export function QuoteBanner() {
         )}
       </div>
 
-      {/* Form thêm Quote - Modal nhỏ nổi lên */}
+      {/* FORM MODAL */}
       {openForm && (
         <div className="absolute top-full mt-2 z-50 w-full max-w-md animate-in fade-in zoom-in duration-200">
           <form
             onSubmit={handleAdd}
             className="
               relative rounded-xl border border-white/10 
-              bg-gray-900/90 backdrop-blur-xl p-5 shadow-2xl
+              bg-gray-900/80 backdrop-blur-xl p-4 shadow-2xl
             "
           >
             <button
               type="button"
               onClick={() => setOpenForm(false)}
-              className="absolute top-3 right-3 text-white/30 hover:text-white transition"
+              className="absolute top-2 right-2 text-white/30 hover:text-white transition"
             >
-              <X size={16} />
+              <X size={14} />
             </button>
             
-            <h4 className="mb-4 text-xs font-bold tracking-widest text-white/60 uppercase text-center">
-              Thêm nguồn cảm hứng
+            <h4 className="mb-3 text-[10px] font-bold tracking-widest text-white/50 uppercase text-center">
+              Thêm Quote Mới
             </h4>
             
-            <div className="space-y-3">
+            <div className="space-y-2">
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Nội dung câu nói..."
-                className="w-full rounded-lg bg-black/40 border border-white/10 p-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition"
+                placeholder="Nội dung..."
+                className="w-full rounded bg-white/5 border border-white/10 p-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/30 transition resize-none"
                 rows={2}
                 required
                 autoFocus
@@ -140,14 +140,14 @@ export function QuoteBanner() {
                 value={author}
                 onChange={e => setAuthor(e.target.value)}
                 placeholder="Tác giả"
-                className="w-full rounded-lg bg-black/40 border border-white/10 p-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition"
+                className="w-full rounded bg-white/5 border border-white/10 p-2 text-sm text-white placeholder-white/20 outline-none focus:border-white/30 transition"
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium py-2 text-xs transition-colors"
+                className="w-full rounded bg-white/10 hover:bg-white/20 text-white font-medium py-1.5 text-xs transition-colors mt-1"
               >
-                {submitting ? 'Đang lưu...' : 'Lưu Quote'}
+                {submitting ? '...' : 'Lưu'}
               </button>
             </div>
           </form>
