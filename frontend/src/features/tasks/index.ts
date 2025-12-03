@@ -10,6 +10,9 @@ export { TasksPage } from './pages/TasksPage'
 export { TaskList } from './components/TaskList'
 export { TaskItem } from './components/TaskItem'
 export { TaskForm } from './components/TaskForm'
+export { PomodoroTaskItem } from './components/PomodoroTaskItem'
+export { QuickTaskForm } from './components/QuickTaskForm'
+export { TaskWidget } from './components/TaskWidget'
 
 // Hooks
 export { useTasks } from './hooks/useTasks'
