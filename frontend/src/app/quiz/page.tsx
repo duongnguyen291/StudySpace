@@ -14,7 +14,7 @@ import QuizImportExport from '@/features/quiz/components/QuizImportExport'
 import QuizPlayer from '@/features/quiz/components/QuizPlayer'
 import QuizHistory from '@/features/quiz/components/QuizHistory'
 
-type ViewMode = 'dashboard' | 'import' | 'play' | 'history'
+type ViewMode = 'dashboard' | 'import' | 'play' | 'history' | 'edit'
 type TabMode = 'my-quizzes' | 'history'
 
 export default function QuizPage() {
@@ -26,6 +26,9 @@ export default function QuizPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [exportQuiz, setExportQuiz] = useState<QuizSet | null>(null)
+  const [isExporting, setIsExporting] = useState(false)
 
   // Load quiz sets
   const loadQuizSets = useCallback(async () => {
@@ -72,13 +75,30 @@ export default function QuizPage() {
     }
   }
 
-  const handleExportQuiz = async (quizSet: QuizSet) => {
+  const handleExportClick = (quizSet: QuizSet) => {
+    setExportQuiz(quizSet)
+    setShowExportModal(true)
+  }
+
+  const handleExportConfirm = async () => {
+    if (!exportQuiz) return
+    
+    setIsExporting(true)
     try {
-      const blob = await exportCsv(quizSet.id)
-      downloadBlob(blob, `${quizSet.title.replace(/[^a-z0-9]/gi, '_')}.csv`)
+      const blob = await exportCsv(exportQuiz.id)
+      downloadBlob(blob, `${exportQuiz.title.replace(/[^a-z0-9]/gi, '_')}.csv`)
+      setShowExportModal(false)
+      setExportQuiz(null)
     } catch (err) {
       console.error('Failed to export:', err)
+    } finally {
+      setIsExporting(false)
     }
+  }
+
+  const handleEditQuiz = (quizSet: QuizSet) => {
+    setSelectedQuiz(quizSet)
+    setViewMode('edit')
   }
 
   const handlePlayQuiz = (quizSet: QuizSet) => {
@@ -260,8 +280,8 @@ export default function QuizPage() {
                           key={quizSet.id}
                           quizSet={quizSet}
                           onPlay={() => handlePlayQuiz(quizSet)}
-                          onEdit={() => {/* TODO: Edit modal */}}
-                          onExport={() => handleExportQuiz(quizSet)}
+                          onEdit={() => handleEditQuiz(quizSet)}
+                          onExport={() => handleExportClick(quizSet)}
                           onDelete={() => handleDeleteQuiz(quizSet.id)}
                           isDeleting={deletingId === quizSet.id}
                         />
@@ -291,6 +311,48 @@ export default function QuizPage() {
               onCancel={handleBackToDashboard}
             />
           )}
+
+          {viewMode === 'edit' && selectedQuiz && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-8">
+                <h2 className="text-2xl font-bold text-white mb-2">{selectedQuiz.title}</h2>
+                {selectedQuiz.description && (
+                  <p className="text-slate-400 mb-6">{selectedQuiz.description}</p>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-slate-900/50 rounded-xl p-4">
+                    <div className="text-2xl font-bold text-emerald-400">{selectedQuiz.question_count}</div>
+                    <div className="text-sm text-slate-400">Questions</div>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-xl p-4">
+                    <div className="text-2xl font-bold text-blue-400">{selectedQuiz.is_public ? 'Yes' : 'No'}</div>
+                    <div className="text-sm text-slate-400">Public</div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
+                  <div className="text-sm text-slate-400 mb-1">Created</div>
+                  <div className="text-white">{new Date(selectedQuiz.created_at).toLocaleString()}</div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handleBackToDashboard}
+                    className="flex-1 py-3 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 transition font-medium"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={() => handlePlayQuiz(selectedQuiz)}
+                    className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl transition font-semibold shadow-lg"
+                  >
+                    ▶ Start Quiz
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 
@@ -301,6 +363,46 @@ export default function QuizPage() {
         onSubmit={handleCreateQuiz}
         isLoading={isCreating}
       />
+
+      {/* Export Confirmation Modal */}
+      {showExportModal && exportQuiz && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowExportModal(false)} />
+          <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-xl font-bold text-white mb-2">Export Quiz</h3>
+            <p className="text-slate-400 mb-6">
+              Download <span className="text-emerald-400 font-medium">"{exportQuiz.title}"</span> as a CSV file?
+            </p>
+            
+            <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-400">Questions:</span>
+                <span className="text-white font-medium">{exportQuiz.question_count}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-2">
+                <span className="text-slate-400">Format:</span>
+                <span className="text-white font-medium">CSV (question, answer)</span>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="flex-1 py-3 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExportConfirm}
+                disabled={isExporting}
+                className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl transition font-semibold shadow-lg disabled:opacity-50"
+              >
+                {isExporting ? '⏳ Exporting...' : '📥 Download'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
