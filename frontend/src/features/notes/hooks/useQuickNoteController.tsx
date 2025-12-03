@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, ReactNode } from 'react'
 
 interface QuickNoteContextValue {
   isOpen: boolean
@@ -15,28 +15,6 @@ export const QuickNoteProvider = ({ children }: { children: ReactNode }) => {
 
   const open = () => setIsOpen(true)
   const close = () => setIsOpen(false)
-
-  // Global keyboard shortcut: Ctrl+Shift+N
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null
-      const isInput =
-        !!target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.getAttribute('contenteditable') === 'true')
-
-      if (isInput) return
-
-      if (e.ctrlKey && e.shiftKey && (e.key === 'N' || e.key === 'n')) {
-        e.preventDefault()
-        open()
-      }
-    }
-
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [])
 
   return (
     <QuickNoteContext.Provider value={{ isOpen, open, close }}>
