@@ -6,6 +6,7 @@ import { LoginModal } from '@/features/pomodoro/components/LoginModal'
 import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
 import { YouTubeBackground } from '@/features/pomodoro/components/YouTubeBackground'
 import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSettings'
+import { QuoteBanner } from '@/features/quote'
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
@@ -17,8 +18,6 @@ import {
   Music,
   CloudRain,
   Grid3x3,
-  Users,
-  MessageCircle,
   Zap,
   Pause,
   RotateCcw,
@@ -26,11 +25,6 @@ import {
   Droplets,
   Bird,
   Flame,
-  Plus,
-  BookOpen,
-  Code,
-  FileText,
-  PlayCircle,
   Check
 } from 'lucide-react'
 
@@ -67,17 +61,14 @@ export default function PomodoroPage() {
   const [customHours, setCustomHours] = useState(0)
   const [customMinutes, setCustomMinutes] = useState(25)
   
-  // State cho chế độ hiển thị
   const [displayMode, setDisplayMode] = useState<'pomodoro' | 'clock'>('pomodoro')
   const [currentTime, setCurrentTime] = useState(new Date())
 
-  // State cho menu âm thanh
   const [showSoundMenu, setShowSoundMenu] = useState(false)
   const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
-  // State cho Tags
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS)
   const [selectedTag, setSelectedTag] = useState<string>('')
   const [showNewTagForm, setShowNewTagForm] = useState(false)
@@ -99,7 +90,6 @@ export default function PomodoroPage() {
     sessionType
   } = usePomodoroTimer()
 
-  // Cập nhật đồng hồ
   useEffect(() => {
     if (displayMode === 'clock') {
       const timer = setInterval(() => {
@@ -109,7 +99,6 @@ export default function PomodoroPage() {
     }
   }, [displayMode])
 
-  // Đóng menu khi click bên ngoài
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (soundMenuRef.current && !soundMenuRef.current.contains(event.target as Node)) {
@@ -122,21 +111,18 @@ export default function PomodoroPage() {
     }
   }, [showSoundMenu])
 
-  // Ẩn custom input khi start
   useEffect(() => {
     if (isActive) {
       setShowCustomInput(false)
     }
   }, [isActive])
 
-  // Hiện custom input khi reset và đang ở chế độ custom
   useEffect(() => {
     if (!isActive && sessionType === 'custom_timer') {
       setShowCustomInput(true)
     }
   }, [isActive, sessionType])
 
-  // Quản lý phát âm thanh
   useEffect(() => {
     if (selectedSound) {
       const soundFiles = {
@@ -169,7 +155,6 @@ export default function PomodoroPage() {
     }
   }, [selectedSound])
 
-  // Handle thêm tag mới
   const handleAddTag = () => {
     if (newTag.name && newTag.icon) {
       const tag: Tag = {
@@ -185,12 +170,10 @@ export default function PomodoroPage() {
     }
   }
 
-  // Handle quick suggestion
   const handleQuickSuggestion = (text: string) => {
     setCurrentTask(currentTask ? `${currentTask} • ${text}` : text)
   }
 
-  // Lấy tag hiện tại
   const currentTagObj = tags.find(tag => tag.id === selectedTag)
 
   if (isLoading) {
@@ -207,11 +190,17 @@ export default function PomodoroPage() {
 
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* HEADER */}
-        <header className="w-full px-6 py-4 flex justify-between items-center bg-black/25 backdrop-blur-sm">
+        <header className="w-full px-6 py-4 flex justify-between items-center gap-6 bg-black/25 backdrop-blur-sm">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-white">StudySpace</h1>
-            <span className="text-sm text-white/70">Learning Core</span>
+            <span className="text-sm text-white/70">Learning</span>
           </div>
+
+          {/* Quote Banner ở giữa */}
+          <div className="flex-1 flex justify-center">
+            <QuoteBanner />
+          </div>
+
           <div className="flex items-center gap-4">
             {isAuthenticated && (
               <>
@@ -273,7 +262,6 @@ export default function PomodoroPage() {
           <div className="w-full max-w-2xl">
             {displayMode === 'pomodoro' ? (
               <>
-                {/* Tag selector - chỉ hiển thị khi chưa start */}
                 {!isActive && (
                   <div className="mb-5">
                     <select
@@ -296,7 +284,6 @@ export default function PomodoroPage() {
                       <option value="add_new" className="bg-gray-900 text-white">➕ Thêm tag mới</option>
                     </select>
 
-                    {/* Form thêm tag mới */}
                     {showNewTagForm && (
                       <div className="mt-3 p-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
                         <h4 className="text-white font-semibold mb-3">Tạo tag mới</h4>
@@ -352,7 +339,6 @@ export default function PomodoroPage() {
                   </div>
                 )}
 
-                {/* Hiển thị tag đã chọn khi đang chạy - căn giữa */}
                 {isActive && currentTagObj && (
                   <div className="mb-5 flex justify-center">
                     <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full">
@@ -362,14 +348,12 @@ export default function PomodoroPage() {
                   </div>
                 )}
 
-                {/* Timer display - ĐỔI FONT THÀNH MONTSERRAT EXTRABOLD */}
                 <div className="mb-8 flex items-center justify-center">
                   <div className="text-9xl font-extrabold text-white drop-shadow-lg" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                     {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                   </div>
                 </div>
 
-                {/* Task input - chỉ hiển thị khi chưa start */}
                 {!isActive && (
                   <>
                     <div className="mb-3">
@@ -382,7 +366,6 @@ export default function PomodoroPage() {
                       />
                     </div>
 
-                    {/* Quick suggestions */}
                     <div className="flex flex-wrap gap-2 mb-4">
                       {QUICK_SUGGESTIONS.map((suggestion, index) => (
                         <button
@@ -398,7 +381,6 @@ export default function PomodoroPage() {
                   </>
                 )}
 
-                {/* Hiển thị task khi đang chạy - căn giữa */}
                 {isActive && currentTask && (
                   <div className="mb-5 flex justify-center">
                     <div className="inline-block px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg">
@@ -407,7 +389,6 @@ export default function PomodoroPage() {
                   </div>
                 )}
 
-                {/* Controls */}
                 <div className="flex justify-center gap-3 mb-4">
                   {!isActive ? (
                     <Button
@@ -442,7 +423,6 @@ export default function PomodoroPage() {
                   )}
                 </div>
 
-                {/* Session label - căn giữa và thu gọn */}
                 <div className="flex justify-center mb-4">
                   <div className="inline-block px-4 py-2 bg-black/30 backdrop-blur-sm rounded-lg">
                     <p className="text-white/80 text-sm text-center">
@@ -451,7 +431,6 @@ export default function PomodoroPage() {
                   </div>
                 </div>
 
-                {/* Preset dots - CHỈ HIỂN THỊ KHI CHƯA START */}
                 {!isActive && (
                   <div className="flex justify-center gap-4 mb-6">
                     <button
@@ -499,7 +478,6 @@ export default function PomodoroPage() {
                   </div>
                 )}
 
-                {/* Custom time panel - CHỈ HIỂN THỊ KHI CHƯA START */}
                 {!isActive && showCustomInput && (
                   <div className="flex flex-col items-center gap-5 mb-10">
                     <div className="flex items-center gap-6">
@@ -513,7 +491,6 @@ export default function PomodoroPage() {
                           onChange={(e) => {
                             const hours = Math.min(12, Math.max(0, Number(e.target.value)))
                             setCustomHours(hours)
-                            // Cập nhật timer ngay lập tức
                             const totalMinutes = hours * 60 + customMinutes
                             setMinutes(totalMinutes)
                             setSeconds(0)
@@ -532,7 +509,6 @@ export default function PomodoroPage() {
                           onChange={(e) => {
                             const mins = Math.min(59, Math.max(0, Number(e.target.value)))
                             setCustomMinutes(mins)
-                            // Cập nhật timer ngay lập tức
                             const totalMinutes = customHours * 60 + mins
                             setMinutes(totalMinutes)
                             setSeconds(0)
