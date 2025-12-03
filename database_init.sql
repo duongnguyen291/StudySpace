@@ -183,12 +183,13 @@ CREATE TABLE quiz_attempts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     quiz_set_id UUID NOT NULL REFERENCES quiz_sets(id) ON DELETE CASCADE,
-    score DECIMAL(5,2) NOT NULL,
+    score DECIMAL(5,2),
     total_questions INTEGER NOT NULL,
-    correct_answers INTEGER NOT NULL,
+    correct_answers INTEGER DEFAULT 0,
     time_spent_seconds INTEGER,
-    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    answers JSONB -- Store user's answers
+    answers JSONB,                             -- Store user's answers
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================

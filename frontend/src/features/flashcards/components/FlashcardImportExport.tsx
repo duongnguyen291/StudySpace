@@ -1,13 +1,13 @@
-﻿'use client'
+'use client'
 import React, { useState, useCallback } from 'react'
-import type { CSVPreviewRow, CSVImportError, QuizSet } from '../types/quiz.types'
-import { importCsv, exportCsv, getQuizSets, downloadBlob } from '../services/quizService'
+import type { CSVPreviewRow, CSVImportError, FlashcardDeck } from '../types/flashcard.types'
+import { importCsv, exportCsv, getDecks, downloadBlob } from '../services/flashcardService'
 
 interface Props {
-  onImportSuccess?: (quizSetId: string) => void
+  onImportSuccess?: (deckId: string) => void
 }
 
-export default function QuizImportExport({ onImportSuccess }: Props): JSX.Element {
+export default function FlashcardImportExport({ onImportSuccess }: Props): JSX.Element {
   const [activeTab, setActiveTab] = useState<'import' | 'export'>('import')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [title, setTitle] = useState('')
@@ -16,25 +16,22 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
   const [errors, setErrors] = useState<CSVImportError[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
-  const [quizSets, setQuizSets] = useState<QuizSet[]>([])
-  const [selectedExportId, setSelectedExportId] = useState('')
+  const [decks, setDecks] = useState<FlashcardDeck[]>([])
+  const [selectedDeckId, setSelectedDeckId] = useState('')
 
-  // Simple CSV parser for question,answer format
   const parseCSV = (text: string) => {
     const lines = text.split(/\r?\n/).filter(l => l.trim())
     if (lines.length < 2) {
       setErrors([{ line: 0, message: 'File is empty or has no data rows' }])
-      setPreviewRows([])
       return
     }
 
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''))
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase())
     const qIdx = headers.indexOf('question')
     const aIdx = headers.indexOf('answer')
 
     if (qIdx === -1 || aIdx === -1) {
-      setErrors([{ line: 1, message: 'CSV must have "question" and "answer" columns' }])
-      setPreviewRows([])
+      setErrors([{ line: 1, message: 'Missing "question" or "answer" column' }])
       return
     }
 
@@ -42,7 +39,6 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
     const newErrors: CSVImportError[] = []
 
     for (let i = 1; i < lines.length; i++) {
-      // Simple CSV split (handles basic quoted values)
       const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''))
       const question = cols[qIdx] || ''
       const answer = cols[aIdx] || ''
@@ -52,13 +48,7 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
         newErrors.push({ line: i + 1, message: 'Missing question or answer' })
       }
 
-      rows.push({
-        line: i + 1,
-        question,
-        answer,
-        is_valid: isValid,
-        error: isValid ? null : 'Missing data'
-      })
+      rows.push({ line: i + 1, question, answer, is_valid: isValid, error: isValid ? null : 'Missing data' })
     }
 
     setPreviewRows(rows)
@@ -79,23 +69,16 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
   const handleImport = async () => {
     if (!selectedFile || !title.trim()) return
 
-    const validRows = previewRows.filter(r => r.is_valid)
-    if (validRows.length === 0) {
-      setResult({ success: false, message: 'No valid questions to import' })
-      return
-    }
-
     setIsLoading(true)
     try {
       const res = await importCsv(selectedFile, title.trim(), description.trim() || undefined)
       if (res.success) {
-        setResult({ success: true, message: `Imported ${res.questions_imported} questions!` })
+        setResult({ success: true, message: `Imported ${res.cards_imported} flashcards!` })
         setSelectedFile(null)
         setPreviewRows([])
-        setErrors([])
         setTitle('')
         setDescription('')
-        if (res.quiz_set_id && onImportSuccess) onImportSuccess(res.quiz_set_id)
+        if (res.deck_id && onImportSuccess) onImportSuccess(res.deck_id)
       } else {
         setResult({ success: false, message: 'Import failed' })
       }
@@ -106,20 +89,20 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
     }
   }
 
-  const loadQuizSets = async () => {
+  const loadDecks = async () => {
     try {
-      const sets = await getQuizSets()
-      setQuizSets(sets)
+      const data = await getDecks()
+      setDecks(data)
     } catch {}
   }
 
   const handleExport = async () => {
-    if (!selectedExportId) return
+    if (!selectedDeckId) return
     setIsLoading(true)
     try {
-      const blob = await exportCsv(selectedExportId)
-      const set = quizSets.find(s => s.id === selectedExportId)
-      downloadBlob(blob, `${set?.title || 'quiz'}.csv`)
+      const blob = await exportCsv(selectedDeckId)
+      const deck = decks.find(d => d.id === selectedDeckId)
+      downloadBlob(blob, `${deck?.title || 'flashcards'}.csv`)
     } catch {}
     setIsLoading(false)
   }
@@ -127,7 +110,7 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
   const downloadTemplate = () => {
     const template = 'question,answer\n"What is 2+2?","4"\n"Capital of France?","Paris"'
     const blob = new Blob([template], { type: 'text/csv' })
-    downloadBlob(blob, 'quiz-template.csv')
+    downloadBlob(blob, 'flashcard-template.csv')
   }
 
   const validCount = previewRows.filter(r => r.is_valid).length
@@ -145,7 +128,7 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
           📥 Import
         </button>
         <button
-          onClick={() => { setActiveTab('export'); loadQuizSets() }}
+          onClick={() => { setActiveTab('export'); loadDecks() }}
           className={`px-6 py-3 font-medium text-sm transition ${
             activeTab === 'export' ? 'text-emerald-400 border-b-2 border-emerald-400' : 'text-slate-400 hover:text-white'
           }`}
@@ -157,16 +140,16 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
       {activeTab === 'import' && (
         <div className="space-y-6">
           <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-            <h3 className="text-lg font-semibold text-white mb-4">Import Questions from CSV</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Import Flashcards from CSV</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-slate-300 mb-2">Quiz Title *</label>
+                <label className="block text-sm text-slate-300 mb-2">Deck Title *</label>
                 <input
                   type="text"
                   value={title}
                   onChange={e => setTitle(e.target.value)}
-                  placeholder="My Quiz"
+                  placeholder="My Flashcard Deck"
                   className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 outline-none"
                 />
               </div>
@@ -177,7 +160,7 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
                   type="text"
                   value={description}
                   onChange={e => setDescription(e.target.value)}
-                  placeholder="Optional..."
+                  placeholder="Optional description..."
                   className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:border-emerald-500 outline-none"
                 />
               </div>
@@ -187,36 +170,33 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
                 <div className="flex gap-3">
                   <label className="flex-1 flex items-center justify-center px-4 py-3 bg-slate-900 border-2 border-dashed border-slate-600 rounded-lg cursor-pointer hover:border-emerald-500 transition">
                     <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
-                    <span className="text-slate-400">{selectedFile ? `📄 ${selectedFile.name}` : '📁 Choose CSV'}</span>
+                    <span className="text-slate-400">{selectedFile ? `📄 ${selectedFile.name}` : '📁 Choose CSV file'}</span>
                   </label>
                   <button onClick={downloadTemplate} className="px-4 py-3 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm">
                     📋 Template
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">Format: <code className="text-emerald-400">question,answer</code></p>
+                <p className="text-xs text-slate-500 mt-2">Required columns: <code className="text-emerald-400">question</code>, <code className="text-emerald-400">answer</code></p>
               </div>
             </div>
           </div>
-
-          {/* Errors */}
-          {errors.length > 0 && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-              <p className="text-red-400 text-sm font-medium mb-2">Errors ({errors.length}):</p>
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {errors.map((e, i) => (
-                  <p key={i} className="text-red-300 text-xs">Line {e.line}: {e.message}</p>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Preview */}
           {previewRows.length > 0 && (
             <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-white">Preview</h3>
-                <span className="text-sm text-emerald-400">{validCount} valid</span>
+                <span className="text-sm text-emerald-400">{validCount} valid cards</span>
               </div>
+
+              {errors.length > 0 && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <p className="text-red-400 text-sm font-medium mb-1">Errors:</p>
+                  {errors.slice(0, 5).map((e, i) => (
+                    <p key={i} className="text-red-300 text-xs">Line {e.line}: {e.message}</p>
+                  ))}
+                </div>
+              )}
 
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {previewRows.slice(0, 10).map(row => (
@@ -239,7 +219,7 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
             disabled={isLoading || !selectedFile || !title.trim() || validCount === 0}
             className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
           >
-            {isLoading ? '⏳ Importing...' : `📥 Import ${validCount} Questions`}
+            {isLoading ? '⏳ Importing...' : `📥 Import ${validCount} Cards`}
           </button>
 
           {result && (
@@ -252,22 +232,22 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
 
       {activeTab === 'export' && (
         <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
-          <h3 className="text-lg font-semibold text-white mb-4">Export Questions to CSV</h3>
+          <h3 className="text-lg font-semibold text-white mb-4">Export Flashcards to CSV</h3>
 
           <select
-            value={selectedExportId}
-            onChange={e => setSelectedExportId(e.target.value)}
+            value={selectedDeckId}
+            onChange={e => setSelectedDeckId(e.target.value)}
             className="w-full px-4 py-2.5 bg-slate-900 border border-slate-600 rounded-lg text-white mb-4"
           >
-            <option value="">Select a quiz...</option>
-            {quizSets.map(s => (
-              <option key={s.id} value={s.id}>{s.title} ({s.question_count} questions)</option>
+            <option value="">Select a deck...</option>
+            {decks.map(d => (
+              <option key={d.id} value={d.id}>{d.title} ({d.card_count} cards)</option>
             ))}
           </select>
 
           <button
             onClick={handleExport}
-            disabled={!selectedExportId || isLoading}
+            disabled={!selectedDeckId || isLoading}
             className="w-full py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold rounded-xl disabled:opacity-50 transition"
           >
             {isLoading ? '⏳ Exporting...' : '📤 Export to CSV'}
@@ -277,3 +257,4 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
     </div>
   )
 }
+
