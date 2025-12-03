@@ -4,17 +4,29 @@ import React, { useEffect, useState } from 'react'
 import { getDailyQuote, addQuote } from '../services/quoteService'
 import type { Quote } from '../types/quote.types'
 import { useAuth } from '@/shared/hooks/useAuth'
+import { RefreshCw, Plus, X } from 'lucide-react'
 
 export function QuoteBanner() {
   const { user } = useAuth()
   const [quote, setQuote] = useState<Quote | null>(null)
+  
+  // State UI
   const [openForm, setOpenForm] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  
+  // State Form
   const [text, setText] = useState('')
   const [author, setAuthor] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  useEffect(() => {
+  // Hàm lấy quote (có thể gọi lại để refresh)
+  const refreshQuote = () => {
+    // Vì hàm getDailyQuote hiện tại random mỗi lần gọi, ta chỉ cần gọi lại nó
     setQuote(getDailyQuote())
+  }
+
+  useEffect(() => {
+    refreshQuote()
   }, [])
 
   const handleAdd = (e: React.FormEvent) => {
@@ -23,7 +35,7 @@ export function QuoteBanner() {
     setSubmitting(true)
     try {
       addQuote({ text, author })
-      setQuote(getDailyQuote())
+      refreshQuote() // Refresh để có cơ hội hiện câu vừa thêm
       setText('')
       setAuthor('')
       setOpenForm(false)
@@ -33,91 +45,114 @@ export function QuoteBanner() {
   }
 
   return (
-    <div className="relative w-full max-w-2xl">
-      <div
-        className="
-          relative rounded-2xl
-          bg-white/10 backdrop-blur-md border border-white/20 shadow-lg
-          px-6 py-3 text-center
-        "
-      >
-        {quote ? (
-          <div>
-            <p
-              className="
-                mb-1 text-sm md:text-base leading-snug tracking-wide
-                text-white drop-shadow
-              "
-              style={{ fontFamily: "'Noto Serif', serif" }}
-            >
-              "{quote.text}"
-            </p>
-            {quote.author && (
-              <p className="text-xs text-white/70">— {quote.author}</p>
-            )}
+    <div 
+      className="relative w-full max-w-3xl mx-auto flex flex-col items-center justify-center py-2"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {quote ? (
+        <div className="text-center transition-all duration-300">
+          <p
+            className="
+              text-lg md:text-xl lg:text-2xl font-light italic leading-relaxed
+              text-white/90 drop-shadow-md selection:bg-white/30
+            "
+            style={{ 
+              fontFamily: "'Merriweather', 'Noto Serif', serif",
+              textShadow: "0 2px 4px rgba(0,0,0,0.3)" 
+            }}
+          >
+            "{quote.text}"
+          </p>
+          
+          {/* Tác giả nhỏ gọn bên dưới */}
+          <div className="mt-2 flex items-center justify-center gap-2 opacity-80">
+             <span className="h-[1px] w-6 bg-white/50 inline-block"></span>
+             <span className="text-xs md:text-sm font-medium tracking-widest text-white/80 uppercase">
+               {quote.author || 'Khuyết danh'}
+             </span>
+             <span className="h-[1px] w-6 bg-white/50 inline-block"></span>
           </div>
-        ) : (
-          <span className="text-xs text-white/70">Đang tải...</span>
-        )}
+        </div>
+      ) : (
+        <span className="text-sm text-white/50 animate-pulse">Loading inspiration...</span>
+      )}
+
+      {/* Các nút điều khiển - Chỉ hiện khi Hover */}
+      <div 
+        className={`
+          mt-3 flex gap-3 transition-opacity duration-300
+          ${isHovered || openForm ? 'opacity-100' : 'opacity-0'}
+        `}
+      >
+        <button
+          onClick={refreshQuote}
+          className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+          title="Đổi câu khác"
+        >
+          <RefreshCw size={14} />
+        </button>
 
         {user && (
           <button
-            type="button"
-            onClick={() => setOpenForm(o => !o)}
-            className="absolute right-2 top-2 rounded-md bg-white/15 px-2 py-1 text-xs text-white hover:bg-white/25 transition"
+            onClick={() => setOpenForm(true)}
+            className="p-1.5 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            title="Thêm quote mới"
           >
-            {openForm ? '✕' : '+'}
+            <Plus size={16} />
           </button>
         )}
+      </div>
 
-        {openForm && (
+      {/* Form thêm Quote - Modal nhỏ nổi lên */}
+      {openForm && (
+        <div className="absolute top-full mt-2 z-50 w-full max-w-md animate-in fade-in zoom-in duration-200">
           <form
             onSubmit={handleAdd}
             className="
-              absolute left-1/2 top-full z-50 mt-2 w-[340px] -translate-x-1/2
-              rounded-xl border border-white/25 bg-black/80 p-4 backdrop-blur
+              relative rounded-xl border border-white/10 
+              bg-gray-900/90 backdrop-blur-xl p-5 shadow-2xl
             "
           >
-            <h4 className="mb-2 text-xs font-semibold tracking-wider text-white/80 uppercase">
-              Thêm Quote
+            <button
+              type="button"
+              onClick={() => setOpenForm(false)}
+              className="absolute top-3 right-3 text-white/30 hover:text-white transition"
+            >
+              <X size={16} />
+            </button>
+            
+            <h4 className="mb-4 text-xs font-bold tracking-widest text-white/60 uppercase text-center">
+              Thêm nguồn cảm hứng
             </h4>
-            <div className="mb-2">
+            
+            <div className="space-y-3">
               <textarea
                 value={text}
                 onChange={e => setText(e.target.value)}
-                placeholder="Nội dung truyền cảm hứng..."
-                className="w-full rounded-md bg-white/10 p-2 text-xs text-white outline-none focus:ring focus:ring-blue-400/40"
-                rows={3}
+                placeholder="Nội dung câu nói..."
+                className="w-full rounded-lg bg-black/40 border border-white/10 p-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition"
+                rows={2}
                 required
+                autoFocus
               />
-            </div>
-            <div className="mb-3">
               <input
                 value={author}
                 onChange={e => setAuthor(e.target.value)}
-                placeholder="Tác giả (tuỳ chọn)"
-                className="w-full rounded-md bg-white/10 p-2 text-xs text-white outline-none focus:ring focus:ring-blue-400/40"
+                placeholder="Tác giả"
+                className="w-full rounded-lg bg-black/40 border border-white/10 p-3 text-sm text-white placeholder-white/30 outline-none focus:border-white/30 transition"
               />
-            </div>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setOpenForm(false)}
-                className="rounded bg-white/10 px-3 py-1 text-xs text-white hover:bg-white/20"
-              >
-                Huỷ
-              </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="rounded bg-blue-500 px-4 py-1 text-xs font-medium text-white hover:bg-blue-600 disabled:opacity-50"
+                className="w-full rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium py-2 text-xs transition-colors"
               >
-                {submitting ? 'Đang lưu...' : 'Lưu'}
+                {submitting ? 'Đang lưu...' : 'Lưu Quote'}
               </button>
             </div>
           </form>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
