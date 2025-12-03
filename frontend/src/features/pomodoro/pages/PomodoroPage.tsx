@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/shared/hooks/useAuth'
-import { LoginModal } from '@/features/pomodoro/components/LoginModal'
-import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
 import { YouTubeBackground } from '@/features/pomodoro/components/YouTubeBackground'
 import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSettings'
 import { QuoteBanner } from '@/features/quote'
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
+import { MusicWidget } from '@/features/pomodoro/components/MusicWidget'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
 import {
@@ -68,6 +68,7 @@ const ICON_PALETTE = [
 ]
 
 export default function PomodoroPage() {
+  const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
   const { youtubeUrl, updateBackground } = useBackground()
 
@@ -93,6 +94,7 @@ export default function PomodoroPage() {
 
   // --- Sound State ---
   const [showSoundMenu, setShowSoundMenu] = useState(false)
+  const [showMusicWidget, setShowMusicWidget] = useState(false)
   const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)

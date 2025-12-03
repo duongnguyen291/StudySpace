@@ -26,8 +26,6 @@ import {
 export default function LandingPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
-  const [showLogin, setShowLogin] = useState(false)
-  const [showRegister, setShowRegister] = useState(false)
 
   const features = [
     {
@@ -144,7 +142,7 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowLogin(true)}
+                onClick={() => router.push('/login')}
                 className="border-white/20 text-white hover:bg-white/10"
               >
                 Đăng nhập
@@ -152,7 +150,7 @@ export default function LandingPage() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => setShowRegister(true)}
+                onClick={() => router.push('/register')}
                 className="bg-white text-gray-900 hover:bg-white/90"
               >
                 Đăng ký
@@ -196,26 +194,6 @@ export default function LandingPage() {
         {/* ...existing code... */}
       </footer>
 
-      {/* Modals */}
-      {showLogin && (
-        <LoginModal
-          onClose={() => setShowLogin(false)}
-          onSwitchToRegister={() => {
-            setShowLogin(false)
-            setShowRegister(true)
-          }}
-        />
-      )}
-
-      {showRegister && (
-        <RegisterModal
-          onClose={() => setShowRegister(false)}
-          onSwitchToLogin={() => {
-            setShowRegister(false)
-            setShowLogin(true)
-          }}
-        />
-      )}
     </div>
   )
 }

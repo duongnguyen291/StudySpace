@@ -76,14 +76,20 @@ CREATE TABLE daily_goals (
 -- ============================================
 -- TABLE: user_achievements
 -- ============================================
+CREATE TABLE achievements (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    url VARCHAR(300),
+    active BOOLEAN DEFAULT TRUE
+);
+
+-- TABLE: user_achievements
 CREATE TABLE user_achievements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    achievement_type VARCHAR(50) NOT NULL, -- 'streak', 'quiz_master', 'study_time'
-    achievement_name VARCHAR(100) NOT NULL,
-    description TEXT,
-    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    badge_icon VARCHAR(100)
+    achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE
 );
 
 -- ============================================
@@ -344,15 +350,41 @@ INSERT INTO quotes (quote_text, author, category, language) VALUES
 -- ============================================
 -- SEED DATA: Music Playlists
 -- ============================================
-INSERT INTO music_playlists (name, description, playlist_type, duration_minutes, is_active) VALUES
-('Lofi Study Beats', 'Nhạc lofi thư giãn giúp tập trung học tập', 'lofi', 60, TRUE),
-('Piano Classical', 'Nhạc piano cổ điển êm dịu', 'piano', 45, TRUE),
-('Rain Sounds', 'Tiếng mưa giúp thư giãn và tập trung', 'rain', 30, TRUE),
-('Nature Ambience', 'Âm thanh thiên nhiên', 'nature', 40, TRUE),
-('White Noise', 'Tiếng ồn trắng giúp tập trung', 'ambient', 60, TRUE);
+INSERT INTO music_playlists (name, description, playlist_type, audio_url, duration_minutes, is_active) VALUES
+('Lofi Hip Hop Radio', 'Nhạc lofi chill để học bài và thư giãn', 'lofi', 'https://www.youtube.com/watch?v=jfKfPfyJRdk', 0, TRUE),
+('Lofi Chill Vibes', 'Lofi beats nhẹ nhàng cho buổi học đêm', 'lofi', 'https://www.youtube.com/watch?v=lTRiuFIWV54', 0, TRUE),
+('Coffee Shop Lofi', 'Không khí quán cà phê với nhạc lofi', 'lofi', 'https://www.youtube.com/watch?v=h2zkV-l_TbY', 0, TRUE),
+('Piano Relaxing Music', 'Nhạc piano thư giãn giúp tập trung', 'piano', 'https://www.youtube.com/watch?v=77ZozI0rw7w', 0, TRUE),
+('Classical Piano', 'Nhạc piano cổ điển - Chopin, Debussy', 'piano', 'https://www.youtube.com/watch?v=9E6b3swbnWg', 0, TRUE),
+('Study Piano', 'Piano nhẹ nhàng cho giờ học', 'piano', 'https://www.youtube.com/watch?v=lCOF9LN_Zxs', 0, TRUE),
+('Rain on Window', 'Tiếng mưa rơi trên cửa kính', 'rain', 'https://www.youtube.com/watch?v=mPZkdNFkNps', 0, TRUE),
+('Thunderstorm Sounds', 'Tiếng mưa bão và sấm sét', 'rain', 'https://www.youtube.com/watch?v=nMfPqeZjc2c', 0, TRUE),
+('Rain in Forest', 'Tiếng mưa trong rừng', 'rain', 'https://www.youtube.com/watch?v=q76bMs-NwRk', 0, TRUE),
+('Forest Birds', 'Tiếng chim hót trong rừng', 'nature', 'https://www.youtube.com/watch?v=xNN7iTA57jM', 0, TRUE),
+('River Stream', 'Tiếng suối chảy róc rách', 'nature', 'https://www.youtube.com/watch?v=IvjMgVS6kng', 0, TRUE),
+('Deep Focus Music', 'Nhạc ambient giúp tập trung sâu', 'ambient', 'https://www.youtube.com/watch?v=ceqgwo7U28Y', 0, TRUE),
+('Space Ambient', 'Âm thanh vũ trụ thư giãn', 'ambient', 'https://www.youtube.com/watch?v=tNkZsRW7h2c', 0, TRUE);
 
 -- ============================================
--- COMPLETE!
+-- SEED DATA: Achievements
 -- ============================================
+
+INSERT INTO achievements (code, name, description, url, active) VALUES
+('first_quiz', 'Bài Quiz Đầu Tiên', 'Hoàn thành bài quiz đầu tiên', '/icons/achievements/first_quiz.png', TRUE),
+('quiz_10', '10 Quizzes', 'Hoàn thành 10 bài quiz', '/icons/achievements/quiz_10.png', TRUE),
+('quiz_50', '50 Quizzes', 'Hoàn thành 50 bài quiz', '/icons/achievements/quiz_50.png', TRUE),
+('quiz_100', '100 Quizzes', 'Hoàn thành 100 bài quiz', '/icons/achievements/quiz_100.png', TRUE),
+('perfect_score', 'Hoàn Hảo', 'Đạt điểm tuyệt đối trong một quiz', '/icons/achievements/perfect_score.png', TRUE),
+('study_60', '60 Phút Tập Trung', 'Tích lũy 60 phút học', '/icons/achievements/study_60.png', TRUE),
+('study_300', '5 Giờ Tập Trung', 'Tích lũy 300 phút học', '/icons/achievements/study_300.png', TRUE),
+('study_1000', '1000 Phút Tập Trung', 'Tích lũy 1000 phút học', '/icons/achievements/study_1000.png', TRUE),
+('study_2000', '2000 Phút Tập Trung', 'Tích lũy 2000 phút học', '/icons/achievements/study_2000.png', TRUE),
+('pomodoro_10', '10 Pomodoro', 'Hoàn thành 10 phiên Pomodoro', '/icons/achievements/pomodoro_10.png', TRUE),
+('pomodoro_50', '50 Pomodoro', 'Hoàn thành 50 phiên Pomodoro', '/icons/achievements/pomodoro_50.png', TRUE),
+('flash_10', '10 Flashcards', 'Review 10 thẻ flashcard', '/icons/achievements/flash_10.png', TRUE),
+('flash_50', '50 Flashcards', 'Review 50 thẻ flashcard', '/icons/achievements/flash_50.png', TRUE),
+('flash_100', '100 Flashcards', 'Review 100 thẻ flashcard', '/icons/achievements/flash_100.png', TRUE);
+
+
 COMMENT ON DATABASE studyspace IS 'StudySpace - Personal Learning Platform Database';
 
