@@ -27,7 +27,8 @@ import {
   Music,
   X,
   ChevronDown,
-  Tag as TagIcon
+  Tag as TagIcon,
+  Type // Import icon cho nút Font
 } from 'lucide-react'
 
 interface Tag {
@@ -49,6 +50,14 @@ const QUICK_SUGGESTIONS = [
   { icon: '💻', text: 'Code' },
   { icon: '🔎', text: 'Nghiên cứu' },
   { icon: '🎥', text: 'Học online' },
+]
+
+// Danh sách Font chữ Timer
+const TIMER_FONTS = [
+  { name: 'Montserrat', value: "'Montserrat', sans-serif" },
+  { name: 'Roboto Mono', value: "'Roboto Mono', monospace" },
+  { name: 'Inter', value: "'Inter', sans-serif" },
+  { name: 'Playfair', value: "'Playfair Display', serif" },
 ]
 
 // Danh sách Icon gợi ý cho bảng chọn
@@ -75,9 +84,12 @@ export default function PomodoroPage() {
   const [customHours, setCustomHours] = useState(0)
   const [customMinutes, setCustomMinutes] = useState(25)
 
-  // --- Display Mode ---
+  // --- Display & Font State ---
   const [displayMode, setDisplayMode] = useState<'pomodoro' | 'clock'>('pomodoro')
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [timerFont, setTimerFont] = useState("'Montserrat', sans-serif") // Font mặc định
+  const [showFontMenu, setShowFontMenu] = useState(false)
+  const fontMenuRef = useRef<HTMLDivElement>(null)
 
   // --- Sound State ---
   const [showSoundMenu, setShowSoundMenu] = useState(false)
@@ -118,18 +130,21 @@ export default function PomodoroPage() {
     }
   }, [displayMode])
 
-  // Effect: Close Sound Menu on Click Outside
+  // Effect: Close Menus on Click Outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (soundMenuRef.current && !soundMenuRef.current.contains(event.target as Node)) {
         setShowSoundMenu(false)
       }
+      if (fontMenuRef.current && !fontMenuRef.current.contains(event.target as Node)) {
+        setShowFontMenu(false)
+      }
     }
-    if (showSoundMenu) {
+    if (showSoundMenu || showFontMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showSoundMenu])
+  }, [showSoundMenu, showFontMenu])
 
   // Effect: Auto hide custom input when timer starts
   useEffect(() => {
@@ -219,6 +234,11 @@ export default function PomodoroPage() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden flex flex-col font-sans text-slate-50 selection:bg-blue-500/30">
+      {/* Import Fonts */}
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&family=Roboto+Mono:wght@400;700&family=Inter:wght@400;700;800&family=Playfair+Display:wght@400;700;800&display=swap');
+      `}</style>
+
       <YouTubeBackground videoId={youtubeUrl} />
       
       {/* Overlay gradient */}
@@ -310,7 +330,7 @@ export default function PomodoroPage() {
                         )}
                        </div>
 
-                       {/* New Tag Form (ĐÃ BỎ CHỌN MÀU SẮC) */}
+                       {/* New Tag Form */}
                        {showNewTagForm && (
                           <div className="absolute top-full left-0 mt-2 w-full p-4 bg-gray-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95">
                              <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-3">Tạo tag mới</h4>
@@ -323,7 +343,6 @@ export default function PomodoroPage() {
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/30"
                               />
                               
-                              {/* Bảng chọn Icon */}
                               <div>
                                 <label className="text-[10px] text-white/50 mb-1 block">Chọn biểu tượng:</label>
                                 <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 pr-1">
@@ -338,7 +357,6 @@ export default function PomodoroPage() {
                                   ))}
                                 </div>
                               </div>
-                              {/* Đã xóa phần chọn màu sắc ở đây */}
 
                               <div className="flex gap-2 pt-2">
                                 <Button variant="primary" size="sm" onClick={handleAddTag} className="flex-1 text-xs h-8">Lưu</Button>
@@ -362,8 +380,8 @@ export default function PomodoroPage() {
                   {/* 2. TIMER DISPLAY */}
                   <div className="flex flex-col items-center select-none">
                     <div 
-                      className="text-9xl font-extrabold text-white drop-shadow-lg tracking-tight leading-none py-4"
-                      style={{ fontFamily: "'Montserrat', sans-serif" }}
+                      className="text-9xl font-extrabold text-white drop-shadow-lg tracking-tight leading-none py-4 transition-all duration-300"
+                      style={{ fontFamily: timerFont }} // Sử dụng state timerFont
                     >
                       {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                     </div>
@@ -375,32 +393,31 @@ export default function PomodoroPage() {
                     </div>
                   </div>
 
-                  {/* 3. TASK INPUT */}
+                  {/* 3. TASK INPUT (Sửa lỗi: Nút X nằm ngoài khung) */}
                   <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {!isActive ? (
                       <div className="relative group">
-                        <input
-                          type="text"
-                          value={currentTask}
-                          onChange={(e) => setCurrentTask(e.target.value)}
-                          placeholder="Bạn đang tập trung làm gì?"
-                          // Căn chỉnh lại: pr-12 cho nút X
-                          className="w-full pl-6 pr-12 py-3 bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/10 group-hover:border-white/20 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-black/40 shadow-lg transition-all text-center text-base md:text-lg"
-                        />
-                        
-                        {/* Nút X: Căn giữa theo chiều dọc chuẩn xác */}
-                        {currentTask && (
-                          <button
-                            onClick={handleClearTask}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center
-                                      w-6 h-6 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-all"
-                            title="Xóa nội dung"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-
-
-                        )}
+                        <div className="relative w-full">
+                          <input
+                            type="text"
+                            value={currentTask}
+                            onChange={(e) => setCurrentTask(e.target.value)}
+                            placeholder="Bạn đang tập trung làm gì?"
+                            // Không cần pr lớn nữa vì nút X đã ra ngoài
+                            className="w-full px-6 py-3 bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/10 group-hover:border-white/20 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-black/40 shadow-lg transition-all text-center text-base md:text-lg"
+                          />
+                          
+                          {/* Nút X: Nằm ngoài khung bên phải */}
+                          {currentTask && (
+                            <button
+                              onClick={handleClearTask}
+                              className="absolute -right-10 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                              title="Xóa nội dung"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
                         
                         <div className="flex flex-wrap justify-center gap-2 mt-3">
                           {QUICK_SUGGESTIONS.map((suggestion, index) => (
@@ -416,7 +433,6 @@ export default function PomodoroPage() {
                       </div>
                     ) : (
                       currentTask && (
-                        // CẢI THIỆN: Khung hiển thị task đang tập trung (Active State)
                         <div className="flex flex-col items-center justify-center p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl animate-in zoom-in duration-300 min-w-[280px]">
                           <span className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-2">Đang tập trung</span>
                           <h3 className="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-md leading-tight">
@@ -518,7 +534,7 @@ export default function PomodoroPage() {
               ) : (
                 // --- CLOCK MODE ---
                 <div className="flex flex-col items-center justify-center animate-in fade-in duration-500 py-10">
-                  <div className="text-[5rem] md:text-[8rem] font-bold text-white leading-none tracking-tight drop-shadow-xl select-none" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                  <div className="text-[5rem] md:text-[8rem] font-bold text-white leading-none tracking-tight drop-shadow-xl select-none" style={{ fontFamily: timerFont }}>
                     {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </div>
                   <div className="mt-6 px-6 py-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/5">
@@ -560,10 +576,39 @@ export default function PomodoroPage() {
 
             <IconButton icon={<Music className="w-5 h-5" />} tooltip="Spotify (Coming soon)" className="opacity-50 cursor-not-allowed" />
             
-            {/* Nút Grid (Menu) */}
+            {/* Nút Menu Grid */}
             <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Menu">
               <Grid3x3 className="w-5 h-5" />
             </button>
+
+            {/* Thêm nút chọn Font chữ */}
+            <div className="relative" ref={fontMenuRef}>
+              <button 
+                onClick={() => setShowFontMenu(!showFontMenu)}
+                className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" 
+                title="Kiểu chữ"
+              >
+                <Type className="w-5 h-5" />
+              </button>
+              
+              {showFontMenu && (
+                <div className="absolute bottom-full right-0 mb-3 w-48 bg-black/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="px-3 py-1 mb-2 border-b border-white/10">
+                    <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Chọn font chữ</span>
+                  </div>
+                  {TIMER_FONTS.map((font) => (
+                    <button
+                      key={font.name}
+                      onClick={() => { setTimerFont(font.value); setShowFontMenu(false); }}
+                      className={`w-full px-3 py-2 rounded-lg text-left text-sm transition-colors ${timerFont === font.value ? 'bg-white/20 text-white' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
+                      style={{ fontFamily: font.value }}
+                    >
+                      {font.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center bg-black/30 backdrop-blur-md rounded-full p-1 border border-white/10">
