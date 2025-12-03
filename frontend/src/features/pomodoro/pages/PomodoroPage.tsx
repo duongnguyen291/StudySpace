@@ -95,6 +95,7 @@ export default function PomodoroPage() {
   // --- Sound State ---
   const [showSoundMenu, setShowSoundMenu] = useState(false)
   const [showMusicWidget, setShowMusicWidget] = useState(false)
+  const [musicWidgetSize, setMusicWidgetSize] = useState<'sm' | 'md' | 'lg'>('md')
   const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -292,8 +293,9 @@ export default function PomodoroPage() {
 
         {/* === MAIN CONTENT === */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          <div className="min-h-full w-full flex flex-col items-center justify-center py-8">
-            <div className="w-full max-w-xl flex flex-col items-center gap-5 px-4">
+          <div className={`min-h-full w-full flex items-center py-8 px-4 gap-8 transition-all ${showMusicWidget ? 'justify-center' : 'justify-center'}`}>
+            {/* Center: Timer, Controls & Quote */}
+            <div className="w-full max-w-xl flex flex-col items-center gap-5">
               
               {displayMode === 'pomodoro' ? (
                 <>
@@ -546,12 +548,61 @@ export default function PomodoroPage() {
                   </div>
                 </div>
               )}
+
+              {/* Quote Banner - Always below Timer */}
+              <div className="w-full max-w-2xl mt-6 opacity-80 hover:opacity-100 transition-opacity">
+                <QuoteBanner />
+              </div>
             </div>
 
-            {/* Quote Banner */}
-            <div className="w-full max-w-2xl px-6 mt-6 opacity-80 hover:opacity-100 transition-opacity">
-               <QuoteBanner />
-            </div>
+            {/* Right Side: Music Widget (only when enabled) */}
+            {showMusicWidget && (
+              <div className={`hidden lg:block w-full animate-in fade-in slide-in-from-right-4 duration-500 transition-all ${
+                musicWidgetSize === 'sm' ? 'max-w-sm' : 
+                musicWidgetSize === 'md' ? 'max-w-md' : 
+                'max-w-2xl'
+              }`}>
+                <div className="relative group">
+                  {/* Size Control Buttons */}
+                  <div className="absolute -top-8 right-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => setMusicWidgetSize('sm')}
+                      className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                        musicWidgetSize === 'sm' 
+                          ? 'bg-white/20 text-white' 
+                          : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                      }`}
+                      title="Nhỏ"
+                    >
+                      S
+                    </button>
+                    <button
+                      onClick={() => setMusicWidgetSize('md')}
+                      className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                        musicWidgetSize === 'md' 
+                          ? 'bg-white/20 text-white' 
+                          : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                      }`}
+                      title="Vừa"
+                    >
+                      M
+                    </button>
+                    <button
+                      onClick={() => setMusicWidgetSize('lg')}
+                      className={`px-2 py-1 rounded text-[10px] font-medium transition-all ${
+                        musicWidgetSize === 'lg' 
+                          ? 'bg-white/20 text-white' 
+                          : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/80'
+                      }`}
+                      title="Lớn"
+                    >
+                      L
+                    </button>
+                  </div>
+                  <MusicWidget />
+                </div>
+              </div>
+            )}
           </div>
         </main>
 
@@ -576,7 +627,12 @@ export default function PomodoroPage() {
               )}
             </div>
 
-            <IconButton icon={<Music className="w-5 h-5" />} tooltip="Spotify (Coming soon)" className="opacity-50 cursor-not-allowed" />
+            <IconButton 
+              onClick={() => setShowMusicWidget(!showMusicWidget)} 
+              active={showMusicWidget}
+              icon={<Music className="w-5 h-5" />} 
+              tooltip="Music Player" 
+            />
             
             {/* Nút Menu Grid */}
             <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Menu">
