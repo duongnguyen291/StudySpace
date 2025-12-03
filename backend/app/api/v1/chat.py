@@ -105,6 +105,7 @@ async def send_message(
 
     - Nếu có `conversation_id` → gắn vào cuộc hội thoại đó
     - Nếu không có → tự tạo conversation mới
+    - `step_by_step_mode`: bật/tắt chế độ giải thích từng bước cho message này
     """
     service = get_service(db)
     return service.send_message(
