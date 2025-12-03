@@ -107,10 +107,11 @@ class AIChatService:
             # Load conversation history để AI có context
             conversation_history = self.repo.get_messages(conversation.id)
 
-            # Generate AI reply với conversation history
+            # Generate AI reply với conversation history và step-by-step mode
             ai_reply, tokens_used = self._generate_ai_reply(
                 message=payload.message,
-                conversation_history=conversation_history
+                conversation_history=conversation_history,
+                step_by_step_mode=payload.step_by_step_mode
             )
 
         # Save assistant message
@@ -158,7 +159,12 @@ class AIChatService:
             )
         return conversation
 
-    def _generate_ai_reply(self, message: str, conversation_history: list = None) -> Tuple[str, int]:
+    def _generate_ai_reply(
+        self, 
+        message: str, 
+        conversation_history: list = None,
+        step_by_step_mode: bool = False
+    ) -> Tuple[str, int]:
         """
         Generate AI reply using Google Gemini API.
         Falls back to stub response if API key is not configured.
@@ -187,6 +193,14 @@ class AIChatService:
                 "và hỗ trợ tạo quiz/flashcards. Hãy trả lời bằng tiếng Việt, ngắn gọn và dễ hiểu."
                 "không dùng các ký hiệu như **,-,#,..."
             )
+            
+            # Nếu step-by-step mode được bật, thêm hướng dẫn đặc biệt
+            if step_by_step_mode:
+                system_instruction += (
+                    "\n\nQUAN TRỌNG: Khi trả lời, bạn PHẢI trình bày theo từng bước rõ ràng. "
+                    "Mỗi bước một dòng, bắt đầu bằng dấu gạch đầu dòng '-' hoặc số thứ tự (1., 2., 3., ...). "
+                    "Ví dụ:\n- Bước 1: Mô tả bước đầu tiên\n- Bước 2: Mô tả bước thứ hai\n- Bước 3: Mô tả bước tiếp theo"
+                )
             
             # Chọn model Gemini 1.5 Pro (hoặc thay bằng gemini-2.0-flash-exp nếu bạn có quyền truy cập)
             model = genai.GenerativeModel('gemini-2.0-flash-exp')
