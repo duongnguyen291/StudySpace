@@ -1,51 +1,38 @@
 import quotesData from '../data/quotes.json'
-import type { Quote, CreateQuoteInput } from '../types/quote.types'
+import type { Quote } from '../types/quote.types'
 
-const LOCAL_KEY = 'user_quotes_v1'
+const STORAGE_KEY = 'user_quotes_v1'
 
-function loadUserQuotes(): Quote[] {
+export function getDailyQuote(): Quote {
+  const userQuotes = getUserQuotes()
+  const allQuotes = [...quotesData, ...userQuotes]
+  
+  if (allQuotes.length === 0) {
+    return { id: 'default', text: 'Hãy bắt đầu hành trình học tập của bạn!', author: 'StudySpace' }
+  }
+
+  // Random quote mỗi lần gọi hàm (mỗi reload)
+  const randomIndex = Math.floor(Math.random() * allQuotes.length)
+  return allQuotes[randomIndex]
+}
+
+export function addQuote(quote: Omit<Quote, 'id'>): void {
+  const userQuotes = getUserQuotes()
+  const newQuote: Quote = {
+    id: `user_${Date.now()}`,
+    text: quote.text,
+    author: quote.author || 'Anonymous'
+  }
+  userQuotes.push(newQuote)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(userQuotes))
+}
+
+function getUserQuotes(): Quote[] {
   if (typeof window === 'undefined') return []
   try {
-    const raw = localStorage.getItem(LOCAL_KEY)
-    if (!raw) return []
-    return JSON.parse(raw)
+    const stored = localStorage.getItem(STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
   } catch {
     return []
   }
-}
-
-function saveUserQuotes(quotes: Quote[]) {
-  if (typeof window === 'undefined') return
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(quotes))
-}
-
-// Quote of the Day: ổn định theo ngày dựa trên hash YYYY-MM-DD
-export function getDailyQuote(date: Date = new Date()): Quote {
-  const userQuotes = loadUserQuotes()
-  const all = [...quotesData, ...userQuotes]
-  const key = date.toISOString().slice(0, 10)
-  let hash = 0
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0
-  const index = hash % all.length
-  return all[index]
-}
-
-// Thêm quote (lưu tạm localStorage, có thể thay bằng API sau)
-export function addQuote(input: CreateQuoteInput): Quote {
-  const quote: Quote = {
-    id: 'u_' + Date.now().toString(36),
-    text: input.text.trim(),
-    author: input.author?.trim() || 'Anonymous',
-    createdByUser: true,
-    createdAt: new Date().toISOString(),
-  }
-  const current = loadUserQuotes()
-  current.push(quote)
-  saveUserQuotes(current)
-  return quote
-}
-
-// Liệt kê tất cả quote (mặc định + người dùng)
-export function listQuotes(): Quote[] {
-  return [...quotesData, ...loadUserQuotes()]
 }
