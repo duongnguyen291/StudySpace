@@ -8,6 +8,7 @@ from uuid import UUID
 
 from app.repositories.category_repo import CategoryRepository
 from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse, CategoryListResponse
+from app.services.default_data_service import DefaultDataService
 
 
 class CategoryService:
@@ -15,6 +16,7 @@ class CategoryService:
     
     def __init__(self, db: Session):
         self.repo = CategoryRepository(db)
+        self.db = db
     
     def create_category(self, user_id: UUID, category_data: CategoryCreate) -> CategoryResponse:
         """Create a new category"""
@@ -29,8 +31,14 @@ class CategoryService:
         return CategoryResponse.model_validate(category)
     
     def get_categories(self, user_id: UUID) -> CategoryListResponse:
-        """Get all categories for user"""
+        """Get all categories for user (creates defaults if none exist)"""
         categories = self.repo.get_all(user_id)
+        
+        # Lazy init: Create default categories if user has none
+        if not categories:
+            default_service = DefaultDataService(self.db)
+            default_service.create_default_categories(user_id)
+            categories = self.repo.get_all(user_id)
         
         category_responses = [CategoryResponse.model_validate(cat) for cat in categories]
         
