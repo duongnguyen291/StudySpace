@@ -18,15 +18,13 @@ import {
   Sparkles,
   ArrowRight,
   PlayCircle,
-  LogOut,
-  Moon,
-  Sun
+  LogOut
 } from 'lucide-react'
 
 export default function LandingPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { theme } = useTheme() // Only need theme for background pattern, toggle is in GlobalHeader
 
   const features = [
     {
@@ -80,13 +78,20 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-white text-[#020617] dark:bg-gradient-to-b dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 dark:text-white">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-[#020617] dark:bg-gradient-to-b dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 dark:text-white">
+      {/* Background Pattern (light + dark) */}
+      <div className="fixed inset-0 opacity-10 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, ${
+              theme === 'dark'
+                ? 'rgba(255,255,255,0.8)' // dark mode: white dots
+                : 'rgba(0,0,0,0.8)' // light mode: black dots (same size & density as dark)
+            } 3px, transparent 0)`,
+            backgroundSize: '40px 40px',
+          }}
+        ></div>
       </div>
 
       {/* Header */}
@@ -131,25 +136,6 @@ export default function LandingPage() {
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Đăng xuất</span>
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTheme}
-                className="border-blue-300 text-black hover:bg-blue-50 dark:border-white/20 dark:text-white dark:hover:bg-white/10 flex items-center gap-2"
-                aria-label="Chuyển chế độ giao diện"
-              >
-                {theme === 'dark' ? (
-                  <>
-                    <Sun className="w-4 h-4" />
-                    <span className="hidden sm:inline">Light</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-4 h-4" />
-                    <span className="hidden sm:inline">Dark</span>
-                  </>
-                )}
-              </Button>
             </>
           ) : (
             <>
@@ -165,7 +151,7 @@ export default function LandingPage() {
                 variant="primary"
                 size="sm"
                 onClick={() => router.push('/register')}
-                className="bg-white text-gray-900 hover:bg-gray-100 dark:bg-white dark:text-gray-900 dark:hover:bg-white/90"
+                className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
               >
                 Đăng ký
               </Button>
@@ -176,25 +162,6 @@ export default function LandingPage() {
                 className="border-gray-300 text-black hover:bg-gray-100 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 Mở ứng dụng
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleTheme}
-                className="border-blue-300 text-black hover:bg-blue-50 dark:border-white/20 dark:text-white dark:hover:bg-white/10 flex items-center gap-2"
-                aria-label="Chuyển chế độ giao diện"
-              >
-                {theme === 'dark' ? (
-                  <>
-                    <Sun className="w-4 h-4" />
-                    <span className="hidden sm:inline">Light</span>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-4 h-4" />
-                    <span className="hidden sm:inline">Dark</span>
-                  </>
-                )}
               </Button>
             </>
           )}
@@ -226,7 +193,7 @@ export default function LandingPage() {
               variant="primary"
               size="lg"
               onClick={() => router.push('/pomodoro')}
-              className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8 py-4 text-lg flex items-center gap-2 group"
+              className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 font-semibold px-8 py-4 text-lg flex items-center gap-2 group"
             >
               Bắt đầu phiên học tập
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
