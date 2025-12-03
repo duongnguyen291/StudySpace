@@ -51,6 +51,13 @@ const QUICK_SUGGESTIONS = [
   { icon: '🎥', text: 'Học online' },
 ]
 
+// Danh sách Icon gợi ý cho bảng chọn
+const ICON_PALETTE = [
+  '📚', '💼', '💻', '🎨', '🎧', '🍎', 
+  '⚽', '🎮', '🚀', '💡', '⏰', '📝',
+  '🏠', '✈️', '🛒', '💊', '💤', '🌳'
+]
+
 export default function PomodoroPage() {
   const { user, isAuthenticated, isLoading, logout } = useAuth()
   const { youtubeUrl, updateBackground } = useBackground()
@@ -82,7 +89,7 @@ export default function PomodoroPage() {
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS)
   const [selectedTag, setSelectedTag] = useState<string>('')
   const [showNewTagForm, setShowNewTagForm] = useState(false)
-  const [newTag, setNewTag] = useState({ name: '', icon: '', color: '#3B82F6' })
+  const [newTag, setNewTag] = useState({ name: '', icon: '📚', color: '#3B82F6' })
 
   // --- Timer Hook ---
   const {
@@ -182,7 +189,7 @@ export default function PomodoroPage() {
       }
       setTags([...tags, tag])
       setSelectedTag(tag.id)
-      setNewTag({ name: '', icon: '', color: '#3B82F6' })
+      setNewTag({ name: '', icon: '📚', color: '#3B82F6' })
       setShowNewTagForm(false)
     }
   }
@@ -211,7 +218,6 @@ export default function PomodoroPage() {
   }
 
   return (
-    // FIX: Wrapper chính vẫn giữ h-screen để cố định Header/Footer
     <div className="relative h-screen w-full overflow-hidden flex flex-col font-sans text-slate-50 selection:bg-blue-500/30">
       <YouTubeBackground videoId={youtubeUrl} />
       
@@ -219,7 +225,7 @@ export default function PomodoroPage() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/10 to-black/40 pointer-events-none z-0" />
 
       <div className="relative z-10 flex-1 flex flex-col h-full">
-        {/* === HEADER (Giữ nguyên) === */}
+        {/* === HEADER === */}
         <header className="w-full px-6 py-4 shrink-0 flex justify-between items-center z-20">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="w-8 h-8 rounded-lg bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/10 group-hover:bg-white/20 transition-all">
@@ -230,7 +236,7 @@ export default function PomodoroPage() {
               <span className="text-[10px] text-white/60 uppercase tracking-widest">Focus Mode</span>
             </div>
           </div>
-          {/* ... (Phần user/login giữ nguyên như cũ để tiết kiệm không gian code) ... */}
+          
            <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <div className="flex items-center gap-3 pl-4 border-l border-white/10">
@@ -262,10 +268,8 @@ export default function PomodoroPage() {
           </div>
         </header>
 
-        {/* === MAIN CONTENT (ĐÃ SỬA LỖI SCROLL & CĂN GIỮA) === */}
-        {/* FIX: overflow-y-auto ở đây cho phép cuộn nội dung bên trong */}
+        {/* === MAIN CONTENT === */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-          {/* FIX: min-h-full + flex + my-auto + py-8 đảm bảo nội dung luôn căn giữa nếu đủ chỗ, và cuộn được nếu thiếu chỗ */}
           <div className="min-h-full w-full flex flex-col items-center justify-center py-8">
             <div className="w-full max-w-xl flex flex-col items-center gap-5 px-4">
               
@@ -306,10 +310,9 @@ export default function PomodoroPage() {
                         )}
                        </div>
 
-                       {/* New Tag Form */}
+                       {/* New Tag Form (ĐÃ BỎ CHỌN MÀU SẮC) */}
                        {showNewTagForm && (
                           <div className="absolute top-full left-0 mt-2 w-full p-4 bg-gray-900/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 animate-in fade-in zoom-in-95">
-                             {/* ... (Form content giữ nguyên) ... */}
                              <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-3">Tạo tag mới</h4>
                             <div className="space-y-3">
                               <input
@@ -319,22 +322,25 @@ export default function PomodoroPage() {
                                 onChange={(e) => setNewTag({ ...newTag, name: e.target.value })}
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:border-white/30"
                               />
-                              <div className="flex gap-2">
-                                <input
-                                  type="text"
-                                  placeholder="Icon (📚)"
-                                  value={newTag.icon}
-                                  onChange={(e) => setNewTag({ ...newTag, icon: e.target.value })}
-                                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm focus:outline-none"
-                                />
-                                <input
-                                  type="color"
-                                  value={newTag.color}
-                                  onChange={(e) => setNewTag({ ...newTag, color: e.target.value })}
-                                  className="w-10 h-9 rounded cursor-pointer bg-transparent border-none"
-                                />
+                              
+                              {/* Bảng chọn Icon */}
+                              <div>
+                                <label className="text-[10px] text-white/50 mb-1 block">Chọn biểu tượng:</label>
+                                <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 pr-1">
+                                  {ICON_PALETTE.map((icon) => (
+                                    <button
+                                      key={icon}
+                                      onClick={() => setNewTag({...newTag, icon})}
+                                      className={`aspect-square flex items-center justify-center rounded hover:bg-white/10 transition-colors ${newTag.icon === icon ? 'bg-blue-500/50 ring-1 ring-blue-400' : 'bg-white/5'}`}
+                                    >
+                                      {icon}
+                                    </button>
+                                  ))}
+                                </div>
                               </div>
-                              <div className="flex gap-2 pt-1">
+                              {/* Đã xóa phần chọn màu sắc ở đây */}
+
+                              <div className="flex gap-2 pt-2">
                                 <Button variant="primary" size="sm" onClick={handleAddTag} className="flex-1 text-xs h-8">Lưu</Button>
                                 <Button variant="outline" size="sm" onClick={() => setShowNewTagForm(false)} className="flex-1 text-xs h-8 bg-white/5 border-none text-white/70">Hủy</Button>
                               </div>
@@ -353,10 +359,11 @@ export default function PomodoroPage() {
                     </div>
                   )}
 
-                  {/* 2. TIMER DISPLAY (FIX: Giảm size font để vừa laptop) */}
+                  {/* 2. TIMER DISPLAY */}
                   <div className="flex flex-col items-center select-none">
                     <div 
-                      className="text-7xl md:text-8xl lg:text-[7rem] leading-none font-bold text-transparent bg-clip-text bg-gradient-to-b from-white to-white/80 drop-shadow-2xl tracking-tighter font-sans py-2"
+                      className="text-9xl font-extrabold text-white drop-shadow-lg tracking-tight leading-none py-4"
+                      style={{ fontFamily: "'Montserrat', sans-serif" }}
                     >
                       {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                     </div>
@@ -368,7 +375,7 @@ export default function PomodoroPage() {
                     </div>
                   </div>
 
-                  {/* 3. TASK INPUT (FIX: Chỉnh lại vị trí X) */}
+                  {/* 3. TASK INPUT */}
                   <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {!isActive ? (
                       <div className="relative group">
@@ -377,19 +384,22 @@ export default function PomodoroPage() {
                           value={currentTask}
                           onChange={(e) => setCurrentTask(e.target.value)}
                           placeholder="Bạn đang tập trung làm gì?"
-                          // FIX: Giảm padding vertical (py-3) và thêm padding right (pr-10) để tránh chữ đè lên nút X
-                          className="w-full pl-6 pr-10 py-3 bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/10 group-hover:border-white/20 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-black/40 shadow-lg transition-all text-center text-base md:text-lg"
+                          // Căn chỉnh lại: pr-12 cho nút X
+                          className="w-full pl-6 pr-12 py-3 bg-black/20 hover:bg-black/30 backdrop-blur-md border border-white/10 group-hover:border-white/20 rounded-2xl text-white placeholder-white/40 focus:outline-none focus:ring-1 focus:ring-white/30 focus:bg-black/40 shadow-lg transition-all text-center text-base md:text-lg"
                         />
                         
-                        {/* FIX: Nút X định vị tuyệt đối chuẩn xác */}
+                        {/* Nút X: Căn giữa theo chiều dọc chuẩn xác */}
                         {currentTask && (
                           <button
                             onClick={handleClearTask}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white hover:bg-white/10 rounded-full transition-all z-10"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center
+                                      w-6 h-6 rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-all"
                             title="Xóa nội dung"
                           >
                             <X className="w-4 h-4" />
                           </button>
+
+
                         )}
                         
                         <div className="flex flex-wrap justify-center gap-2 mt-3">
@@ -406,9 +416,12 @@ export default function PomodoroPage() {
                       </div>
                     ) : (
                       currentTask && (
-                        <div className="text-center animate-in zoom-in duration-300">
-                          <p className="text-white/60 text-xs mb-1 uppercase tracking-wide">Đang tập trung</p>
-                          <h3 className="text-xl md:text-2xl font-medium text-white drop-shadow-md">{currentTask}</h3>
+                        // CẢI THIỆN: Khung hiển thị task đang tập trung (Active State)
+                        <div className="flex flex-col items-center justify-center p-6 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl animate-in zoom-in duration-300 min-w-[280px]">
+                          <span className="text-white/50 text-xs font-semibold uppercase tracking-widest mb-2">Đang tập trung</span>
+                          <h3 className="text-2xl md:text-3xl font-bold text-white text-center drop-shadow-md leading-tight">
+                            {currentTask}
+                          </h3>
                         </div>
                       )
                     )}
@@ -470,7 +483,7 @@ export default function PomodoroPage() {
                     </div>
                   )}
 
-                  {/* Custom Input Panel (FIX: Khoảng cách và animation) */}
+                  {/* Custom Input Panel */}
                   {!isActive && showCustomInput && (
                     <div className="mt-4 p-5 bg-black/60 backdrop-blur-xl border border-white/10 rounded-2xl animate-in zoom-in-95 shadow-2xl flex flex-col items-center gap-4 mb-4">
                       <div className="flex items-center gap-4 text-white">
@@ -505,11 +518,8 @@ export default function PomodoroPage() {
               ) : (
                 // --- CLOCK MODE ---
                 <div className="flex flex-col items-center justify-center animate-in fade-in duration-500 py-10">
-                  <div className="text-[6rem] md:text-[8rem] font-bold text-white leading-none tracking-tight drop-shadow-xl select-none" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                    {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                  <div className="text-2xl text-white/50 font-light mt-2">
-                    {currentTime.toLocaleTimeString('vi-VN', { second: '2-digit' })}
+                  <div className="text-[5rem] md:text-[8rem] font-bold text-white leading-none tracking-tight drop-shadow-xl select-none" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                    {currentTime.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </div>
                   <div className="mt-6 px-6 py-3 bg-white/5 backdrop-blur-md rounded-2xl border border-white/5">
                     <p className="text-white/80 text-xl font-medium tracking-wide">
@@ -527,9 +537,8 @@ export default function PomodoroPage() {
           </div>
         </main>
 
-        {/* === FOOTER (Giữ nguyên) === */}
+        {/* === FOOTER === */}
         <footer className="w-full px-6 py-4 shrink-0 flex justify-between items-center z-20">
-           {/* ... Footer Content ... */}
            <div className="flex items-center gap-2">
             <IconButton onClick={() => setShowBackgroundSettings(true)} icon={<ImageIcon className="w-5 h-5" />} tooltip="Hình nền" />
             
@@ -550,6 +559,11 @@ export default function PomodoroPage() {
             </div>
 
             <IconButton icon={<Music className="w-5 h-5" />} tooltip="Spotify (Coming soon)" className="opacity-50 cursor-not-allowed" />
+            
+            {/* Nút Grid (Menu) */}
+            <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Menu">
+              <Grid3x3 className="w-5 h-5" />
+            </button>
           </div>
 
           <div className="flex items-center bg-black/30 backdrop-blur-md rounded-full p-1 border border-white/10">
