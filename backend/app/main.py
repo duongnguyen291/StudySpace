@@ -5,6 +5,8 @@ Entry point for the application
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -32,6 +34,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files for audio (if local storage is used)
+static_path = Path("static")
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
 
@@ -56,4 +63,3 @@ async def health_check():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
-
