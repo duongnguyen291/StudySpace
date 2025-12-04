@@ -142,6 +142,7 @@ CREATE TABLE tasks (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     priority VARCHAR(10) DEFAULT 'medium', -- 'low', 'medium', 'high'
+    start_date DATE,
     due_date DATE,
     completed BOOLEAN DEFAULT FALSE,
     completed_at TIMESTAMP,
@@ -299,6 +300,7 @@ CREATE INDEX idx_daily_goals_user_date ON daily_goals(user_id, goal_date);
 CREATE INDEX idx_notes_user_id ON notes(user_id);
 CREATE INDEX idx_notes_category_id ON notes(category_id);
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_tasks_start_date ON tasks(start_date);
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 CREATE INDEX idx_quiz_attempts_user_id ON quiz_attempts(user_id);
 CREATE INDEX idx_flashcard_progress_user_id ON flashcard_progress(user_id);

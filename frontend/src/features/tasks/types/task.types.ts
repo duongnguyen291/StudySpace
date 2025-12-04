@@ -14,6 +14,7 @@ export interface Task {
   priority: TaskPriority
   completed: boolean
   completed_at?: string | null
+  start_date?: string | null
   due_date?: string | null
   created_at: string
   updated_at: string
@@ -24,6 +25,7 @@ export interface TaskCreate {
   description?: string
   category_id?: string
   priority?: TaskPriority
+  start_date?: string
   due_date?: string
 }
 
@@ -32,6 +34,7 @@ export interface TaskUpdate {
   description?: string
   category_id?: string
   priority?: TaskPriority
+  start_date?: string
   due_date?: string
   completed?: boolean
 }

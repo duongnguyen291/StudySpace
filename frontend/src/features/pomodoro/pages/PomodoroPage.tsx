@@ -8,6 +8,7 @@ import { BackgroundSettings } from '@/features/pomodoro/components/BackgroundSet
 import { QuoteBanner } from '@/features/quote'
 import { useBackground } from '@/features/pomodoro/hooks/useBackground'
 import { MusicWidget } from '@/features/pomodoro/components/MusicWidget'
+import { TaskWidget } from '@/features/tasks/components/TaskWidget'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
 import {
@@ -685,6 +686,9 @@ export default function PomodoroPage() {
           </div>
         </footer>
       </div>
+
+      {/* Task Widget Popup */}
+      <TaskWidget />
 
       {/* MODALS */}
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} onSwitchToRegister={() => { setShowLogin(false); setShowRegister(true) }} />}
