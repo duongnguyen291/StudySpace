@@ -32,8 +32,6 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
-    # Trust Railway proxy headers
-    root_path="/api/v1" if settings.ENVIRONMENT == "production" else "",
 )
 
 # Trust Railway proxy headers
