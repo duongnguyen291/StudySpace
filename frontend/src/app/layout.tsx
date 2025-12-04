@@ -3,6 +3,8 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AppShell } from './AppShell'
 import { Providers } from '@/shared/components'
+// Import axios HTTPS patch early
+import '@/lib/axios-https-patch'
 
 const inter = Inter({ subsets: ['latin'] })
 
