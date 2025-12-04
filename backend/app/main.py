@@ -33,15 +33,19 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# qicknotes
 # CORS middleware
+# Allow all origins in development, specific origins in production
+cors_origins = settings.ALLOWED_ORIGINS if settings.ENVIRONMENT == "production" else ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+logger.info(f"CORS enabled for origins: {cors_origins}")
 
 # Mount static files for audio (if local storage is used)
 static_path = Path("static")

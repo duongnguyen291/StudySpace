@@ -69,8 +69,9 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: studyspace-frontend
+    env_file:
+      - ./frontend/.env.local
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
       NODE_ENV: development
     ports:
       - "3000:3000"

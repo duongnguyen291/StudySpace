@@ -4,6 +4,7 @@ Loads settings from environment variables
 """
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
@@ -22,12 +23,25 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # CORS
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://127.0.0.1:3000",
-    ]
+    # CORS - Đọc từ environment variable hoặc dùng default
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        """
+        Get allowed CORS origins from environment or use defaults.
+        In production, set ALLOWED_ORIGINS env var as comma-separated list:
+        ALLOWED_ORIGINS="http://localhost:3000,https://your-app.vercel.app"
+        """
+        env_origins = os.getenv("ALLOWED_ORIGINS")
+        if env_origins:
+            # Parse comma-separated string from env
+            return [origin.strip() for origin in env_origins.split(",")]
+        
+        # Default origins for development
+        return [
+            "http://localhost:3000",
+            "http://localhost:3001", 
+            "http://127.0.0.1:3000",
+        ]
     
     # Audio Storage
     AUDIO_STORAGE_PATH: str = "static/audio"

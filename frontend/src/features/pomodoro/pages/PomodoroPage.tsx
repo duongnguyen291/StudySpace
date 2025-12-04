@@ -31,7 +31,12 @@ import {
   X,
   ChevronDown,
   Tag as TagIcon,
-  Type // Import icon cho nút Font
+  Type, // Import icon cho nút Font
+  Award,
+  CheckSquare,
+  BookOpen,
+  TrendingUp,
+  Home
 } from 'lucide-react'
 
 interface Tag {
@@ -103,6 +108,10 @@ export default function PomodoroPage() {
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  // --- Menu State ---
+  const [showMainMenu, setShowMainMenu] = useState(false)
+  const mainMenuRef = useRef<HTMLDivElement>(null)
+
   // --- Tags State ---
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS)
   const [selectedTag, setSelectedTag] = useState<string>('')
@@ -145,12 +154,15 @@ export default function PomodoroPage() {
       if (fontMenuRef.current && !fontMenuRef.current.contains(event.target as Node)) {
         setShowFontMenu(false)
       }
+      if (mainMenuRef.current && !mainMenuRef.current.contains(event.target as Node)) {
+        setShowMainMenu(false)
+      }
     }
-    if (showSoundMenu || showFontMenu) {
+    if (showSoundMenu || showFontMenu || showMainMenu) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showSoundMenu, showFontMenu])
+  }, [showSoundMenu, showFontMenu, showMainMenu])
 
   // Effect: Auto hide custom input when timer starts
   useEffect(() => {
@@ -637,10 +649,66 @@ export default function PomodoroPage() {
               tooltip="Music Player" 
             />
             
-            {/* Nút Menu Grid */}
-            <button className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors" title="Menu">
-              <Grid3x3 className="w-5 h-5" />
-            </button>
+            {/* Nút Main Menu với Dropdown */}
+            <div className="relative" ref={mainMenuRef}>
+              <button 
+                onClick={() => setShowMainMenu(!showMainMenu)}
+                className={`p-2 rounded-lg transition-colors ${showMainMenu ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                title="Menu"
+              >
+                <Grid3x3 className="w-5 h-5" />
+              </button>
+              
+              {showMainMenu && (
+                <div className="absolute bottom-full left-0 mb-3 w-56 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="px-3 py-2 mb-2 border-b border-white/10">
+                    <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Điều hướng</span>
+                  </div>
+                  
+                  <button
+                    onClick={() => { router.push('/achievements'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Award className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm font-medium">Thành tích</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => { router.push('/tasks'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <CheckSquare className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-medium">Nhiệm vụ</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => { router.push('/notes'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4 text-green-400" />
+                    <span className="text-sm font-medium">Ghi chú</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => { router.push('/progress'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <TrendingUp className="w-4 h-4 text-purple-400" />
+                    <span className="text-sm font-medium">Tiến độ</span>
+                  </button>
+
+                  <div className="mt-2 pt-2 border-t border-white/10">
+                    <button
+                      onClick={() => { router.push('/'); setShowMainMenu(false); }}
+                      className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                    >
+                      <Home className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm font-medium">Trang chủ</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Thêm nút chọn Font chữ */}
             <div className="relative" ref={fontMenuRef}>
