@@ -115,6 +115,9 @@ CREATE TABLE notes (
     title VARCHAR(255) NOT NULL,
     content TEXT,
     is_pinned BOOLEAN DEFAULT FALSE,
+    is_quick_note BOOLEAN DEFAULT FALSE,
+    source_context TEXT,
+    theme VARCHAR(50) DEFAULT 'standard',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

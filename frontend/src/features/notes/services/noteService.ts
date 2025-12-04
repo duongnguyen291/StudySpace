@@ -13,8 +13,8 @@ export const noteService = {
     return response.data
   },
 
-  async getAll(): Promise<Note[]> {
-    const response = await apiClient.get(BASE_URL)
+  async getAll(params?: { is_quick_note?: boolean }): Promise<Note[]> {
+    const response = await apiClient.get(BASE_URL, { params })
     return response.data
   },
 

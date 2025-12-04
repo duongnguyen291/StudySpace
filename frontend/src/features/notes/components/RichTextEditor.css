@@ -1,0 +1,111 @@
+/* Rich Text Editor - Dark Mode Styles */
+.rich-text-editor-wrapper {
+  @apply w-full;
+}
+
+.rich-text-editor-wrapper .ql-container {
+  @apply bg-transparent rounded-b-md;
+  font-family: inherit;
+  font-size: 14px;
+  min-height: 200px;
+  border: none;
+  color: var(--theme-text-color, #ffffff);
+}
+
+.rich-text-editor-wrapper .ql-editor {
+  @apply min-h-[200px];
+  padding: 12px 15px;
+  color: var(--theme-text-color, #ffffff);
+}
+
+.rich-text-editor-wrapper .ql-editor.ql-blank::before {
+  color: var(--theme-text-color, rgba(255, 255, 255, 0.5));
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.rich-text-editor-wrapper .ql-toolbar {
+  @apply bg-white/10 backdrop-blur-sm rounded-t-md border-b;
+  padding: 8px;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rich-text-editor-wrapper .ql-toolbar .ql-stroke {
+  stroke: var(--theme-text-color, rgba(255, 255, 255, 0.7));
+}
+
+.rich-text-editor-wrapper .ql-toolbar .ql-fill {
+  fill: var(--theme-text-color, rgba(255, 255, 255, 0.7));
+}
+
+.rich-text-editor-wrapper .ql-toolbar .ql-picker-label {
+  color: var(--theme-text-color, rgba(255, 255, 255, 0.7));
+}
+
+.rich-text-editor-wrapper .ql-toolbar .ql-picker-options {
+  @apply bg-gray-900/95 backdrop-blur-md border-gray-700;
+}
+
+.rich-text-editor-wrapper .ql-toolbar button:hover,
+.rich-text-editor-wrapper .ql-toolbar button.ql-active {
+  @apply bg-gray-700;
+}
+
+.rich-text-editor-wrapper .ql-toolbar button:hover .ql-stroke,
+.rich-text-editor-wrapper .ql-toolbar button.ql-active .ql-stroke {
+  @apply stroke-white;
+}
+
+.rich-text-editor-wrapper .ql-toolbar button:hover .ql-fill,
+.rich-text-editor-wrapper .ql-toolbar button.ql-active .ql-fill {
+  @apply fill-white;
+}
+
+/* Color picker */
+.rich-text-editor-wrapper .ql-picker.ql-color .ql-picker-item {
+  @apply border-gray-600;
+}
+
+.rich-text-editor-wrapper .ql-picker.ql-background .ql-picker-item {
+  @apply border-gray-600;
+}
+
+/* Link input */
+.rich-text-editor-wrapper .ql-tooltip {
+  @apply bg-gray-800 border-gray-700 text-white;
+}
+
+.rich-text-editor-wrapper .ql-tooltip input {
+  @apply bg-gray-700 text-white border-gray-600;
+}
+
+.rich-text-editor-wrapper .ql-tooltip a {
+  @apply text-blue-400;
+}
+
+/* Image upload */
+.rich-text-editor-wrapper .ql-editor img {
+  @apply max-w-full h-auto rounded-md my-2;
+}
+
+/* Code block */
+.rich-text-editor-wrapper .ql-syntax {
+  @apply bg-gray-900 text-gray-200;
+  border-radius: 4px;
+  padding: 12px;
+}
+
+/* Blockquote */
+.rich-text-editor-wrapper .ql-editor blockquote {
+  @apply border-l-4 border-gray-500 pl-4 italic text-gray-300;
+}
+
+/* Read-only mode */
+.rich-text-editor-wrapper .ql-container.ql-disabled {
+  @apply bg-gray-900;
+}
+
+.rich-text-editor-wrapper .ql-container.ql-disabled .ql-editor {
+  @apply cursor-default;
+}
+
