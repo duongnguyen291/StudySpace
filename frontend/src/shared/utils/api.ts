@@ -3,6 +3,7 @@
  * Axios instance with authentication and error handling
  */
 import axios, { AxiosInstance, AxiosError } from 'axios'
+import '@/lib/axios-https-patch'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -34,6 +35,19 @@ class ApiClient {
         if (typeof window !== 'undefined') {
           console.log('📡 Request URL:', (config.baseURL || '') + (config.url || ''))
         }
+        
+        // Ensure HTTPS on production
+        if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+          if (config.url && config.url.startsWith('http://') && !config.url.includes('localhost')) {
+            console.warn('⚠️ Converting HTTP to HTTPS:', config.url)
+            config.url = config.url.replace('http://', 'https://')
+          }
+          if (config.baseURL && config.baseURL.startsWith('http://') && !config.baseURL.includes('localhost')) {
+            console.warn('⚠️ Converting baseURL HTTP to HTTPS:', config.baseURL)
+            config.baseURL = config.baseURL.replace('http://', 'https://')
+          }
+        }
+        
         const token = localStorage.getItem('access_token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
