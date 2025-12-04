@@ -7,11 +7,6 @@ import '@/lib/axios-https-patch'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
-// Debug: Log API URL in production
-if (typeof window !== 'undefined') {
-  console.log('🔗 API URL:', API_URL)
-}
-
 class ApiClient {
   private client: AxiosInstance
 
@@ -23,28 +18,34 @@ class ApiClient {
       },
     })
 
-    // Debug: Log full baseURL
-    if (typeof window !== 'undefined') {
-      console.log('🔧 Axios baseURL:', this.client.defaults.baseURL)
-    }
+
 
     // Request interceptor - Add auth token
     this.client.interceptors.request.use(
       (config) => {
-        // Debug: Log each request URL
-        if (typeof window !== 'undefined') {
-          console.log('📡 Request URL:', (config.baseURL || '') + (config.url || ''))
-        }
-        
-        // Ensure HTTPS on production
+        // Force HTTPS in production - This is the LAST LINE OF DEFENSE
         if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+          // Check and fix URL
           if (config.url && config.url.startsWith('http://') && !config.url.includes('localhost')) {
-            console.warn('⚠️ Converting HTTP to HTTPS:', config.url)
             config.url = config.url.replace('http://', 'https://')
           }
+          
+          // Check and fix baseURL
           if (config.baseURL && config.baseURL.startsWith('http://') && !config.baseURL.includes('localhost')) {
-            console.warn('⚠️ Converting baseURL HTTP to HTTPS:', config.baseURL)
             config.baseURL = config.baseURL.replace('http://', 'https://')
+          }
+          
+          // AGGRESSIVE FIX: Reconstruct full URL and ensure HTTPS
+          const fullUrl = (config.baseURL || '') + (config.url || '')
+          if (fullUrl.startsWith('http://') && !fullUrl.includes('localhost')) {
+            const httpsUrl = fullUrl.replace('http://', 'https://')
+            
+            // Split back into baseURL and url
+            const apiV1Index = httpsUrl.indexOf('/api/v1')
+            if (apiV1Index !== -1) {
+              config.baseURL = httpsUrl.substring(0, apiV1Index + 7) // Include "/api/v1"
+              config.url = httpsUrl.substring(apiV1Index + 7) // Rest of the path
+            }
           }
         }
         

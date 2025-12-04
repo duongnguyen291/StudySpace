@@ -5,6 +5,7 @@ Entry point for the application
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
@@ -31,7 +32,16 @@ app = FastAPI(
     version="1.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
+    # Trust Railway proxy headers
+    root_path="/api/v1" if settings.ENVIRONMENT == "production" else "",
 )
+
+# Trust Railway proxy headers
+if settings.ENVIRONMENT == "production":
+    app.add_middleware(
+        TrustedHostMiddleware, 
+        allowed_hosts=["studyspace-production-3806.up.railway.app", "*.railway.app"]
+    )
 
 # CORS middleware
 # Allow all origins in development, specific origins in production
@@ -46,6 +56,24 @@ app.add_middleware(
 )
 
 logger.info(f"CORS enabled for origins: {cors_origins}")
+
+# Custom middleware to prevent HTTP redirects
+@app.middleware("http")
+async def force_https_redirects(request, call_next):
+    """
+    Prevent Railway from redirecting to HTTP upstream
+    """
+    response = await call_next(request)
+    
+    # If this is a redirect response, ensure location header uses HTTPS
+    if response.status_code in [301, 302, 307, 308] and "location" in response.headers:
+        location = response.headers["location"]
+        if location.startswith("http://") and not "localhost" in location:
+            # Force HTTPS in redirect location
+            response.headers["location"] = location.replace("http://", "https://")
+            logger.warning(f"Fixed redirect from HTTP to HTTPS: {location}")
+    
+    return response
 
 # Mount static files for audio (if local storage is used)
 static_path = Path("static")
