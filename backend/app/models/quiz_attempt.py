@@ -18,7 +18,9 @@ class QuizAttempt(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    quiz_set_id = Column(UUID(as_uuid=True), ForeignKey("quiz_sets.id", ondelete="CASCADE"), nullable=False)
+    # TODO: Uncomment when QuizSet model is created
+    # quiz_set_id = Column(UUID(as_uuid=True), ForeignKey("quiz_sets.id", ondelete="CASCADE"), nullable=False)
+    quiz_set_id = Column(UUID(as_uuid=True), nullable=False)  # Temporary: no FK constraint until QuizSet model exists
     score = Column(Numeric(5, 2), nullable=False)
     total_questions = Column(Integer, nullable=False)
     correct_answers = Column(Integer, nullable=False)

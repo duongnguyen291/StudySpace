@@ -25,12 +25,12 @@
 
 ## 📖 Giới thiệu
 
-**StudySpace** là một nền tảng học tập cá nhân toàn diện, được thiết kế để giúp học sinh và sinh viên:
-- 🎯 Tăng khả năng tập trung với Pomodoro Timer
-- 📝 Quản lý ghi chú và công việc có hệ thống
-- 🧠 Học hiệu quả qua Quiz & Flashcards
-- 🤖 Nhận hỗ trợ học tập từ AI Assistant
-- 📊 Theo dõi tiến độ và nhận huy hiệu thành tích
+**StudySpace** is a comprehensive personal learning platform designed to help students:
+- 🎯 Improve focus with a Pomodoro Timer
+- 📝 Organize notes and tasks systematically
+- 🧠 Learn more effectively through Quizzes & Flashcards
+- 🤖 Receive study support from an AI Assistant
+- 📊 Track progress and earn achievement badges
 
 ---
 

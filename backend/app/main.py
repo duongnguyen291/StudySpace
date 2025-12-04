@@ -2,6 +2,7 @@
 StudySpace Backend - FastAPI Application
 Entry point for the application
 """
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,6 +12,14 @@ from pathlib import Path
 from app.core.config import settings
 from app.core.database import engine, Base
 from app.api.v1.router import api_router
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO if settings.ENVIRONMENT == "production" else logging.DEBUG,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S"
+)
+logger = logging.getLogger(__name__)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -24,6 +33,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+# qicknotes
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
