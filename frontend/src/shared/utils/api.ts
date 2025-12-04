@@ -6,6 +6,11 @@ import axios, { AxiosInstance, AxiosError } from 'axios'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
+// Debug: Log API URL in production
+if (typeof window !== 'undefined') {
+  console.log('🔗 API URL:', API_URL)
+}
+
 class ApiClient {
   private client: AxiosInstance
 
