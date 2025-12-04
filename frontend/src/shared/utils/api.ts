@@ -22,9 +22,18 @@ class ApiClient {
       },
     })
 
+    // Debug: Log full baseURL
+    if (typeof window !== 'undefined') {
+      console.log('🔧 Axios baseURL:', this.client.defaults.baseURL)
+    }
+
     // Request interceptor - Add auth token
     this.client.interceptors.request.use(
       (config) => {
+        // Debug: Log each request URL
+        if (typeof window !== 'undefined') {
+          console.log('📡 Request URL:', (config.baseURL || '') + (config.url || ''))
+        }
         const token = localStorage.getItem('access_token')
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
