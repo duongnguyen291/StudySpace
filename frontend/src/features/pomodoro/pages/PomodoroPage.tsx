@@ -10,6 +10,8 @@ import { useBackground } from '@/features/pomodoro/hooks/useBackground'
 import { MusicWidget } from '@/features/pomodoro/components/MusicWidget'
 import { TaskWidget } from '@/features/tasks/components/TaskWidget'
 import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
+import { LoginModal } from '@/features/pomodoro/components/LoginModal'
+import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
 import { Button } from '@/shared/components/Button'
 import {
   LogOut,

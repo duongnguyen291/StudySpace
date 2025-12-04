@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { BookOpen, Zap, Plus, Home, Loader2, ArrowRight, LogOut } from 'lucide-react'
 import { noteService } from '@/features/notes/services/noteService'
@@ -12,7 +12,7 @@ import { ExportButton } from '@/features/notes/components/ExportButton'
 import { stripHtml } from '@/features/notes/utils/sanitizeHtml'
 import { NOTE_THEMES, DEFAULT_THEME, type NoteTheme } from '@/features/notes/constants/note-themes'
 
-export default function NotesPage() {
+function NotesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const filter = searchParams.get('filter')
@@ -409,5 +409,13 @@ export default function NotesPage() {
         </main>
       </div>
     </div>
+  )
+}
+
+export default function NotesPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
+      <NotesPageContent />
+    </Suspense>
   )
 }

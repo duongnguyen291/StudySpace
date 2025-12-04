@@ -15,14 +15,17 @@ interface ExportButtonProps {
   themeBgColor?: string
 }
 
-export const ExportButton = ({ 
-  note, 
-  variant = 'outline', 
-  size = 'sm',
-  themeColor,
-  themeBorderColor,
-  themeBgColor,
-}: ExportButtonProps) => {
+export const ExportButton = (props: ExportButtonProps) => {
+  const { 
+    note,
+    variant: variantProp,
+    size = 'sm',
+    themeColor,
+    themeBorderColor,
+    themeBgColor,
+  } = props
+  
+  const variant: 'default' | 'outline' | 'ghost' = variantProp ?? 'outline'
   const [isOpen, setIsOpen] = useState(false)
   const [isExporting, setIsExporting] = useState<string | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -93,7 +96,7 @@ export const ExportButton = ({
     }
   }
 
-  const getButtonStyles = () => {
+  const getButtonStyles = (): Record<'default' | 'outline' | 'ghost', React.CSSProperties> => {
     if (themeColor && themeBorderColor && themeBgColor) {
       return {
         default: {
@@ -113,7 +116,7 @@ export const ExportButton = ({
           color: '#ffffff',
           boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.2)',
         },
-      }
+      } as Record<'default' | 'outline' | 'ghost', React.CSSProperties>
     }
     // Default styles khi không có theme props (cho note list)
     return {
@@ -130,7 +133,7 @@ export const ExportButton = ({
         color: '#ffffff',
         boxShadow: '0 2px 4px 0 rgba(0, 0, 0, 0.2)',
       },
-    }
+    } as Record<'default' | 'outline' | 'ghost', React.CSSProperties>
   }
 
   const buttonStyles = getButtonStyles()
