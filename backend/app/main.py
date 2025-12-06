@@ -5,6 +5,8 @@ Entry point for the application
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+import os
 
 from app.core.config import settings
 from app.core.database import engine, Base
@@ -33,6 +35,10 @@ app.add_middleware(
 
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
+
+# Mount static files for avatars
+if os.path.exists("uploads/avatars"):
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")
