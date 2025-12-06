@@ -10,8 +10,6 @@ import { usePomodoroTimer } from '@/features/pomodoro/hooks/usePomodoroTimer'
 import { Button } from '@/shared/components/Button'
 import {
   LogOut,
-  BarChart3,
-  Video,
   Image as ImageIcon,
   Music,
   CloudRain,
@@ -211,28 +209,39 @@ export default function PomodoroPage() {
           </div>
           <div className="flex items-center gap-4">
             {isAuthenticated && (
-              <>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg">
-                  <span className="text-xs text-white/70">Tiến độ</span>
-                </div>
-                <BarChart3 className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" title="Thống kê" />
-                <Video className="w-5 h-5 text-white/80 cursor-pointer hover:text-white" title="Video nền" />
-              </>
+              <button
+                onClick={() => router.push('/analytics')}
+                className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                title="Xem tiến độ học tập"
+              >
+                <span className="text-xs text-white/70">Tiến độ</span>
+              </button>
             )}
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
-                {user?.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt={user.username || 'User'}
-                    className="w-8 h-8 rounded-full object-cover border border-white/30"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
-                    {user?.username?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                )}
+                <button
+                  onClick={() => router.push('/profile')}
+                  className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                  title="Xem hồ sơ"
+                >
+                  {user?.avatar_url ? (
+                    <img
+                      src={
+                        user.avatar_url.startsWith('http')
+                          ? user.avatar_url
+                          : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${user.avatar_url}`
+                      }
+                      alt={user.username || 'User'}
+                      className="w-8 h-8 rounded-full object-cover border border-white/30"
+                      key={user.avatar_url} // Force re-render when avatar changes
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
+                      {user?.username?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                  )}
+                </button>
                 <Button
                   variant="outline"
                   size="sm"
