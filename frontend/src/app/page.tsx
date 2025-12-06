@@ -105,19 +105,39 @@ export default function LandingPage() {
         <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <>
-              <div className="flex items-center gap-2">
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => router.push('/profile')}
+                title="Xem hồ sơ"
+              >
                 {user?.avatar_url ? (
                   <img 
-                    src={user.avatar_url} 
+                    src={
+                      user.avatar_url.startsWith('http') 
+                        ? user.avatar_url 
+                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${user.avatar_url}`
+                    }
                     alt={user.username || 'User'} 
                     className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initial if image fails to load
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        const fallback = document.createElement('div')
+                        fallback.className = 'w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold'
+                        fallback.textContent = user?.username?.[0]?.toUpperCase() || 'U'
+                        parent.appendChild(fallback)
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
                     {user?.username?.[0]?.toUpperCase() || 'U'}
                   </div>
                 )}
-                <span className="text-sm text-gray-300 hidden sm:inline">{user?.username}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-300 hidden sm:inline">{user?.username}</span>
               </div>
               <Button
                 variant="outline"
