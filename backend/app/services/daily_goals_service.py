@@ -2,6 +2,7 @@ from datetime import date
 from sqlalchemy.orm import Session
 from app.models.daily_goals import DailyGoal
 
+
 class DailyGoalService:
 
     @staticmethod
@@ -16,10 +17,13 @@ class DailyGoalService:
         )
 
     @staticmethod
-    def create_or_update(db: Session, user_id: str, target_minutes: int, target_quiz: int):
+    def set_today_goal(db: Session, user_id: str, target_minutes: int, target_quiz: int):
         goal = DailyGoalService.get_today(db, user_id)
 
-        if not goal:
+        if goal:
+            goal.target_minutes = target_minutes
+            goal.target_quiz_count = target_quiz
+        else:
             goal = DailyGoal(
                 user_id=user_id,
                 goal_date=date.today(),
@@ -27,27 +31,12 @@ class DailyGoalService:
                 target_quiz_count=target_quiz,
             )
             db.add(goal)
-        else:
-            goal.target_minutes = target_minutes
-            goal.target_quiz_count = target_quiz
 
         db.commit()
         db.refresh(goal)
         return goal
 
     @staticmethod
-    def update_progress(db: Session, user_id: str, minutes: int, quizzes: int):
-        goal = DailyGoalService.get_today(db, user_id)
-        if not goal:
-            return None
-
-        goal.actual_minutes += minutes
-        goal.actual_quiz_count += quizzes
-
-        if goal.actual_minutes >= goal.target_minutes and \
-           goal.actual_quiz_count >= goal.target_quiz_count:
-            goal.completed = True
-
-        db.commit()
-        db.refresh(goal)
-        return goal
+    def get_today_or_empty(db: Session, user_id: str):
+        """API muốn lấy mục tiêu hôm nay mà không cập nhật gì"""
+        return DailyGoalService.get_today(db, user_id)

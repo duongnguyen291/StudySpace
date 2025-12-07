@@ -1,21 +1,14 @@
 from pydantic import BaseModel
 from datetime import date
-from uuid import UUID
 
-class DailyGoalBase(BaseModel):
+class DailyGoalUpdateRequest(BaseModel):
     target_minutes: int
     target_quiz_count: int
 
-class DailyGoalCreate(DailyGoalBase):
-    pass
-
-class DailyGoalUpdateProgress(BaseModel):
-    minutes: int = 0
-    quizzes: int = 0
 
 class DailyGoalResponse(BaseModel):
-    id: UUID
-    user_id: UUID
+    id: int
+    user_id: str
     goal_date: date
     target_minutes: int
     target_quiz_count: int
@@ -24,4 +17,4 @@ class DailyGoalResponse(BaseModel):
     completed: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True

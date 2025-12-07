@@ -17,6 +17,7 @@ from app.api.v1 import (
     progress,
     test_progress,
     chat,
+    daily_goals
 )
 
 api_router = APIRouter()
