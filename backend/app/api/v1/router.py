@@ -17,6 +17,8 @@ from app.api.v1 import (
     progress,
     test_progress,
     chat,
+    quiz,
+    flashcards,
 )
 
 api_router = APIRouter()
@@ -43,9 +45,10 @@ api_router.include_router(test_achievements.router)
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
 
+# Quiz and Flashcards routes (added by feature/quiz branch)
+api_router.include_router(quiz.router, prefix="/quiz", tags=["Quiz"])
+api_router.include_router(flashcards.router, prefix="/flashcards", tags=["Flashcards"])
+
 # TODO: Uncomment when these modules are created
 # from app.api.v1 import quiz, flashcards, chat, profile, analytics
-# api_router.include_router(quiz.router, prefix="/quiz", tags=["Quiz"])
-# api_router.include_router(flashcards.router, prefix="/flashcards", tags=["Flashcards"])
 # api_router.include_router(profile.router, prefix="/profile", tags=["Profile"])
-

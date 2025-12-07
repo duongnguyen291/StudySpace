@@ -46,6 +46,9 @@ services:
     container_name: studyspace-backend
     env_file:
       - ./backend/.env
+    environment:
+      # Override DATABASE_URL for Docker (use service name instead of localhost)
+      DATABASE_URL: postgresql://admin:studyspace2024@postgres:5432/studyspace
     ports:
       - "8000:8000"
     volumes:

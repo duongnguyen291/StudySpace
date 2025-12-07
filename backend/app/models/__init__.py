@@ -13,6 +13,7 @@ from app.models.achievement import Achievement
 from app.models.note import Note, NoteTag
 from app.models.category import Category
 from app.models.task import Task
+from app.models.quiz import QuizSet, QuizQuestion
 
 __all__ = [
     "Base",
@@ -28,5 +29,7 @@ __all__ = [
     "Category",
     "Task",
     "StudySession",
-    "QuizAttempt"
+    "QuizAttempt",
+    "QuizSet",
+    "QuizQuestion",
 ]
