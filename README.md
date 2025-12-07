@@ -2,8 +2,8 @@
 
 <div align="center">
 
-![StudySpace Banner](https://via.placeholder.com/1200x300/3B82F6/FFFFFF?text=StudySpace)
 
+<img width="2752" height="1536" alt="Image" src="https://github.com/user-attachments/assets/0e4f7c1e-d4fb-4891-ac3e-0fbd7cb85c8f" />
 **Nền tảng học tập cá nhân thông minh - Tập trung, Hiệu quả, Có động lực**
 
 [![Next.js](https://img.shields.io/badge/Next.js-14.0-black?style=flat&logo=next.js)](https://nextjs.org/)
