@@ -27,3 +27,9 @@ class DailyGoalResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UpdateGoalModel(BaseModel):
+    minutes: int
+    quizzes: int
+    goal_date: date | None = None

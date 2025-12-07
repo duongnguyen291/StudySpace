@@ -6,6 +6,7 @@ from app.api.deps import get_current_user_id_only
 from app.schemas.daily_goals import (
     DailyGoalResponse,
     DailyGoalUpdateRequest,
+    UpdateGoalModel,
 )
 from app.services.daily_goals_service import DailyGoalService
 
@@ -53,3 +54,18 @@ def set_daily_goal(
         target_quiz=payload.target_quiz_count
     )
     return goal
+
+@router.post("/update")
+def update_goal(
+    data: UpdateGoalModel,
+    user_id: str = Depends(get_current_user_id_only),
+    db: Session = Depends(get_db),
+):
+    result = DailyGoalService.create_or_update(
+        db=db,
+        user_id=user_id,
+        target_minutes=data.minutes,
+        target_quiz=data.quizzes,
+        goal_date=data.goal_date  # optional
+    )
+    return result
