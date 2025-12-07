@@ -1,4 +1,4 @@
-"""Note and NoteTag models"""
+"""Note, NoteCategory, and NoteTag models"""
 from datetime import datetime
 from uuid import uuid4
 
@@ -9,6 +9,24 @@ from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
+class NoteCategory(Base):
+    """Note categories table model (separate from task categories)"""
+
+    __tablename__ = "note_categories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    color = Column(String(7), default="#3B82F6", nullable=False)
+    icon = Column(String(50), default="folder", nullable=False)
+    is_default = Column(Boolean, default=False, nullable=False)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    notes = relationship("Note", back_populates="category")
+
+
 class Note(Base):
     """Notes table model"""
 
@@ -16,8 +34,7 @@ class Note(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    # Optional category reference (no FK because categories table is not defined in this project)
-    category_id = Column(UUID(as_uuid=True), nullable=True)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("note_categories.id", ondelete="SET NULL"), nullable=True)
 
     title = Column(String(255), nullable=False)
     content = Column(Text, nullable=True)
@@ -30,6 +47,7 @@ class Note(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
+    category = relationship("NoteCategory", back_populates="notes")
     tags = relationship("NoteTag", back_populates="note", cascade="all, delete-orphan")
 
 

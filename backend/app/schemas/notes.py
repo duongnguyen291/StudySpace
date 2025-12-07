@@ -6,6 +6,43 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 
+# ============================================
+# NOTE CATEGORY SCHEMAS
+# ============================================
+class NoteCategoryBase(BaseModel):
+    """Shared fields for note categories"""
+    name: str = Field(..., min_length=1, max_length=100)
+    color: str = Field(default="#3B82F6", max_length=7)
+    icon: str = Field(default="folder", max_length=50)
+
+
+class NoteCategoryCreate(NoteCategoryBase):
+    """Payload for creating a note category"""
+    pass
+
+
+class NoteCategoryUpdate(BaseModel):
+    """Payload for updating a note category"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    color: Optional[str] = Field(None, max_length=7)
+    icon: Optional[str] = Field(None, max_length=50)
+
+
+class NoteCategoryResponse(NoteCategoryBase):
+    """Response model for note categories"""
+    id: UUID
+    user_id: UUID
+    is_default: bool
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ============================================
+# NOTE SCHEMAS
+# ============================================
 class NoteBase(BaseModel):
     """Shared fields for notes"""
 
@@ -43,6 +80,7 @@ class NoteResponse(NoteBase):
 
     id: UUID
     user_id: UUID
+    category: Optional[NoteCategoryResponse] = None
     created_at: datetime
     updated_at: datetime
 

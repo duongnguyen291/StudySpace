@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { BookOpen, Zap, Plus, Home, Loader2, ArrowRight, LogOut } from 'lucide-react'
-import { noteService } from '@/features/notes/services/noteService'
-import type { Note } from '@/features/notes/types/note.types'
+import { BookOpen, Zap, Plus, Home, Loader2, ArrowRight, LogOut, Folder, Book, Lightbulb, Search, Briefcase, User } from 'lucide-react'
+import { noteService, noteCategoryService } from '@/features/notes/services/noteService'
+import type { Note, NoteCategory } from '@/features/notes/types/note.types'
 import { Button } from '@/shared/components/Button'
 import { useAuth } from '@/shared/hooks/useAuth'
 import NoteEditor from '@/features/notes/components/NoteEditor'
@@ -12,16 +12,36 @@ import { ExportButton } from '@/features/notes/components/ExportButton'
 import { stripHtml } from '@/features/notes/utils/sanitizeHtml'
 import { NOTE_THEMES, DEFAULT_THEME, type NoteTheme } from '@/features/notes/constants/note-themes'
 
+// Icon mapping for categories
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  folder: Folder,
+  book: Book,
+  lightbulb: Lightbulb,
+  search: Search,
+  briefcase: Briefcase,
+  user: User,
+}
+
 function NotesPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const filter = searchParams.get('filter')
+  const categoryFilter = searchParams.get('category')
   const [notes, setNotes] = useState<Note[]>([])
+  const [categories, setCategories] = useState<NoteCategory[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [editorOpen, setEditorOpen] = useState(false)
   const [editingNote, setEditingNote] = useState<Note | null>(null)
   const { isAuthenticated, user, logout } = useAuth()
+
+  // Load categories
+  useEffect(() => {
+    if (!isAuthenticated) return
+    noteCategoryService.getAll()
+      .then(setCategories)
+      .catch(err => console.error('Failed to load categories:', err))
+  }, [isAuthenticated])
 
   useEffect(() => {
     if (!isAuthenticated) return
@@ -31,9 +51,10 @@ function NotesPageContent() {
         setLoading(true)
         setError(null)
         const isQuick = filter === 'quick' ? true : undefined
-        const data = await noteService.getAll(
-          isQuick !== undefined ? { is_quick_note: isQuick } : undefined,
-        )
+        const params: { is_quick_note?: boolean; category_id?: string } = {}
+        if (isQuick !== undefined) params.is_quick_note = isQuick
+        if (categoryFilter) params.category_id = categoryFilter
+        const data = await noteService.getAll(Object.keys(params).length > 0 ? params : undefined)
         setNotes(data)
       } catch (err) {
         console.error(err)
@@ -44,7 +65,7 @@ function NotesPageContent() {
     }
 
     load()
-  }, [filter, isAuthenticated])
+  }, [filter, categoryFilter, isAuthenticated])
 
   if (!isAuthenticated) {
     return (
@@ -151,12 +172,12 @@ function NotesPageContent() {
         </div>
 
         {/* Tabs: All / Quick Notes */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-4">
           <button
             type="button"
             onClick={() => router.push('/notes')}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-              activeTab === 'all'
+              activeTab === 'all' && !categoryFilter
                     ? 'bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-lg'
                     : 'bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20'
             }`}
@@ -177,6 +198,42 @@ function NotesPageContent() {
             <span>Quick Notes</span>
           </button>
         </div>
+
+            {/* Category Filter */}
+            {categories.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {categories.map((category) => {
+                  const CatIcon = ICON_MAP[category.icon] || Folder
+                  const isActive = categoryFilter === category.id
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        if (isActive) {
+                          router.push('/notes')
+                        } else {
+                          router.push(`/notes?category=${category.id}`)
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                        isActive
+                          ? 'bg-white/15 backdrop-blur-md border border-white/25 text-white shadow-lg'
+                          : 'bg-white/5 backdrop-blur-sm border border-white/10 text-white/70 hover:bg-white/10 hover:border-white/20'
+                      }`}
+                    >
+                      <div
+                        className="w-4 h-4 rounded flex items-center justify-center"
+                        style={{ backgroundColor: `${category.color}30` }}
+                      >
+                        <CatIcon className="w-2.5 h-2.5" style={{ color: category.color }} />
+                      </div>
+                      <span>{category.name}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
 
             {/* Error Message */}
             {error && (
@@ -275,13 +332,29 @@ function NotesPageContent() {
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3 relative z-10">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                   {note.is_quick_note && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-400/10 text-yellow-300 border border-yellow-400/30 text-xs font-medium">
                               <Zap className="w-3 h-3" />
                               Quick
                     </span>
                   )}
+                          {note.category && (() => {
+                            const CatIcon = ICON_MAP[note.category.icon] || Folder
+                            return (
+                              <span
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border"
+                                style={{
+                                  backgroundColor: `${note.category.color}15`,
+                                  borderColor: `${note.category.color}40`,
+                                  color: note.category.color,
+                                }}
+                              >
+                                <CatIcon className="w-3 h-3" />
+                                {note.category.name}
+                              </span>
+                            )
+                          })()}
                         </div>
                         <h2 
                           className="text-lg font-bold mb-1 line-clamp-2"
@@ -376,12 +449,13 @@ function NotesPageContent() {
               }
               // reload
               setLoading(true)
-                  const isQuick = filter === 'quick' ? true : undefined
-                  const data = await noteService.getAll(
-                    isQuick !== undefined ? { is_quick_note: isQuick } : undefined,
-                  )
+              const isQuick = filter === 'quick' ? true : undefined
+              const params: { is_quick_note?: boolean; category_id?: string } = {}
+              if (isQuick !== undefined) params.is_quick_note = isQuick
+              if (categoryFilter) params.category_id = categoryFilter
+              const data = await noteService.getAll(Object.keys(params).length > 0 ? params : undefined)
               setNotes(data)
-                  setError(null)
+              setError(null)
             } catch (err) {
               console.error(err)
               setError('Lưu ghi chú thất bại')
@@ -393,12 +467,13 @@ function NotesPageContent() {
             if (!editingNote) return
             try {
               await noteService.delete(editingNote.id)
-                  const isQuick = filter === 'quick' ? true : undefined
-                  const data = await noteService.getAll(
-                    isQuick !== undefined ? { is_quick_note: isQuick } : undefined,
-                  )
+              const isQuick = filter === 'quick' ? true : undefined
+              const params: { is_quick_note?: boolean; category_id?: string } = {}
+              if (isQuick !== undefined) params.is_quick_note = isQuick
+              if (categoryFilter) params.category_id = categoryFilter
+              const data = await noteService.getAll(Object.keys(params).length > 0 ? params : undefined)
               setNotes(data)
-                  setError(null)
+              setError(null)
             } catch (err) {
               console.error(err)
               setError('Xóa ghi chú thất bại')

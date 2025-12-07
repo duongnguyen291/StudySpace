@@ -7,6 +7,7 @@ import { Button } from '@/shared/components/Button'
 import { useQuickNote } from '../hooks/useQuickNote'
 import { useQuickNoteController } from '../hooks/useQuickNoteController'
 import { showToast } from '@/shared/utils/toast'
+import { NoteCategorySelector } from './NoteCategorySelector'
 
 export const QuickNotePopup = () => {
   const router = useRouter()
@@ -18,6 +19,8 @@ export const QuickNotePopup = () => {
     setContent,
     tags,
     setTags,
+    categoryId,
+    setCategoryId,
     isSaving,
     save,
   } = useQuickNote()
@@ -130,6 +133,14 @@ export const QuickNotePopup = () => {
             onBlur={(e) => {
               e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)'
             }}
+          />
+
+          {/* Category Selector */}
+          <NoteCategorySelector
+            selectedCategoryId={categoryId}
+            onCategoryChange={setCategoryId}
+            textColor="#ffffff"
+            compact
           />
 
           <div className="flex justify-end items-center pt-2">

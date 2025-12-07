@@ -106,12 +106,26 @@ CREATE TABLE categories (
 );
 
 -- ============================================
+-- TABLE: note_categories (separate from task categories)
+-- ============================================
+CREATE TABLE note_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(7) DEFAULT '#3B82F6',
+    icon VARCHAR(50) DEFAULT 'folder',
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- TABLE: notes
 -- ============================================
 CREATE TABLE notes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES note_categories(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT,
     is_pinned BOOLEAN DEFAULT FALSE,
@@ -297,6 +311,7 @@ CREATE TABLE music_playlists (
 CREATE INDEX idx_study_sessions_user_id ON study_sessions(user_id);
 CREATE INDEX idx_study_sessions_start_time ON study_sessions(start_time);
 CREATE INDEX idx_daily_goals_user_date ON daily_goals(user_id, goal_date);
+CREATE INDEX idx_note_categories_user_id ON note_categories(user_id);
 CREATE INDEX idx_notes_user_id ON notes(user_id);
 CREATE INDEX idx_notes_category_id ON notes(category_id);
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
@@ -334,6 +349,9 @@ CREATE TRIGGER update_daily_goals_updated_at BEFORE UPDATE ON daily_goals
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_note_categories_updated_at BEFORE UPDATE ON note_categories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes
