@@ -16,6 +16,7 @@ import { Button } from '@/shared/components/Button'
 import {
   LogOut,
   BarChart3,
+  BarChart2,
   Video,
   Image as ImageIcon,
   CloudRain,
@@ -671,6 +672,14 @@ export default function PomodoroPage() {
                   >
                     <Award className="w-4 h-4 text-yellow-400" />
                     <span className="text-sm font-medium">Thành tích</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => { router.push('/analytics'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <BarChart2 className="w-4 h-4 text-indigo-400" />
+                    <span className="text-sm font-medium">Phân tích</span>
                   </button>
                   
                   <button

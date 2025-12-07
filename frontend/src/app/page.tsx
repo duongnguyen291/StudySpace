@@ -13,6 +13,7 @@ import {
   Target, 
   Music, 
   TrendingUp,
+  BarChart2,
   CheckCircle2,
   Sparkles,
   ArrowRight,
@@ -117,6 +118,15 @@ export default function LandingPage() {
                 className="border-white/20 text-white hover:bg-white/10"
               >
                 Mở ứng dụng
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push('/analytics')}
+                className="border-white/20 text-white hover:bg-white/10 flex items-center gap-2"
+              >
+                <BarChart2 className="w-4 h-4" />
+                <span className="hidden sm:inline">Analytics</span>
               </Button>
               <Button
                 variant="outline"
