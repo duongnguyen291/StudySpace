@@ -19,6 +19,7 @@ class TaskBase(BaseModel):
     description: Optional[str] = Field(None, description="Task description")
     category_id: Optional[UUID] = Field(None, description="Category ID")
     priority: str = Field(default="medium", description="Task priority: low, medium, high")
+    start_date: Optional[date] = Field(None, description="Start date")
     due_date: Optional[date] = Field(None, description="Due date")
 
     @field_validator('priority')
@@ -49,6 +50,7 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     category_id: Optional[UUID] = None
     priority: Optional[str] = None
+    start_date: Optional[date] = None
     due_date: Optional[date] = None
     completed: Optional[bool] = None
 

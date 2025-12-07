@@ -44,12 +44,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: studyspace-backend
-    environment:
-      DATABASE_URL: postgresql://admin:studyspace2024@postgres:5432/studyspace
-      SECRET_KEY: your-secret-key-change-in-production
-      ALGORITHM: HS256
-      ACCESS_TOKEN_EXPIRE_MINUTES: 30
-      ENVIRONMENT: development
+    env_file:
+      - ./backend/.env
     ports:
       - "8000:8000"
     volumes:
@@ -69,8 +65,9 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: studyspace-frontend
+    env_file:
+      - ./frontend/.env.local
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
       NODE_ENV: development
     ports:
       - "3000:3000"
@@ -82,7 +79,7 @@ services:
       - studyspace-network
     depends_on:
       - backend
-    command: npm run dev
+    command: sh -c "npm install && npm run dev"
 
 volumes:
   postgres_data:

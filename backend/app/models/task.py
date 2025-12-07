@@ -33,7 +33,8 @@ class Task(Base):
     completed = Column(Boolean, default=False, nullable=False, index=True)
     completed_at = Column(DateTime, nullable=True)
     
-    # Due Date
+    # Dates
+    start_date = Column(Date, nullable=True, index=True)
     due_date = Column(Date, nullable=True, index=True)
     
     # Timestamps
@@ -58,6 +59,7 @@ class Task(Base):
             "priority": self.priority,
             "completed": self.completed,
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
+            "start_date": self.start_date.isoformat() if self.start_date else None,
             "due_date": self.due_date.isoformat() if self.due_date else None,
             "created_at": self.created_at.isoformat(),
             "updated_at": self.updated_at.isoformat()
