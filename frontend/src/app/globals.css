@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Quill CSS */
+@import 'react-quill/dist/quill.snow.css';
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -30,5 +33,93 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Rich text content styles */
+.prose-invert {
+  color: rgb(209, 213, 219);
+}
+
+.prose-invert h1,
+.prose-invert h2,
+.prose-invert h3,
+.prose-invert h4,
+.prose-invert h5,
+.prose-invert h6 {
+  color: rgb(255, 255, 255);
+  font-weight: 600;
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose-invert p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose-invert ul,
+.prose-invert ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  padding-left: 1.5em;
+}
+
+.prose-invert li {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
+}
+
+.prose-invert a {
+  color: rgb(96, 165, 250);
+  text-decoration: underline;
+}
+
+.prose-invert a:hover {
+  color: rgb(147, 197, 253);
+}
+
+.prose-invert strong {
+  font-weight: 700;
+  color: rgb(255, 255, 255);
+}
+
+.prose-invert em {
+  font-style: italic;
+}
+
+.prose-invert code {
+  background-color: rgb(31, 41, 55);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+}
+
+.prose-invert blockquote {
+  border-left: 4px solid rgb(107, 114, 128);
+  padding-left: 1rem;
+  font-style: italic;
+  color: rgb(156, 163, 175);
+}
+
+.prose-invert img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.375rem;
+  margin: 0.5rem 0;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s ease-out;
 }
 

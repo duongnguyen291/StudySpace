@@ -1,27 +1,34 @@
 """
 Study Session Model
 """
-from sqlalchemy import Column, String, Integer, DateTime, Float
-from sqlalchemy.ext.declarative import declarative_base
-from datetime import datetime
+from sqlalchemy import Column, String, DateTime, Integer, Boolean, Text, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 import uuid
+from datetime import datetime
 
-Base = declarative_base()
+from app.core.database import Base
 
 
 class StudySession(Base):
-    """Model for study sessions"""
+    """
+    Study Session model - tracks study sessions (pomodoro, free_study, quiz)
+    """
     __tablename__ = "study_sessions"
-
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    user_id = Column(String(36), nullable=False, index=True)
-    start_time = Column(DateTime, nullable=False, default=datetime.utcnow)
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    session_type = Column(String(20), nullable=False)  # 'pomodoro', 'free_study', 'quiz'
+    start_time = Column(DateTime, nullable=False, index=True)
     end_time = Column(DateTime, nullable=True)
-    duration_minutes = Column(Integer, nullable=False, default=0)
-    subject = Column(String(255), nullable=True)
-    notes = Column(String(500), nullable=True)
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    duration_minutes = Column(Integer, nullable=True)
+    # TODO: Re-enable ForeignKey when daily_goals table is implemented
+    # goal_id = Column(UUID(as_uuid=True), ForeignKey("daily_goals.id", ondelete="SET NULL"), nullable=True)
+    goal_id = Column(UUID(as_uuid=True), nullable=True)
+    notes = Column(Text, nullable=True)
+    completed = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = relationship("User", backref="study_sessions")
 
-    def __repr__(self):
-        return f"<StudySession(id={self.id}, user_id={self.user_id}, duration={self.duration_minutes})>"

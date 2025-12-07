@@ -18,6 +18,8 @@ export interface PomodoroSession {
 export interface PomodoroSessionCreate {
   session_type: SessionType
   duration_minutes: number
+  started_at: string
+  completed_at: string
   notes?: string
 }
 
