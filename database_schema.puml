@@ -64,14 +64,20 @@ TABLE(daily_goals) {
   updated_at: TIMESTAMP
 }
 
+
+TABLE(achievements) {
+  PK(id): UUID
+  NOT_NULL(code): VARCHAR(50) UNIQUE
+  NOT_NULL(name): VARCHAR(100)
+  description: TEXT
+  url: VARCHAR(300)
+  active: BOOLEAN DEFAULT TRUE
+}
+
 TABLE(user_achievements) {
   PK(id): UUID
   FK(user_id): UUID
-  achievement_type: VARCHAR(50)
-  achievement_name: VARCHAR(100)
-  description: TEXT
-  earned_at: TIMESTAMP
-  badge_icon: VARCHAR(100)
+  FK(achievement_id): UUID
 }
 
 ' ============================================
@@ -270,6 +276,8 @@ flashcards ||--o{ flashcard_progress : "tracked_by"
 chat_conversations ||--o{ chat_messages : "contains"
 
 daily_goals ||--o{ study_sessions : "contributes_to"
+
+achievements ||--o{ user_achievements : "mapped"
 
 @enduml
 
