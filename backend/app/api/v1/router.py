@@ -17,10 +17,9 @@ from app.api.v1 import (
     notes,
     progress,
     test_progress,
+    analytics
 )
 
-from .analytics import router as analytics_router
-api_router.include_router(analytics_router, prefix="/analytics")
 
 api_router = APIRouter()
 
@@ -30,6 +29,7 @@ api_router.include_router(pomodoro.router, prefix="/pomodoro", tags=["Pomodoro"]
 api_router.include_router(notes.router, prefix="/notes", tags=["Notes"])
 api_router.include_router(progress.router, prefix="/progress", tags=["Progress Tracker"])
 api_router.include_router(test_progress.router)
+api_router.include_router(analytics.router, prefix="/analytics")
 
 
 # TODO: Uncomment when these modules are created
