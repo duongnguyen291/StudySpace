@@ -13,6 +13,7 @@ import CreateQuizModal from '@/features/quiz/components/CreateQuizModal'
 import QuizImportExport from '@/features/quiz/components/QuizImportExport'
 import QuizPlayer from '@/features/quiz/components/QuizPlayer'
 import QuizHistory from '@/features/quiz/components/QuizHistory'
+import EditQuizForm from '@/features/quiz/components/EditQuizForm'
 
 type ViewMode = 'dashboard' | 'import' | 'play' | 'history' | 'edit'
 type TabMode = 'my-quizzes' | 'history'
@@ -313,45 +314,11 @@ export default function QuizPage() {
           )}
 
           {viewMode === 'edit' && selectedQuiz && (
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-8">
-                <h2 className="text-2xl font-bold text-white mb-2">{selectedQuiz.title}</h2>
-                {selectedQuiz.description && (
-                  <p className="text-slate-400 mb-6">{selectedQuiz.description}</p>
-                )}
-                
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-slate-900/50 rounded-xl p-4">
-                    <div className="text-2xl font-bold text-emerald-400">{selectedQuiz.question_count}</div>
-                    <div className="text-sm text-slate-400">Questions</div>
-                  </div>
-                  <div className="bg-slate-900/50 rounded-xl p-4">
-                    <div className="text-2xl font-bold text-blue-400">{selectedQuiz.is_public ? 'Yes' : 'No'}</div>
-                    <div className="text-sm text-slate-400">Public</div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
-                  <div className="text-sm text-slate-400 mb-1">Created</div>
-                  <div className="text-white">{new Date(selectedQuiz.created_at).toLocaleString()}</div>
-                </div>
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleBackToDashboard}
-                    className="flex-1 py-3 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 transition font-medium"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    onClick={() => handlePlayQuiz(selectedQuiz)}
-                    className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl transition font-semibold shadow-lg"
-                  >
-                    ▶ Start Quiz
-                  </button>
-                </div>
-              </div>
-            </div>
+            <EditQuizForm
+              quizSetId={selectedQuiz.id}
+              onBack={handleBackToDashboard}
+              onSave={handleBackToDashboard}
+            />
           )}
         </main>
       </div>

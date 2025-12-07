@@ -12,7 +12,8 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from app.models.quiz import QuizSet, QuizQuestion, QuizAttempt
+from app.models.quiz import QuizSet, QuizQuestion
+from app.models.quiz_attempt import QuizAttempt
 from app.schemas.quiz import (
     QuizSetCreate, QuizSetUpdate,
     QuizQuestionCreate,
@@ -138,6 +139,23 @@ class QuizService:
             order_index=max_order + 1
         )
         db.add(question)
+        db.commit()
+        db.refresh(question)
+        return question
+
+    @staticmethod
+    def update_question(db: Session, question_id: UUID, user_id: UUID, data: QuizQuestionCreate) -> Optional[QuizQuestion]:
+        """Update a quiz question"""
+        question = db.query(QuizQuestion).join(QuizSet).filter(
+            QuizQuestion.id == question_id,
+            QuizSet.user_id == user_id
+        ).first()
+
+        if not question:
+            return None
+
+        question.question_text = data.question_text
+        question.correct_answer = data.correct_answer
         db.commit()
         db.refresh(question)
         return question

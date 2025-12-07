@@ -6,7 +6,7 @@ interface Props {
 }
 
 export function AchievementCard({ achievement }: Props) {
-  const icon = achievement.icon_url || "/icons/achievements/default.png";
+  const icon = achievement.url || "/icons/achievements/default.png";
 
   return (
     <div className="flex flex-col items-center p-4 rounded-xl bg-slate-800/40 hover:bg-slate-800/60 transition">

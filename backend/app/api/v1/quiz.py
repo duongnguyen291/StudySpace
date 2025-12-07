@@ -12,6 +12,7 @@ import io
 
 from app.core.database import get_db
 from app.api.deps import get_current_user
+from app.models.user import User
 from app.services.quiz_service import quiz_service
 from app.schemas.quiz import (
     QuizSetCreate, QuizSetUpdate, QuizSetResponse, QuizSetDetailResponse,
@@ -32,11 +33,10 @@ router = APIRouter()
 async def create_quiz_set(
     data: QuizSetCreate,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new quiz set"""
-    user_id = UUID(current_user_id)
-    quiz_set = quiz_service.create_quiz_set(db, user_id, data)
+    quiz_set = quiz_service.create_quiz_set(db, current_user.id, data)
     question_count = quiz_service.get_question_count(db, quiz_set.id)
     
     return QuizSetResponse(
@@ -55,11 +55,10 @@ async def create_quiz_set(
 @router.get("/sets", response_model=List[QuizSetResponse])
 async def get_quiz_sets(
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get all quiz sets for current user"""
-    user_id = UUID(current_user_id)
-    quiz_sets = quiz_service.get_user_quiz_sets(db, user_id)
+    quiz_sets = quiz_service.get_user_quiz_sets(db, current_user.id)
     
     return [QuizSetResponse(
         id=qs.id,
@@ -78,11 +77,10 @@ async def get_quiz_sets(
 async def get_quiz_set(
     quiz_set_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get a quiz set with questions"""
-    user_id = UUID(current_user_id)
-    quiz_set = quiz_service.get_quiz_set(db, quiz_set_id, user_id)
+    quiz_set = quiz_service.get_quiz_set(db, quiz_set_id, current_user.id)
     
     if not quiz_set:
         raise HTTPException(status_code=404, detail="Quiz set not found")
@@ -108,20 +106,112 @@ async def get_quiz_set(
     )
 
 
+@router.put("/sets/{quiz_set_id}", response_model=QuizSetResponse)
+async def update_quiz_set(
+    quiz_set_id: UUID,
+    data: QuizSetUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a quiz set"""
+    quiz_set = quiz_service.update_quiz_set(db, quiz_set_id, current_user.id, data)
+    
+    if not quiz_set:
+        raise HTTPException(status_code=404, detail="Quiz set not found")
+    
+    question_count = quiz_service.get_question_count(db, quiz_set.id)
+    
+    return QuizSetResponse(
+        id=quiz_set.id,
+        user_id=quiz_set.user_id,
+        category_id=quiz_set.category_id,
+        title=quiz_set.title,
+        description=quiz_set.description,
+        is_public=quiz_set.is_public,
+        question_count=question_count,
+        created_at=quiz_set.created_at,
+        updated_at=quiz_set.updated_at
+    )
+
+
 @router.delete("/sets/{quiz_set_id}")
 async def delete_quiz_set(
     quiz_set_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Delete a quiz set"""
-    user_id = UUID(current_user_id)
-    success = quiz_service.delete_quiz_set(db, quiz_set_id, user_id)
+    success = quiz_service.delete_quiz_set(db, quiz_set_id, current_user.id)
     
     if not success:
         raise HTTPException(status_code=404, detail="Quiz set not found")
     
     return {"message": "Quiz set deleted"}
+
+
+# ============================================
+# Quiz Question Endpoints
+# ============================================
+
+@router.post("/sets/{quiz_set_id}/questions", response_model=QuizQuestionResponse)
+async def add_question(
+    quiz_set_id: UUID,
+    data: QuizQuestionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a question to a quiz set"""
+    question = quiz_service.add_question(db, quiz_set_id, current_user.id, data)
+    
+    if not question:
+        raise HTTPException(status_code=404, detail="Quiz set not found")
+    
+    return QuizQuestionResponse(
+        id=question.id,
+        quiz_set_id=question.quiz_set_id,
+        question_text=question.question_text,
+        correct_answer=question.correct_answer,
+        order_index=question.order_index,
+        created_at=question.created_at
+    )
+
+
+@router.put("/questions/{question_id}", response_model=QuizQuestionResponse)
+async def update_question(
+    question_id: UUID,
+    data: QuizQuestionCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update a quiz question"""
+    question = quiz_service.update_question(db, question_id, current_user.id, data)
+    
+    if not question:
+        raise HTTPException(status_code=404, detail="Question not found")
+    
+    return QuizQuestionResponse(
+        id=question.id,
+        quiz_set_id=question.quiz_set_id,
+        question_text=question.question_text,
+        correct_answer=question.correct_answer,
+        order_index=question.order_index,
+        created_at=question.created_at
+    )
+
+
+@router.delete("/questions/{question_id}")
+async def delete_question(
+    question_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a quiz question"""
+    success = quiz_service.delete_question(db, question_id, current_user.id)
+    
+    if not success:
+        raise HTTPException(status_code=404, detail="Question not found")
+    
+    return {"message": "Question deleted"}
 
 
 # ============================================
@@ -160,10 +250,10 @@ async def import_csv(
     title: str = Form(...),
     description: Optional[str] = Form(None),
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Import quiz from CSV"""
-    user_id = UUID(current_user_id)
+    user_id = current_user.id
     
     if not file.filename or not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="Must be CSV file")
@@ -186,11 +276,10 @@ async def import_csv(
 async def export_csv(
     quiz_set_id: UUID,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Export quiz to CSV"""
-    user_id = UUID(current_user_id)
-    csv_content = quiz_service.export_csv(db, quiz_set_id, user_id)
+    csv_content = quiz_service.export_csv(db, quiz_set_id, current_user.id)
     
     if not csv_content:
         raise HTTPException(status_code=404, detail="Quiz set not found")
@@ -210,11 +299,10 @@ async def export_csv(
 async def start_attempt(
     data: QuizAttemptCreate,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Start a quiz attempt"""
-    user_id = UUID(current_user_id)
-    result = quiz_service.start_attempt(db, user_id, data)
+    result = quiz_service.start_attempt(db, current_user.id, data)
     
     if not result:
         raise HTTPException(status_code=404, detail="Quiz not found or empty")
@@ -240,11 +328,10 @@ async def submit_attempt(
     attempt_id: UUID,
     data: QuizAttemptSubmit,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Submit quiz answers"""
-    user_id = UUID(current_user_id)
-    attempt = quiz_service.submit_attempt(db, attempt_id, user_id, data)
+    attempt = quiz_service.submit_attempt(db, attempt_id, current_user.id, data)
     
     if not attempt:
         raise HTTPException(status_code=404, detail="Attempt not found")
@@ -267,11 +354,10 @@ async def submit_attempt(
 async def get_attempts(
     quiz_set_id: Optional[UUID] = None,
     db: Session = Depends(get_db),
-    current_user_id: str = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get user's quiz attempts"""
-    user_id = UUID(current_user_id)
-    attempts = quiz_service.get_user_attempts(db, user_id, quiz_set_id)
+    attempts = quiz_service.get_user_attempts(db, current_user.id, quiz_set_id)
     
     return [QuizAttemptResponse(
         id=a.id,

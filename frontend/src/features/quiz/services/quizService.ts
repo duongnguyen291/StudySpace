@@ -54,7 +54,7 @@ export async function addQuestion(quizSetId: string, data: QuizQuestionCreate): 
   return res.data
 }
 
-export async function updateQuestion(questionId: string, data: QuizQuestionUpdate): Promise<QuizQuestion> {
+export async function updateQuestion(questionId: string, data: QuizQuestionCreate): Promise<QuizQuestion> {
   const res = await apiClient.put(`/quiz/questions/${questionId}`, data)
   return res.data
 }
