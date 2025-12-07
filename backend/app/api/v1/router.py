@@ -43,7 +43,7 @@ api_router.include_router(achievements.router)
 api_router.include_router(test_achievements.router)
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
-api_router.include_router(daily_goals.router, prefix="/dailygoals")
+api_router.include_router(daily_goals.router)
 
 # TODO: Uncomment when these modules are created
 # from app.api.v1 import quiz, flashcards, chat, profile, analytics

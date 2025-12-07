@@ -20,6 +20,20 @@ def get_today_goal(
     db: Session = Depends(get_db),
 ):
     goal = DailyGoalService.get_today(db, user_id)
+
+    if goal is None:
+        # Trả về default goal để FE hiển thị
+        return {
+            "id": None,
+            "user_id": user_id,
+            "goal_date": None,
+            "target_minutes": 0,
+            "target_quiz_count": 0,
+            "actual_minutes": 0,
+            "actual_quiz_count": 0,
+            "completed": False,
+        }
+
     return goal
 
 
