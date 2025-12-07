@@ -1,6 +1,7 @@
 export interface DailyGoal {
-  id: string | null;
-  goal_date: string | null;
+  id: string;
+  user_id: string;
+  goal_date: string;
   target_minutes: number;
   target_quiz_count: number;
   actual_minutes: number;

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { userDailyGoal } from "../hooks/userDailyGoals";
+import { useDailyGoals } from "../hooks/userDailyGoals";
 
 export default function DailyGoalsCard() {
-  const { goal, loading, updateGoal } = userDailyGoal();
+  const { goal, loading, updateGoal } = useDailyGoals();
 
   const [minutes, setMinutes] = useState(goal?.target_minutes ?? 30);
   const [quiz, setQuiz] = useState(goal?.target_quiz_count ?? 5);

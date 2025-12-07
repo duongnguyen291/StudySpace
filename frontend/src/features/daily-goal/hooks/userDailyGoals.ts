@@ -3,26 +3,15 @@ import { DailyGoal } from "../types/dailyGoals.types";
 import { dailyGoalsService } from "../services/dailyGoalsService";
 
 
-export function userDailyGoal() {
+export const useDailyGoals = () => {
   const [goal, setGoal] = useState<DailyGoal | null>(null);
   const [loading, setLoading] = useState(true);
 
   const fetchGoal = async () => {
+    setLoading(true);
     try {
-      const res = await dailyGoalsService.getToday();
-
-      // always set goal, even when id = null
-      setGoal(
-        res || {
-          id: null,
-          goal_date: null,
-          target_minutes: 0,
-          target_quiz_count: 0,
-          actual_minutes: 0,
-          actual_quiz_count: 0,
-          completed: false,
-        }
-      );
+      const data = await dailyGoalsService.getToday();
+      setGoal(data);
     } finally {
       setLoading(false);
     }
@@ -41,6 +30,4 @@ export function userDailyGoal() {
   }, []);
 
   return { goal, loading, fetchGoal, updateGoal };
-}
-
- 
+};
