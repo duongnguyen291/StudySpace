@@ -30,12 +30,12 @@ def get_service(db: Session) -> AIChatService:
     response_model=List[ChatConversationSummary],
 )
 async def list_conversations(
-    current_user_id: str = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_database),
 ):
     """List all chat conversations for the current user."""
     service = get_service(db)
-    return service.list_conversations(user_id=UUID(current_user_id))
+    return service.list_conversations(user_id=current_user.id)
 
 
 @router.post(
@@ -45,13 +45,13 @@ async def list_conversations(
 )
 async def create_conversation(
     payload: ChatConversationCreate,
-    current_user_id: str = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_database),
 ):
     """Create a new chat conversation."""
     service = get_service(db)
     return service.create_conversation(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         payload=payload,
     )
 
@@ -62,13 +62,13 @@ async def create_conversation(
 )
 async def get_conversation(
     conversation_id: UUID,
-    current_user_id: str = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_database),
 ):
     """Get a single conversation with all of its messages."""
     service = get_service(db)
     return service.get_conversation(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         conversation_id=conversation_id,
     )
 
@@ -79,13 +79,13 @@ async def get_conversation(
 )
 async def delete_conversation(
     conversation_id: UUID,
-    current_user_id: str = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_database),
 ):
     """Delete a conversation and all messages in it."""
     service = get_service(db)
     service.delete_conversation(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         conversation_id=conversation_id,
     )
 
@@ -97,7 +97,7 @@ async def delete_conversation(
 )
 async def send_message(
     payload: ChatSendMessageRequest,
-    current_user_id: str = Depends(get_current_user),
+    current_user = Depends(get_current_user),
     db: Session = Depends(get_database),
 ):
     """
@@ -109,7 +109,7 @@ async def send_message(
     """
     service = get_service(db)
     return service.send_message(
-        user_id=UUID(current_user_id),
+        user_id=current_user.id,
         payload=payload,
     )
 

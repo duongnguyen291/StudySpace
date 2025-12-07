@@ -46,7 +46,14 @@ class Settings(BaseSettings):
     # Audio Storage
     AUDIO_STORAGE_PATH: str = "static/audio"
     MAX_AUDIO_FILE_SIZE: int = 100 * 1024 * 1024  # 100MB
-    ALLOWED_AUDIO_FORMATS: List[str] = [".mp3", ".wav", ".ogg", ".m4a", ".aac"]
+    
+    @property
+    def ALLOWED_AUDIO_FORMATS(self) -> List[str]:
+        """Get allowed audio formats from env or use defaults."""
+        env_formats = os.getenv("ALLOWED_AUDIO_FORMATS")
+        if env_formats:
+            return [fmt.strip() for fmt in env_formats.split(",")]
+        return [".mp3", ".wav", ".ogg", ".m4a", ".aac"]
     
     # AI/LLM (Optional)
     OPENAI_API_KEY: str = ""
@@ -55,6 +62,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignore extra fields from .env
 
 
 settings = Settings()
