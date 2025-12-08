@@ -1,127 +1,125 @@
-'use client'
+"use client";
 
-import { useRouter } from 'next/navigation'
-import { useProfile } from '@/features/profile'
-import { Button } from '@/shared/components/Button'
-import { ArrowLeft, Clock, TrendingUp, Target, Calendar } from 'lucide-react'
-import { Loader2 } from 'lucide-react'
+import { useAuth } from "@/shared/hooks/useAuth";
+import { useAnalytics } from "@/features/analytics/hook/useAnalytics";
+
+import StudyTimeChart from "@/features/analytics/components/StudyTimeChart";
+import GoalChart from "@/features/analytics/components/GoalChart";
 
 export default function AnalyticsPage() {
-  const router = useRouter()
-  const { profile, loading } = useProfile()
+  const { user } = useAuth();
+  const { studyTime, goals, summary, insights } = useAnalytics(user?.id || "");
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-blue-600 dark:text-blue-400" />
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Đang tải thống kê...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const formatHours = (hours: number) => {
-    const h = Math.floor(hours)
-    const m = Math.floor((hours - h) * 60)
-    if (h > 0 && m > 0) {
-      return `${h} giờ ${m} phút`
-    } else if (h > 0) {
-      return `${h} giờ`
-    } else if (m > 0) {
-      return `${m} phút`
-    }
-    return '0 phút'
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
+  if (!user) return <div className="text-white p-10">Please log in</div>;
+  if (!studyTime || !goals || !summary)
+    return <div className="text-white p-10">Loading data...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Quay lại
-          </Button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Thống kê học tập</h1>
+    <div className="min-h-screen p-10 text-white">
+
+      <h1 className="text-4xl font-bold mb-10">📊 Analytics Dashboard</h1>
+
+      {/* SUMMARY */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        <div className="bg-gray-800 p-6 rounded-xl">
+          <h3 className="text-gray-400">Average minutes/day (7d)</h3>
+          <p className="text-3xl font-bold">{insights?.avg_minutes_per_day_7d || '—'}</p>
         </div>
 
-        {profile && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Total Study Hours */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Tổng thời gian học</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatHours(profile.total_study_hours)}
-                  </p>
-                </div>
-              </div>
-            </div>
+        <div className="bg-gray-800 p-6 rounded-xl">
+          <h3 className="text-gray-400">Today's Progress</h3>
+          <p className="text-3xl font-bold">
+            {summary.today_completion_percent}%
+          </p>
+        </div>
 
-            {/* Member Since */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Thành viên từ</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {formatDate(profile.created_at)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Last Login */}
-            {profile.last_login && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-900/40 flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Đăng nhập lần cuối</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {formatDate(profile.last_login)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Coming Soon Section */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-          <Target className="w-16 h-16 mx-auto text-gray-400 dark:text-gray-600 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-            Thống kê chi tiết đang được phát triển
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Chúng tôi đang làm việc để mang đến cho bạn biểu đồ và phân tích chi tiết hơn về tiến độ học tập.
+        <div className="bg-gray-800 p-6 rounded-xl">
+          <h3 className="text-gray-400">Today's Goal</h3>
+          <p className="text-3xl font-bold">
+            {summary.today_actual_minutes}/{summary.today_target_minutes} min
           </p>
         </div>
       </div>
+
+      {/* INSIGHTS - additional analytics to avoid duplication with Progress */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-2xl font-semibold">🔎 Insights</h2>
+          <div>
+            <button
+              onClick={() => {
+                // Export studyTime as CSV if available
+                try {
+                  const rows = (studyTime || []).map((r: any) => ({ date: r.date || r.label || '', minutes: r.minutes ?? r.value ?? '' }))
+                  const header = 'date,minutes\n'
+                  const csv = header + rows.map((r: any) => `${r.date},${r.minutes}`).join('\n')
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `studytime_export_${new Date().toISOString().slice(0,10)}.csv`
+                  document.body.appendChild(a)
+                  a.click()
+                  a.remove()
+                  URL.revokeObjectURL(url)
+                } catch (err) {
+                  // eslint-disable-next-line no-console
+                  console.error('Export failed', err)
+                }
+              }}
+              className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-md text-white/80 text-sm"
+            >
+              Export CSV
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <InsightCard
+            title="Best day (30d)"
+            value={insights && insights.best_day?.date ? `${insights.best_day.date} (${insights.best_day.minutes}m)` : '—'}
+          />
+
+          <InsightCard
+            title="Current streak"
+            value={insights ? `${insights.current_streak_days} day${insights.current_streak_days !== 1 ? 's' : ''}` : '—'}
+          />
+
+          <InsightCard
+            title="Avg session length"
+            value={insights ? `${insights.avg_session_length_minutes}m` : '—'}
+          />
+
+          <InsightCard
+            title="Best hour today"
+            value={insights && insights.best_hour_today !== null ? `${insights.best_hour_today}:00 (${insights.best_hour_minutes_today}m)` : '—'}
+          />
+        </div>
+      </div>
+
+
+      {/* CHARTS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-gray-800 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold mb-4">⏱ Study Time (7 days)</h2>
+          <StudyTimeChart data={studyTime} />
+        </div>
+
+        <div className="bg-gray-800 p-6 rounded-xl">
+          <h2 className="text-xl font-semibold mb-4">🎯 Goal Completion</h2>
+          <GoalChart data={goals} />
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+function InsightCard({ title, value }: { title: string; value: string | number }) {
+  return (
+    <div className="bg-gray-800 p-4 rounded-xl flex flex-col justify-between">
+      <div className="text-sm text-gray-400">{title}</div>
+      <div className="text-2xl font-bold mt-2">{value}</div>
     </div>
   )
 }
-
