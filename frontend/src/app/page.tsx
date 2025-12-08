@@ -18,13 +18,15 @@ import {
   Sparkles,
   ArrowRight,
   PlayCircle,
-  LogOut
+  LogOut,
+  Moon,
+  Sun
 } from 'lucide-react'
 
 export default function LandingPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
-  const { theme } = useTheme() // Only need theme for background pattern, toggle is in GlobalHeader
+  const { theme, toggleTheme, mounted } = useTheme()
 
   const features = [
     {
@@ -232,9 +234,35 @@ export default function LandingPage() {
           </div>
 
           {/* Additional Info */}
-          <p className="text-sm text-black dark:text-gray-400">
+          <p className="text-sm text-black dark:text-gray-400 mb-6">
             Bắt đầu học tập ngay hôm nay. Miễn phí, không cần thẻ tín dụng.
           </p>
+
+          {/* Theme Toggle Button - Centered between two text lines */}
+          {mounted && (
+            <div className="flex justify-center my-6">
+              <button
+                onClick={toggleTheme}
+                className="flex items-center gap-3 px-6 py-3 rounded-full border-2 transition-all duration-300 hover:scale-105 active:scale-95
+                  bg-white text-black border-black dark:bg-black dark:text-white dark:border-white
+                  hover:bg-gray-100 dark:hover:bg-gray-900 shadow-lg hover:shadow-xl"
+                aria-label="Chuyển chế độ giao diện"
+                title={theme === 'dark' ? 'Chuyển sang chế độ sáng' : 'Chuyển sang chế độ tối'}
+              >
+                {theme === 'dark' ? (
+                  <>
+                    <Moon className="w-5 h-5" />
+                    <span className="font-semibold">Dark Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <Sun className="w-5 h-5" />
+                    <span className="font-semibold">Light Mode</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       </section>
 

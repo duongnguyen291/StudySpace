@@ -24,10 +24,29 @@ export const useProfile = (): UseProfileReturn => {
     try {
       setLoading(true)
       setError(null)
+      
+      // Check if user is authenticated
+      const token = localStorage.getItem('access_token')
+      if (!token) {
+        setError('Bạn cần đăng nhập để xem hồ sơ')
+        setProfile(null)
+        setLoading(false)
+        return
+      }
+      
       const data = await profileService.getProfile()
       setProfile(data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to fetch profile')
+      const errorMessage = err.response?.data?.detail || err.message || 'Không thể tải thông tin hồ sơ'
+      
+      // Handle 401 Unauthorized
+      if (err.response?.status === 401) {
+        setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+        // Clear token and redirect will be handled by api interceptor
+      } else {
+        setError(errorMessage)
+      }
+      
       setProfile(null)
     } finally {
       setLoading(false)

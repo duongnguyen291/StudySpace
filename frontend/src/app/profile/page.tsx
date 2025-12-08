@@ -9,13 +9,20 @@ import { Loader2, Save, ArrowLeft, Clock, Mail, User } from 'lucide-react'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user: authUser } = useAuth()
+  const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth()
   const { profile, loading, error, updateProfile, uploadAvatar, deleteAvatar } = useProfile()
   const [username, setUsername] = useState('')
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveSuccessMessage, setSaveSuccessMessage] = useState<string | null>(null)
   const [avatarSuccessMessage, setAvatarSuccessMessage] = useState<string | null>(null)
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/login')
+    }
+  }, [authLoading, isAuthenticated, router])
 
   // Update username field when profile loads
   useEffect(() => {
@@ -24,7 +31,8 @@ export default function ProfilePage() {
     }
   }, [profile])
 
-  if (loading) {
+  // Show loading while checking auth or loading profile
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
@@ -35,14 +43,24 @@ export default function ProfilePage() {
     )
   }
 
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
+
   if (error && !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center max-w-md">
           <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-          <Button onClick={() => router.push('/')} variant="outline">
-            Về trang chủ
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={() => router.push('/')} variant="outline">
+              Về trang chủ
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="primary">
+              Thử lại
+            </Button>
+          </div>
         </div>
       </div>
     )

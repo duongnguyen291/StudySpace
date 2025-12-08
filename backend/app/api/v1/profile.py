@@ -9,7 +9,8 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-from app.api.deps import get_database, get_current_user
+from app.api.deps import get_database
+from app.core.security import get_current_user_id
 from app.schemas.profile import ProfileResponse, ProfileUpdate
 from app.services.profile_service import ProfileService
 
@@ -26,7 +27,7 @@ MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 @router.get("/me", response_model=ProfileResponse)
 def get_my_profile(
-    current_user_id: str = Depends(get_current_user),
+    current_user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_database)
 ):
     """Get current user's profile"""
@@ -37,7 +38,7 @@ def get_my_profile(
 @router.put("/me", response_model=ProfileResponse)
 def update_my_profile(
     profile_data: ProfileUpdate,
-    current_user_id: str = Depends(get_current_user),
+    current_user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_database)
 ):
     """Update current user's profile"""
@@ -48,7 +49,7 @@ def update_my_profile(
 @router.post("/me/avatar", response_model=ProfileResponse)
 async def upload_avatar(
     file: UploadFile = File(...),
-    current_user_id: str = Depends(get_current_user),
+    current_user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_database)
 ):
     """Upload user avatar"""
@@ -98,7 +99,7 @@ async def upload_avatar(
 
 @router.delete("/me/avatar")
 def delete_avatar(
-    current_user_id: str = Depends(get_current_user),
+    current_user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_database)
 ):
     """Delete user avatar"""
