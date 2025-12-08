@@ -14,6 +14,7 @@ import {
   Timer,
   Brain,
   BarChart3,
+  Layers,
 } from 'lucide-react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import Link from 'next/link'
@@ -73,6 +74,12 @@ export function NavigationBar() {
       href: '/achievements',
       icon: <Award className="w-5 h-5" />,
       description: 'Các huy chương'
+    },
+    {
+      label: 'Flashcards',
+      href: '/flashcards',
+      icon: <Layers className="w-5 h-5" />,
+      description: 'Ôn tập thẻ học'
     },
     {
       label: 'Quiz',
