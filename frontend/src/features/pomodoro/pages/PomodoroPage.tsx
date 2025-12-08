@@ -38,7 +38,8 @@ import {
   BookOpen,
   TrendingUp,
   Home,
-  MessageSquare
+  MessageSquare,
+  Target
 } from 'lucide-react'
 
 interface Tag {
@@ -686,6 +687,14 @@ export default function PomodoroPage() {
                   <div className="px-3 py-2 mb-2 border-b border-white/10">
                     <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Điều hướng</span>
                   </div>
+                  
+                  <button
+                    onClick={() => { router.push('/daily-goals'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Target className="w-4 h-4 text-red-400" />
+                    <span className="text-sm font-medium">Daily Goals</span>
+                  </button>
                   
                   <button
                     onClick={() => { router.push('/notes'); setShowMainMenu(false); }}
