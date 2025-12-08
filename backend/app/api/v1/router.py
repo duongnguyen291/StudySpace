@@ -34,7 +34,7 @@ api_router.include_router(chat.router, prefix="/chat", tags=["AI Chat"])
 # from app.api.v1 import tasks, quiz, flashcards, profile, analytics
 api_router.include_router(progress.router, prefix="/progress", tags=["Progress Tracker"])
 api_router.include_router(test_progress.router)
-api_router.include_router(analytics.router, prefix="/analytics")
+api_router.include_router(analytics.router)
 
 
 # TODO: Uncomment when these modules are created
