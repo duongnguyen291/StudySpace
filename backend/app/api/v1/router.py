@@ -18,7 +18,6 @@ from app.api.v1 import (
     progress,
     test_progress,
     analytics,
-    chat
     chat,
     quiz,
     flashcards,
