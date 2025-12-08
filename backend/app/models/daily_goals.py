@@ -1,7 +1,7 @@
 """
 Daily Goals Model
 """
-from sqlalchemy import Column, Integer, Date, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, Date, DateTime, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -19,6 +19,9 @@ class DailyGoal(Base):
     goal_date = Column(Date, nullable=False, index=True)
     target_minutes = Column(Integer, nullable=False, default=0)
     actual_minutes = Column(Integer, nullable=False, default=0)
+    target_quiz_count = Column(Integer, nullable=False, default=0)
+    actual_quiz_count = Column(Integer, nullable=False, default=0)
+    completed = Column(Boolean, default=False, nullable=False)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -26,4 +29,4 @@ class DailyGoal(Base):
     user = relationship("User", backref="daily_goals")
 
     def __repr__(self):
-        return f"<DailyGoal(id={self.id}, user_id={self.user_id}, goal_date={self.goal_date}, target={self.target_minutes})>"
+        return f"<DailyGoal(id={self.id}, user_id={self.user_id}, goal_date={self.goal_date}, target_minutes={self.target_minutes}, target_quiz_count={self.target_quiz_count})>"
