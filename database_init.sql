@@ -106,15 +106,32 @@ CREATE TABLE categories (
 );
 
 -- ============================================
+-- TABLE: note_categories (separate from task categories)
+-- ============================================
+CREATE TABLE note_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(7) DEFAULT '#3B82F6',
+    icon VARCHAR(50) DEFAULT 'folder',
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- TABLE: notes
 -- ============================================
 CREATE TABLE notes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES note_categories(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT,
     is_pinned BOOLEAN DEFAULT FALSE,
+    is_quick_note BOOLEAN DEFAULT FALSE,
+    source_context TEXT,
+    theme VARCHAR(50) DEFAULT 'standard',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -139,6 +156,7 @@ CREATE TABLE tasks (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     priority VARCHAR(10) DEFAULT 'medium', -- 'low', 'medium', 'high'
+    start_date DATE,
     due_date DATE,
     completed BOOLEAN DEFAULT FALSE,
     completed_at TIMESTAMP,
@@ -183,12 +201,13 @@ CREATE TABLE quiz_attempts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     quiz_set_id UUID NOT NULL REFERENCES quiz_sets(id) ON DELETE CASCADE,
-    score DECIMAL(5,2) NOT NULL,
+    score DECIMAL(5,2),
     total_questions INTEGER NOT NULL,
-    correct_answers INTEGER NOT NULL,
+    correct_answers INTEGER DEFAULT 0,
     time_spent_seconds INTEGER,
-    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    answers JSONB -- Store user's answers
+    answers JSONB,                             -- Store user's answers
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -293,9 +312,11 @@ CREATE TABLE music_playlists (
 CREATE INDEX idx_study_sessions_user_id ON study_sessions(user_id);
 CREATE INDEX idx_study_sessions_start_time ON study_sessions(start_time);
 CREATE INDEX idx_daily_goals_user_date ON daily_goals(user_id, goal_date);
+CREATE INDEX idx_note_categories_user_id ON note_categories(user_id);
 CREATE INDEX idx_notes_user_id ON notes(user_id);
 CREATE INDEX idx_notes_category_id ON notes(category_id);
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_tasks_start_date ON tasks(start_date);
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 CREATE INDEX idx_quiz_attempts_user_id ON quiz_attempts(user_id);
 CREATE INDEX idx_flashcard_progress_user_id ON flashcard_progress(user_id);
@@ -331,6 +352,9 @@ CREATE TRIGGER update_daily_goals_updated_at BEFORE UPDATE ON daily_goals
 CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+CREATE TRIGGER update_note_categories_updated_at BEFORE UPDATE ON note_categories
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -350,14 +374,20 @@ INSERT INTO quotes (quote_text, author, category, language) VALUES
 -- ============================================
 -- SEED DATA: Music Playlists
 -- ============================================
-INSERT INTO music_playlists (name, description, playlist_type, duration_minutes, is_active) VALUES
-('Lofi Study Beats', 'Nhạc lofi thư giãn giúp tập trung học tập', 'lofi', 60, TRUE),
-('Piano Classical', 'Nhạc piano cổ điển êm dịu', 'piano', 45, TRUE),
-('Rain Sounds', 'Tiếng mưa giúp thư giãn và tập trung', 'rain', 30, TRUE),
-('Nature Ambience', 'Âm thanh thiên nhiên', 'nature', 40, TRUE),
-('White Noise', 'Tiếng ồn trắng giúp tập trung', 'ambient', 60, TRUE);
-
--- ====================
+INSERT INTO music_playlists (name, description, playlist_type, audio_url, duration_minutes, is_active) VALUES
+('Lofi Hip Hop Radio', 'Nhạc lofi chill để học bài và thư giãn', 'lofi', 'https://www.youtube.com/watch?v=jfKfPfyJRdk', 0, TRUE),
+('Lofi Chill Vibes', 'Lofi beats nhẹ nhàng cho buổi học đêm', 'lofi', 'https://www.youtube.com/watch?v=lTRiuFIWV54', 0, TRUE),
+('Coffee Shop Lofi', 'Không khí quán cà phê với nhạc lofi', 'lofi', 'https://www.youtube.com/watch?v=h2zkV-l_TbY', 0, TRUE),
+('Piano Relaxing Music', 'Nhạc piano thư giãn giúp tập trung', 'piano', 'https://www.youtube.com/watch?v=77ZozI0rw7w', 0, TRUE),
+('Classical Piano', 'Nhạc piano cổ điển - Chopin, Debussy', 'piano', 'https://www.youtube.com/watch?v=9E6b3swbnWg', 0, TRUE),
+('Study Piano', 'Piano nhẹ nhàng cho giờ học', 'piano', 'https://www.youtube.com/watch?v=lCOF9LN_Zxs', 0, TRUE),
+('Rain on Window', 'Tiếng mưa rơi trên cửa kính', 'rain', 'https://www.youtube.com/watch?v=mPZkdNFkNps', 0, TRUE),
+('Thunderstorm Sounds', 'Tiếng mưa bão và sấm sét', 'rain', 'https://www.youtube.com/watch?v=nMfPqeZjc2c', 0, TRUE),
+('Rain in Forest', 'Tiếng mưa trong rừng', 'rain', 'https://www.youtube.com/watch?v=q76bMs-NwRk', 0, TRUE),
+('Forest Birds', 'Tiếng chim hót trong rừng', 'nature', 'https://www.youtube.com/watch?v=xNN7iTA57jM', 0, TRUE),
+('River Stream', 'Tiếng suối chảy róc rách', 'nature', 'https://www.youtube.com/watch?v=IvjMgVS6kng', 0, TRUE),
+('Deep Focus Music', 'Nhạc ambient giúp tập trung sâu', 'ambient', 'https://www.youtube.com/watch?v=ceqgwo7U28Y', 0, TRUE),
+('Space Ambient', 'Âm thanh vũ trụ thư giãn', 'ambient', 'https://www.youtube.com/watch?v=tNkZsRW7h2c', 0, TRUE);
 
 -- ============================================
 -- SEED DATA: Achievements

@@ -9,9 +9,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import type { SessionType } from '../types/pomodoro.types'
-
-// (Nếu có service backend, giữ import; nếu không có thì bỏ)
-// import { pomodoroService } from '../services/pomodoroService'
+import { pomodoroService } from '../services/pomodoroService'
 
 interface UsePomodoroTimerProps {
   workDuration?: number
@@ -112,13 +110,40 @@ export const usePomodoroTimer = ({
     }
   }, [isActive, isPaused])
 
+  const logWorkSession = useCallback(
+    (durationMinutes: number) => {
+      if (!isAuthenticated || durationMinutes <= 0) return
+
+      const completedAt = new Date()
+      const startedAt = new Date(
+        completedAt.getTime() - durationMinutes * 60 * 1000
+      )
+
+      void pomodoroService
+        .createSession({
+          session_type: 'work',
+          duration_minutes: durationMinutes,
+          started_at: startedAt.toISOString(),
+          completed_at: completedAt.toISOString(),
+        })
+        .catch((err) => {
+          // Không làm vỡ UX Pomodoro nếu log thất bại
+          console.error('Error logging pomodoro session', err)
+        })
+    },
+    [isAuthenticated]
+  )
+
   // Hoàn thành phiên
   const handleCompleteSession = useCallback(() => {
     setIsActive(false)
     setIsPaused(false)
 
-    // Backend (nếu có)
-    // if (isAuthenticated) { ... }
+    // Phiên work hoàn thành đủ thời gian gốc → log toàn bộ phiên
+    if (sessionType === 'work' && baselineSeconds > 0) {
+      const durationMinutes = Math.round(baselineSeconds / 60)
+      logWorkSession(durationMinutes)
+    }
 
     // Chuyển phiên
     if (sessionType === 'work') {
@@ -136,7 +161,7 @@ export const usePomodoroTimer = ({
       setSessionType('work')
       setCustomApplied(false)
     }
-  }, [sessionType, cycleCount, longBreakEvery])
+  }, [sessionType, baselineSeconds, cycleCount, longBreakEvery, logWorkSession])
 
   // Start
   const handleStart = useCallback(() => {
@@ -157,6 +182,18 @@ export const usePomodoroTimer = ({
 
   // Reset: quay về baselineSeconds
   const handleReset = useCallback(() => {
+    // Nếu đang ở phiên work và đã chạy được một phần, log phần đã học
+    if (
+      isActive &&
+      sessionType === 'work' &&
+      baselineSeconds > 0 &&
+      remainingSeconds < baselineSeconds
+    ) {
+      const elapsedSeconds = baselineSeconds - remainingSeconds
+      const durationMinutes = Math.max(1, Math.round(elapsedSeconds / 60))
+      logWorkSession(durationMinutes)
+    }
+
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
@@ -164,7 +201,7 @@ export const usePomodoroTimer = ({
     setIsActive(false)
     setIsPaused(false)
     setRemainingSeconds(baselineSeconds)
-  }, [baselineSeconds])
+  }, [isActive, sessionType, baselineSeconds, remainingSeconds, logWorkSession])
 
   // External setMinutes (preset hoặc custom Apply)
   const setMinutesExternal = useCallback((mins: number) => {
