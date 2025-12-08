@@ -1,0 +1,2 @@
+export { GlobalHeader } from './GlobalHeader'
+

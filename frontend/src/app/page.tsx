@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/Button'
 import { useAuth } from '@/shared/hooks/useAuth'
+import { useTheme } from '@/shared/hooks/useTheme'
 import { 
   Timer, 
   BookOpen, 
@@ -23,6 +24,7 @@ import {
 export default function LandingPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
+  const { theme } = useTheme() // Only need theme for background pattern, toggle is in GlobalHeader
 
   const features = [
     {
@@ -76,13 +78,20 @@ export default function LandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
-      {/* Background Pattern */}
-      <div className="fixed inset-0 opacity-10">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
-          backgroundSize: '40px 40px'
-        }}></div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-[#020617] dark:bg-gradient-to-b dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 dark:text-white">
+      {/* Background Pattern (light + dark) */}
+      <div className="fixed inset-0 opacity-10 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, ${
+              theme === 'dark'
+                ? 'rgba(255,255,255,0.8)' // dark mode: white dots
+                : 'rgba(0,0,0,0.8)' // light mode: black dots (same size & density as dark)
+            } 3px, transparent 0)`,
+            backgroundSize: '40px 40px',
+          }}
+        ></div>
       </div>
 
       {/* Header */}
@@ -91,30 +100,50 @@ export default function LandingPage() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-xl font-bold">StudySpace</h1>
+          <h1 className="text-xl font-bold text-black dark:text-white">StudySpace</h1>
         </div>
         <div className="flex items-center gap-3">
             {isAuthenticated ? (
               <>
-              <div className="flex items-center gap-2">
+              <div 
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => router.push('/profile')}
+                title="Xem hồ sơ"
+              >
                 {user?.avatar_url ? (
                   <img 
-                    src={user.avatar_url} 
+                    src={
+                      user.avatar_url.startsWith('http') 
+                        ? user.avatar_url 
+                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${user.avatar_url}`
+                    }
                     alt={user.username || 'User'} 
                     className="w-8 h-8 rounded-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initial if image fails to load
+                      const target = e.target as HTMLImageElement
+                      target.style.display = 'none'
+                      const parent = target.parentElement
+                      if (parent) {
+                        const fallback = document.createElement('div')
+                        fallback.className = 'w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold'
+                        fallback.textContent = user?.username?.[0]?.toUpperCase() || 'U'
+                        parent.appendChild(fallback)
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-semibold">
                     {user?.username?.[0]?.toUpperCase() || 'U'}
                   </div>
                 )}
-                <span className="text-sm text-gray-300 hidden sm:inline">{user?.username}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-300 hidden sm:inline">{user?.username}</span>
               </div>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => router.push('/pomodoro')}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-gray-300 text-black hover:bg-gray-100 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 Mở ứng dụng
               </Button>
@@ -122,7 +151,7 @@ export default function LandingPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => logout()}
-                className="border-white/20 text-white hover:bg-white/10 flex items-center gap-2"
+                className="border-gray-300 text-black hover:bg-gray-100 dark:border-white/20 dark:text-white dark:hover:bg-white/10 flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="hidden sm:inline">Đăng xuất</span>
@@ -134,7 +163,7 @@ export default function LandingPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => router.push('/login')}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-gray-300 text-black hover:bg-gray-100 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 Đăng nhập
               </Button>
@@ -142,7 +171,7 @@ export default function LandingPage() {
                 variant="primary"
                 size="sm"
                 onClick={() => router.push('/register')}
-                className="bg-white text-gray-900 hover:bg-white/90"
+                className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100"
               >
                 Đăng ký
               </Button>
@@ -150,7 +179,7 @@ export default function LandingPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => router.push('/pomodoro')}
-                className="border-white/20 text-white hover:bg-white/10"
+                className="border-gray-300 text-black hover:bg-gray-100 dark:border-white/20 dark:text-white dark:hover:bg-white/10"
               >
                 Mở ứng dụng
               </Button>
@@ -169,12 +198,12 @@ export default function LandingPage() {
           </div>
 
           {/* Main Heading */}
-          <h2 className="text-6xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-gray-100 to-gray-300 bg-clip-text text-transparent">
+          <h2 className="text-6xl md:text-7xl font-bold mb-6 text-black dark:text-white">
             Không gian học tập của bạn
           </h2>
 
           {/* Description */}
-          <p className="text-xl md:text-2xl text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl md:text-2xl text-black dark:text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed">
             StudySpace giúp bạn học tập hiệu quả hơn, chặn các phiền nhiễu, quản lý thời gian và duy trì trạng thái tập trung.
           </p>
 
@@ -184,7 +213,7 @@ export default function LandingPage() {
               variant="primary"
               size="lg"
               onClick={() => router.push('/pomodoro')}
-              className="bg-white text-gray-900 hover:bg-gray-100 font-semibold px-8 py-4 text-lg flex items-center gap-2 group"
+              className="bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-100 font-semibold px-8 py-4 text-lg flex items-center gap-2 group"
             >
               Bắt đầu phiên học tập
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -196,14 +225,14 @@ export default function LandingPage() {
                 const featuresSection = document.getElementById('features')
                 featuresSection?.scrollIntoView({ behavior: 'smooth' })
               }}
-              className="border-white/30 text-white hover:bg-white/10 font-semibold px-8 py-4 text-lg"
+              className="border-gray-300 text-black hover:bg-gray-100 dark:border-white/30 dark:text-white dark:hover:bg-white/10 font-semibold px-8 py-4 text-lg"
             >
               Xem cách hoạt động
             </Button>
           </div>
 
           {/* Additional Info */}
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-black dark:text-gray-400">
             Bắt đầu học tập ngay hôm nay. Miễn phí, không cần thẻ tín dụng.
           </p>
         </div>
@@ -214,9 +243,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <p className="text-sm text-gray-400 mb-4">Được xây dựng để giúp bạn học tập nhiều hơn, đạt được nhiều hơn</p>
-            <h3 className="text-4xl md:text-5xl font-bold mb-4">Được thiết kế cho sự tập trung sâu</h3>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            <p className="text-sm text-black dark:text-gray-400 mb-4">
+              Được xây dựng để giúp bạn học tập nhiều hơn, đạt được nhiều hơn
+            </p>
+            <h3 className="text-4xl md:text-5xl font-bold mb-4 text-black dark:text-white">
+              Được thiết kế cho sự tập trung sâu
+            </h3>
+            <p className="text-lg text-black dark:text-gray-300 max-w-2xl mx-auto">
               Các công cụ được suy nghĩ kỹ lưỡng giúp bạn tập trung vào nhiệm vụ, xây dựng động lực và theo dõi tiến độ – mà không làm gián đoạn.
             </p>
           </div>
@@ -228,13 +261,19 @@ export default function LandingPage() {
               return (
                 <div
                   key={index}
-                  className="p-6 bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:border-gray-600/50 transition-all hover:transform hover:scale-105"
+                  className="p-6 bg-gray-100 dark:bg-gray-800/30 rounded-xl border border-gray-200 dark:border-gray-700/50 hover:border-gray-300 dark:hover:border-gray-600/50 transition-all hover:transform hover:scale-105"
                 >
-                  <div className={`w-12 h-12 rounded-lg bg-gray-800/50 flex items-center justify-center mb-4 ${feature.color}`}>
+                  <div
+                    className={`w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-800/50 flex items-center justify-center mb-4 ${feature.color}`}
+                  >
                     <Icon className="w-6 h-6" />
                   </div>
-                  <h4 className="text-xl font-semibold mb-2">{feature.title}</h4>
-                  <p className="text-gray-400 text-sm leading-relaxed">{feature.description}</p>
+                  <h4 className="text-xl font-semibold mb-2 text-black dark:text-white">
+                    {feature.title}
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-400 text-sm leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
               )
             })}
@@ -243,36 +282,38 @@ export default function LandingPage() {
       </section>
 
       {/* Simple Timer Modes Section */}
-      <section className="relative z-10 px-6 py-20 bg-gray-900/50">
+      <section className="relative z-10 px-6 py-20 bg-gray-50 dark:bg-gray-900/50">
         <div className="max-w-6xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text Content */}
             <div>
-              <div className="w-12 h-12 rounded-lg bg-gray-800/50 flex items-center justify-center mb-6">
-                <Timer className="w-6 h-6 text-gray-400" />
+              <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-800/50 flex items-center justify-center mb-6">
+                <Timer className="w-6 h-6 text-gray-500 dark:text-gray-400" />
               </div>
-              <h3 className="text-4xl font-bold mb-4">Chế độ đếm giờ đơn giản</h3>
-              <p className="text-lg text-gray-300 leading-relaxed">
+              <h3 className="text-4xl font-bold mb-4 text-black dark:text-white">
+                Chế độ đếm giờ đơn giản
+              </h3>
+              <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
                 Chọn Pomodoro (25/5), đếm giờ tùy chỉnh, hoặc Stopwatch. Chuyển đổi chế độ để phù hợp với nhiệm vụ của bạn.
               </p>
             </div>
 
             {/* Right: Visual Demo */}
             <div className="relative">
-              <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 border border-gray-700/50 shadow-2xl">
+              <div className="bg-white dark:bg-gradient-to-br dark:from-gray-800 dark:to-gray-900 rounded-2xl p-8 border border-gray-200 dark:border-gray-700/50 shadow-2xl">
                 <div className="space-y-4">
                   <div className="flex gap-2 border-b border-gray-700 pb-4">
-                    <div className="px-4 py-2 bg-gray-700 rounded-lg flex items-center gap-2">
+                    <div className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center gap-2">
                       <Timer className="w-4 h-4" />
                       <span className="text-sm">Focus Timer</span>
                     </div>
-                    <div className="px-4 py-2 rounded-lg flex items-center gap-2 text-gray-400 hover:text-white cursor-pointer transition-colors">
+                    <div className="px-4 py-2 rounded-lg flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white cursor-pointer transition-colors">
                       <PlayCircle className="w-4 h-4" />
                       <span className="text-sm">Stopwatch</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-400 mb-2">Chọn Preset</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Chọn Preset</p>
                     <div className="space-y-2">
                       {[
                         'Classic Pomodoro 25m - 5m - 15m',
@@ -282,7 +323,7 @@ export default function LandingPage() {
                       ].map((preset, i) => (
                         <div
                           key={i}
-                          className="px-4 py-3 bg-gray-800/50 rounded-lg hover:bg-gray-800 cursor-pointer transition-colors text-sm"
+                          className="px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800/50 dark:hover:bg-gray-800 cursor-pointer transition-colors text-sm"
                         >
                           {preset}
                         </div>
@@ -299,7 +340,7 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="relative z-10 px-6 py-20 text-center">
         <div className="max-w-4xl mx-auto">
-          <h3 className="text-5xl font-bold mb-6">Sẵn sàng tập trung?</h3>
+          <h3 className="text-5xl font-bold mb-6 text-black dark:text-white">Sẵn sàng tập trung?</h3>
           <Button
             variant="primary"
             size="lg"
@@ -309,14 +350,14 @@ export default function LandingPage() {
             Bắt đầu phiên học tập
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>
-          <p className="text-sm text-gray-400 mt-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-6">
             Bắt đầu học tập ngay hôm nay. Miễn phí, không cần thẻ tín dụng.
           </p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="relative z-10 px-6 py-12 bg-gray-900/80 border-t border-gray-800">
+      <footer className="relative z-10 px-6 py-12 bg-gray-100 border-t border-gray-200 dark:bg-gray-900/80 dark:border-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Brand Column */}
@@ -325,45 +366,80 @@ export default function LandingPage() {
                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <h4 className="text-lg font-bold">StudySpace</h4>
+                <h4 className="text-lg font-bold text-black dark:text-white">StudySpace</h4>
               </div>
-              <p className="text-sm text-gray-400 leading-relaxed">
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 Không gian học tập giúp sinh viên học tập nhiều hơn và đạt được nhiều hơn.
               </p>
             </div>
 
             {/* Product Column */}
             <div>
-              <h5 className="font-semibold mb-4">Sản phẩm</h5>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><Link href="/pomodoro" className="hover:text-white transition-colors">Tính năng</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pomodoro Timer</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Ghi chú & Tasks</a></li>
+              <h5 className="font-semibold mb-4 text-black dark:text-white">Sản phẩm</h5>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li>
+                  <Link
+                    href="/pomodoro"
+                    className="hover:text-black dark:hover:text-white transition-colors"
+                  >
+                    Tính năng
+                  </Link>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    Pomodoro Timer
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    Ghi chú & Tasks
+                  </a>
+                </li>
               </ul>
             </div>
 
             {/* Support Column */}
             <div>
-              <h5 className="font-semibold mb-4">Hỗ trợ</h5>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Hướng dẫn</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Liên hệ</a></li>
+              <h5 className="font-semibold mb-4 text-black dark:text-white">Hỗ trợ</h5>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    Hướng dẫn
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    FAQ
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    Liên hệ
+                  </a>
+                </li>
               </ul>
             </div>
 
             {/* Legal Column */}
             <div>
-              <h5 className="font-semibold mb-4">Pháp lý</h5>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Chính sách bảo mật</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Điều khoản sử dụng</a></li>
+              <h5 className="font-semibold mb-4 text-black dark:text-white">Pháp lý</h5>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    Chính sách bảo mật
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-black dark:hover:text-white transition-colors">
+                    Điều khoản sử dụng
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
 
-          <div className="pt-8 border-t border-gray-800 text-center">
-            <p className="text-sm text-gray-400">
+          <div className="pt-8 border-t border-gray-200 dark:border-gray-800 text-center">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               © 2025 StudySpace. Tất cả quyền được bảo lưu.
             </p>
           </div>
