@@ -91,21 +91,28 @@ export default function AnalyticsPage() {
               onClick={() => {
                 // Export studyTime as CSV if available
                 try {
-                  const rows = (studyTime || []).map((r: any) => ({ date: r.date || r.label || '', minutes: r.minutes ?? r.value ?? '' }))
-                  const header = 'date,minutes\n'
-                  const csv = header + rows.map((r: any) => `${r.date},${r.minutes}`).join('\n')
-                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.download = `studytime_export_${new Date().toISOString().slice(0,10)}.csv`
-                  document.body.appendChild(a)
-                  a.click()
-                  a.remove()
-                  URL.revokeObjectURL(url)
+                  if (!studyTime || !studyTime.labels || !studyTime.values) {
+                    console.error('Study time data not available');
+                    return;
+                  }
+                  const rows = studyTime.labels.map((label: string, index: number) => ({
+                    date: label,
+                    minutes: studyTime.values[index] ?? 0
+                  }));
+                  const header = 'date,minutes\n';
+                  const csv = header + rows.map((r: any) => `${r.date},${r.minutes}`).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `studytime_export_${new Date().toISOString().slice(0, 10)}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
                 } catch (err) {
                   // eslint-disable-next-line no-console
-                  console.error('Export failed', err)
+                  console.error('Export failed', err);
                 }
               }}
               className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-md text-white/80 text-sm"
