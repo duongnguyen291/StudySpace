@@ -2,8 +2,10 @@
 Flashcard Service
 Business logic layer for flashcard operations
 """
+import csv
+import io
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from uuid import UUID, uuid4
 from datetime import datetime
 
@@ -26,7 +28,11 @@ from app.schemas.flashcard import (
     ReviewCard,
     ReviewSessionResponse,
     ReviewResult,
-    FlashcardDeckFilter
+    FlashcardDeckFilter,
+    FlashcardCSVPreviewResponse,
+    FlashcardCSVImportResult,
+    FlashcardCSVImportError,
+    FlashcardCSVPreviewRow
 )
 
 
@@ -148,6 +154,144 @@ class FlashcardService:
             total=len(flashcard_responses),
             deck_id=deck_id
         )
+
+    # ============================================
+    # CSV IMPORT/EXPORT (simple: question, answer [, hint])
+    # ============================================
+
+    @staticmethod
+    def _parse_csv(content: str) -> Tuple[List[str], List[List[str]], List[FlashcardCSVImportError]]:
+        """Parse CSV content and return headers, rows, errors"""
+        errors: List[FlashcardCSVImportError] = []
+        rows: List[List[str]] = []
+        headers: List[str] = []
+
+        try:
+            reader = csv.reader(io.StringIO(content))
+            lines = list(reader)
+
+            if not lines:
+                errors.append(FlashcardCSVImportError(line=0, message="Empty file"))
+                return headers, rows, errors
+
+            headers = [h.strip().lower() for h in lines[0]]
+
+            if 'question' not in headers:
+                errors.append(FlashcardCSVImportError(line=1, message="Missing 'question' column"))
+            if 'answer' not in headers:
+                errors.append(FlashcardCSVImportError(line=1, message="Missing 'answer' column"))
+
+            for row in lines[1:]:
+                if not row or (len(row) == 1 and not row[0].strip()):
+                    continue
+                rows.append([cell.strip() for cell in row])
+
+        except Exception as e:
+            errors.append(FlashcardCSVImportError(line=0, message=f"Parse error: {str(e)}"))
+
+        return headers, rows, errors
+
+    def preview_csv(self, user_id: UUID, deck_id: UUID, content: str, limit: int = 10) -> FlashcardCSVPreviewResponse:
+        """Preview CSV content with validation"""
+        # Verify deck ownership
+        deck = self.deck_repo.get_by_id(deck_id, user_id)
+        if not deck:
+            return FlashcardCSVPreviewResponse(headers=[], rows=[], total_rows=0, valid_rows=0, errors=[
+                FlashcardCSVImportError(line=0, message="Deck not found")
+            ])
+
+        headers, rows, parse_errors = self._parse_csv(content)
+
+        if parse_errors:
+            return FlashcardCSVPreviewResponse(
+                headers=headers or ['question', 'answer', 'hint'],
+                rows=[],
+                total_rows=0,
+                valid_rows=0,
+                errors=parse_errors
+            )
+
+        col_map = {h: i for i, h in enumerate(headers)}
+        q_idx = col_map.get('question')
+        a_idx = col_map.get('answer')
+        hint_idx = col_map.get('hint')
+
+        preview_rows: List[FlashcardCSVPreviewRow] = []
+        valid_count = 0
+        all_errors: List[FlashcardCSVImportError] = []
+
+        for line_num, row in enumerate(rows, start=2):
+            question = row[q_idx] if q_idx is not None and q_idx < len(row) else ""
+            answer = row[a_idx] if a_idx is not None and a_idx < len(row) else ""
+            hint = row[hint_idx] if hint_idx is not None and hint_idx < len(row) else ""
+
+            is_valid = bool(question and answer)
+            error_msg = None if is_valid else "Missing question or answer"
+
+            if not is_valid:
+                all_errors.append(FlashcardCSVImportError(line=line_num, message=error_msg))
+            else:
+                valid_count += 1
+
+            if len(preview_rows) < limit:
+                preview_rows.append(FlashcardCSVPreviewRow(
+                    line=line_num,
+                    question=question,
+                    answer=answer,
+                    is_valid=is_valid,
+                    error=error_msg
+                ))
+
+        return FlashcardCSVPreviewResponse(
+            headers=headers,
+            rows=preview_rows,
+            total_rows=len(rows),
+            valid_rows=valid_count,
+            errors=all_errors
+        )
+
+    def import_csv(self, user_id: UUID, deck_id: UUID, content: str) -> FlashcardCSVImportResult:
+        """Import flashcards from CSV into a deck"""
+        # Verify deck ownership
+        deck = self.deck_repo.get_by_id(deck_id, user_id)
+        if not deck:
+            return FlashcardCSVImportResult(success=False, flashcards_imported=0, errors=[
+                FlashcardCSVImportError(line=0, message="Deck not found")
+            ])
+
+        headers, rows, parse_errors = self._parse_csv(content)
+        if parse_errors:
+            return FlashcardCSVImportResult(success=False, flashcards_imported=0, errors=parse_errors)
+
+        col_map = {h: i for i, h in enumerate(headers)}
+        q_idx = col_map.get('question')
+        a_idx = col_map.get('answer')
+        hint_idx = col_map.get('hint')
+
+        imported = 0
+        errors: List[FlashcardCSVImportError] = []
+        to_create: List[FlashcardCreate] = []
+
+        for line_num, row in enumerate(rows, start=2):
+            question = row[q_idx] if q_idx is not None and q_idx < len(row) else ""
+            answer = row[a_idx] if a_idx is not None and a_idx < len(row) else ""
+            hint = row[hint_idx] if hint_idx is not None and hint_idx < len(row) else None
+
+            if not question or not answer:
+                errors.append(FlashcardCSVImportError(line=line_num, message="Missing question or answer"))
+                continue
+
+            to_create.append(FlashcardCreate(question=question, answer=answer, hint=hint))
+            imported += 1
+
+        if not imported:
+            return FlashcardCSVImportResult(success=False, flashcards_imported=0, errors=errors or [
+                FlashcardCSVImportError(line=0, message="No valid flashcards found")
+            ])
+
+        # bulk create
+        self.flashcard_repo.bulk_create(deck_id, to_create)
+        return FlashcardCSVImportResult(success=True, flashcards_imported=imported, errors=errors)
     
     def update_flashcard(
         self,

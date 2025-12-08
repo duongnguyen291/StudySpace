@@ -1,7 +1,7 @@
 """
 Flashcards API endpoints
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import Optional, List
 from uuid import UUID
@@ -22,7 +22,9 @@ from app.schemas.flashcard import (
     ReviewSessionStart,
     ReviewSessionResponse,
     ReviewResult,
-    FlashcardDeckFilter
+    FlashcardDeckFilter,
+    FlashcardCSVImportResult,
+    FlashcardCSVPreviewResponse
 )
 
 router = APIRouter()
@@ -283,6 +285,63 @@ async def delete_flashcard(
             detail="Flashcard not found"
         )
     return None
+
+
+# ============================================
+# CSV IMPORT/PREVIEW (similar to quiz)
+# ============================================
+
+
+@router.post(
+    "/decks/{deck_id}/preview",
+    response_model=FlashcardCSVPreviewResponse,
+    summary="Preview CSV for flashcards",
+    description="Preview CSV content before importing flashcards"
+)
+async def preview_flashcards_csv(
+    deck_id: UUID,
+    file: UploadFile = File(...),
+    limit: int = Query(10, ge=1, le=100, description="Number of rows to preview"),
+    current_user: User = Depends(get_current_user),
+    service: FlashcardService = Depends(get_flashcard_service)
+):
+    if not file.filename or not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Must be a CSV file")
+
+    content = await file.read()
+    try:
+        text = content.decode('utf-8')
+    except Exception:
+        text = content.decode('utf-8-sig')
+
+    return service.preview_csv(current_user.id, deck_id, text, limit=limit)
+
+
+@router.post(
+    "/decks/{deck_id}/import",
+    response_model=FlashcardCSVImportResult,
+    summary="Import flashcards from CSV",
+    description="Import flashcards into a deck from CSV (columns: question, answer, optional hint)"
+)
+async def import_flashcards_csv(
+    deck_id: UUID,
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    service: FlashcardService = Depends(get_flashcard_service)
+):
+    if not file.filename or not file.filename.endswith('.csv'):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Must be a CSV file")
+
+    content = await file.read()
+    try:
+        text = content.decode('utf-8')
+    except Exception:
+        text = content.decode('utf-8-sig')
+
+    result = service.import_csv(current_user.id, deck_id, text)
+    if not result.success:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Import failed")
+    return result
 
 # ============================================
 # REVIEW SESSION ENDPOINTS

@@ -15,6 +15,8 @@ import type {
   ReviewSessionStart,
   ReviewSessionResponse,
   ReviewResult,
+  FlashcardCSVImportResult,
+  FlashcardCSVPreviewResponse,
 } from '../types/flashcard.types'
 
 import { API_ENDPOINTS } from '@/shared/constants'
@@ -190,6 +192,37 @@ class FlashcardService {
       console.error('Error deleting flashcard:', error)
       throw error
     }
+  }
+
+  // ============================================
+  // CSV IMPORT/PREVIEW
+  // ============================================
+
+  async previewFlashcardsCsv(deckId: string, file: File, limit = 10): Promise<FlashcardCSVPreviewResponse> {
+    const fd = new FormData()
+    fd.append('file', file)
+    const response = await apiClient.post<FlashcardCSVPreviewResponse>(
+      `/flashcards/decks/${deckId}/preview`,
+      fd,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        params: { limit }
+      }
+    )
+    return response.data
+  }
+
+  async importFlashcardsCsv(deckId: string, file: File): Promise<FlashcardCSVImportResult> {
+    const fd = new FormData()
+    fd.append('file', file)
+    const response = await apiClient.post<FlashcardCSVImportResult>(
+      `/flashcards/decks/${deckId}/import`,
+      fd,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    )
+    return response.data
   }
 
   // ============================================

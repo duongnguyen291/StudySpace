@@ -82,6 +82,34 @@ export interface FlashcardListResponse {
   deck_id: string
 }
 
+// CSV import/preview
+export interface FlashcardCSVImportError {
+  line: number
+  message: string
+}
+
+export interface FlashcardCSVPreviewRow {
+  line: number
+  question: string
+  answer: string
+  is_valid: boolean
+  error?: string | null
+}
+
+export interface FlashcardCSVPreviewResponse {
+  headers: string[]
+  rows: FlashcardCSVPreviewRow[]
+  total_rows: number
+  valid_rows: number
+  errors: FlashcardCSVImportError[]
+}
+
+export interface FlashcardCSVImportResult {
+  success: boolean
+  flashcards_imported: number
+  errors: FlashcardCSVImportError[]
+}
+
 export interface FlashcardDeckFilter {
   category_id?: string
   search?: string

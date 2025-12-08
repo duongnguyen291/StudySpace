@@ -201,6 +201,38 @@ class FlashcardListResponse(BaseModel):
 
 
 # ============================================
+# CSV IMPORT/PREVIEW
+# ============================================
+
+
+class FlashcardCSVImportError(BaseModel):
+    line: int
+    message: str
+
+
+class FlashcardCSVPreviewRow(BaseModel):
+    line: int
+    question: str
+    answer: str
+    is_valid: bool = True
+    error: Optional[str] = None
+
+
+class FlashcardCSVPreviewResponse(BaseModel):
+    headers: List[str]
+    rows: List[FlashcardCSVPreviewRow]
+    total_rows: int
+    valid_rows: int
+    errors: List[FlashcardCSVImportError] = []
+
+
+class FlashcardCSVImportResult(BaseModel):
+    success: bool
+    flashcards_imported: int = 0
+    errors: List[FlashcardCSVImportError] = []
+
+
+# ============================================
 # FILTER SCHEMAS
 # ============================================
 

@@ -39,6 +39,8 @@ export function FlashcardsPage() {
   const [flashcardQuestion, setFlashcardQuestion] = useState('')
   const [flashcardAnswer, setFlashcardAnswer] = useState('')
   const [flashcardHint, setFlashcardHint] = useState('')
+  const [csvFile, setCsvFile] = useState<File | null>(null)
+  const [csvImporting, setCsvImporting] = useState(false)
 
   // Load decks
   useEffect(() => {
@@ -179,6 +181,26 @@ export function FlashcardsPage() {
     }
   }
 
+  const handleImportCsv = async () => {
+    if (!selectedDeck) return
+    if (!csvFile) {
+      showToast('Please choose a CSV file', 'error')
+      return
+    }
+    setCsvImporting(true)
+    try {
+      const res = await flashcardService.importFlashcardsCsv(selectedDeck.id, csvFile)
+      showToast(`Imported ${res.flashcards_imported} cards`, 'success')
+      loadFlashcards(selectedDeck.id)
+      setCsvFile(null)
+    } catch (error) {
+      console.error(error)
+      showToast('Failed to import CSV', 'error')
+    } finally {
+      setCsvImporting(false)
+    }
+  }
+
   const handleStartReview = async (deckId: string) => {
     try {
       const session = await flashcardService.startReviewSession({
@@ -262,6 +284,28 @@ export function FlashcardsPage() {
                 Add Card
               </Button>
             </div>
+          </div>
+
+          {/* CSV Import */}
+          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 mb-6 flex items-center gap-3 flex-wrap">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm font-semibold text-white">Import flashcards from CSV</p>
+              <p className="text-xs text-gray-400">Columns: question, answer, hint (optional)</p>
+            </div>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+              className="text-sm text-gray-200 file:mr-3 file:px-3 file:py-2 file:rounded-md file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer"
+            />
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={!csvFile || csvImporting}
+              onClick={handleImportCsv}
+            >
+              {csvImporting ? 'Importing...' : 'Import CSV'}
+            </Button>
           </div>
 
           {/* Flashcard Form */}
