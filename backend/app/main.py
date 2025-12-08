@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+import os
 from pathlib import Path
 
 from app.core.config import settings
@@ -80,6 +81,10 @@ if static_path.exists():
 
 # Include API router
 app.include_router(api_router, prefix="/api/v1")
+
+# Mount static files for avatars
+if os.path.exists("uploads/avatars"):
+    app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 
 @app.get("/")

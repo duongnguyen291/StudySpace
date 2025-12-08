@@ -97,7 +97,7 @@ export default function MusicPlayerPage() {
     : ''
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden">
+    <div className="relative min-h-screen w-full overflow-hidden md:ml-0">
       {/* YouTube Background - chỉ hiển thị nếu có YouTube URL */}
       {youtubeVideoId && (
         <YouTubeBackground videoId={youtubeVideoId} />
