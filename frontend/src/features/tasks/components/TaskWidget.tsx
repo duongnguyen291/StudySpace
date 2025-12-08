@@ -7,6 +7,7 @@ import { PomodoroTaskItem } from './PomodoroTaskItem'
 import { QuickTaskForm } from './QuickTaskForm'
 import { useTasks } from '../hooks/useTasks'
 import { useTaskMutations } from '../hooks/useTaskMutations'
+import { useCategories } from '../hooks/useCategories'
 import type { Task, TaskPriority } from '../types/task.types'
 
 interface TaskWidgetProps {
@@ -25,6 +26,9 @@ export function TaskWidget({ onFocusChange }: TaskWidgetProps) {
     sort_by: 'created_at',
     sort_order: 'desc',
   })
+  
+  // Fetch categories
+  const { categories } = useCategories()
   
   const { createTask, toggleTask, loading: mutating } = useTaskMutations()
 
@@ -58,9 +62,9 @@ export function TaskWidget({ onFocusChange }: TaskWidgetProps) {
     }
   }, [isOpen])
 
-  const handleCreateTask = async (title: string, priority: TaskPriority) => {
+  const handleCreateTask = async (title: string, priority: TaskPriority, categoryId?: string) => {
     try {
-      await createTask({ title, priority })
+      await createTask({ title, priority, category_id: categoryId })
       refetch()
       refetchStats()
     } catch (err) {
@@ -151,7 +155,11 @@ export function TaskWidget({ onFocusChange }: TaskWidgetProps) {
 
           {/* Quick Add */}
           <div className="border-b border-white/10">
-            <QuickTaskForm onSubmit={handleCreateTask} loading={mutating} />
+            <QuickTaskForm 
+              onSubmit={handleCreateTask} 
+              categories={categories}
+              loading={mutating} 
+            />
           </div>
 
           {/* Focused Task Display */}
