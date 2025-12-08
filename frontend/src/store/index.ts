@@ -1,6 +1,6 @@
 /**
  * Global State Management
- * Using Zustand for state management
+ * Using Zustand for state management 
  */
 import { create } from 'zustand'
 

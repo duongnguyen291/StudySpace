@@ -3,9 +3,46 @@
  * API calls for Notes feature
  */
 import { apiClient } from '@/shared/utils/api'
-import type { Note, NoteCreate, NoteUpdate } from '../types/note.types'
+import type { 
+  Note, NoteCreate, NoteUpdate,
+  NoteCategory, NoteCategoryCreate, NoteCategoryUpdate 
+} from '../types/note.types'
 
 const BASE_URL = '/notes'
+
+// ============================================
+// NOTE CATEGORY SERVICE
+// ============================================
+
+export const noteCategoryService = {
+  async getAll(): Promise<NoteCategory[]> {
+    const response = await apiClient.get(`${BASE_URL}/categories`)
+    return response.data
+  },
+
+  async getById(categoryId: string): Promise<NoteCategory> {
+    const response = await apiClient.get(`${BASE_URL}/categories/${categoryId}`)
+    return response.data
+  },
+
+  async create(data: NoteCategoryCreate): Promise<NoteCategory> {
+    const response = await apiClient.post(`${BASE_URL}/categories`, data)
+    return response.data
+  },
+
+  async update(categoryId: string, data: NoteCategoryUpdate): Promise<NoteCategory> {
+    const response = await apiClient.put(`${BASE_URL}/categories/${categoryId}`, data)
+    return response.data
+  },
+
+  async delete(categoryId: string): Promise<void> {
+    await apiClient.delete(`${BASE_URL}/categories/${categoryId}`)
+  },
+}
+
+// ============================================
+// NOTE SERVICE
+// ============================================
 
 export const noteService = {
   async create(data: NoteCreate): Promise<Note> {
@@ -13,8 +50,8 @@ export const noteService = {
     return response.data
   },
 
-  async getAll(): Promise<Note[]> {
-    const response = await apiClient.get(BASE_URL)
+  async getAll(params?: { is_quick_note?: boolean; category_id?: string }): Promise<Note[]> {
+    const response = await apiClient.get(BASE_URL, { params })
     return response.data
   },
 

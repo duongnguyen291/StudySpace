@@ -106,15 +106,32 @@ CREATE TABLE categories (
 );
 
 -- ============================================
+-- TABLE: note_categories (separate from task categories)
+-- ============================================
+CREATE TABLE note_categories (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name VARCHAR(100) NOT NULL,
+    color VARCHAR(7) DEFAULT '#3B82F6',
+    icon VARCHAR(50) DEFAULT 'folder',
+    is_default BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- TABLE: notes
 -- ============================================
 CREATE TABLE notes (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
+    category_id UUID REFERENCES note_categories(id) ON DELETE SET NULL,
     title VARCHAR(255) NOT NULL,
     content TEXT,
     is_pinned BOOLEAN DEFAULT FALSE,
+    is_quick_note BOOLEAN DEFAULT FALSE,
+    source_context TEXT,
+    theme VARCHAR(50) DEFAULT 'standard',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -139,6 +156,7 @@ CREATE TABLE tasks (
     title VARCHAR(255) NOT NULL,
     description TEXT,
     priority VARCHAR(10) DEFAULT 'medium', -- 'low', 'medium', 'high'
+    start_date DATE,
     due_date DATE,
     completed BOOLEAN DEFAULT FALSE,
     completed_at TIMESTAMP,
@@ -183,12 +201,13 @@ CREATE TABLE quiz_attempts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     quiz_set_id UUID NOT NULL REFERENCES quiz_sets(id) ON DELETE CASCADE,
-    score DECIMAL(5,2) NOT NULL,
+    score DECIMAL(5,2),
     total_questions INTEGER NOT NULL,
-    correct_answers INTEGER NOT NULL,
+    correct_answers INTEGER DEFAULT 0,
     time_spent_seconds INTEGER,
-    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    answers JSONB -- Store user's answers
+    answers JSONB,                             -- Store user's answers
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -293,9 +312,11 @@ CREATE TABLE music_playlists (
 CREATE INDEX idx_study_sessions_user_id ON study_sessions(user_id);
 CREATE INDEX idx_study_sessions_start_time ON study_sessions(start_time);
 CREATE INDEX idx_daily_goals_user_date ON daily_goals(user_id, goal_date);
+CREATE INDEX idx_note_categories_user_id ON note_categories(user_id);
 CREATE INDEX idx_notes_user_id ON notes(user_id);
 CREATE INDEX idx_notes_category_id ON notes(category_id);
 CREATE INDEX idx_tasks_user_id ON tasks(user_id);
+CREATE INDEX idx_tasks_start_date ON tasks(start_date);
 CREATE INDEX idx_tasks_due_date ON tasks(due_date);
 CREATE INDEX idx_quiz_attempts_user_id ON quiz_attempts(user_id);
 CREATE INDEX idx_flashcard_progress_user_id ON flashcard_progress(user_id);
@@ -329,6 +350,9 @@ CREATE TRIGGER update_daily_goals_updated_at BEFORE UPDATE ON daily_goals
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_note_categories_updated_at BEFORE UPDATE ON note_categories
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes

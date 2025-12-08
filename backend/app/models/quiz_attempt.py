@@ -28,6 +28,5 @@ class QuizAttempt(Base):
     
     # Relationships
     user = relationship("User", backref="quiz_attempts")
-    # quiz_set relationship will be added when QuizSet model is created
-    # quiz_set = relationship("QuizSet", backref="quiz_attempts")
+    quiz_set = relationship("QuizSet", back_populates="attempts")
 

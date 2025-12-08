@@ -140,12 +140,17 @@ export function TaskItem({
               </span>
             )}
 
-            {/* Due Date */}
-            {task.due_date && (
+            {/* Dates */}
+            {(task.start_date || task.due_date) && (
               <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-md ${dueDateStatus?.color || 'text-gray-400 bg-gray-500/10'}`}>
                 <Calendar className="w-3 h-3" />
-                {dueDateStatus?.label || format(new Date(task.due_date), 'MMM dd')}
-                {!dueDateStatus && ` - ${format(new Date(task.due_date), 'MMM dd, yyyy')}`}
+                {dueDateStatus?.label || (
+                  <>
+                    {task.start_date && format(new Date(task.start_date), 'MMM dd, yyyy')}
+                    {task.start_date && task.due_date && ' - '}
+                    {task.due_date && format(new Date(task.due_date), 'MMM dd, yyyy')}
+                  </>
+                )}
               </span>
             )}
 

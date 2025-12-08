@@ -3,12 +3,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  ArrowLeft, Plus, Search, Filter, SortAsc, SortDesc, 
+  ArrowLeft, Plus, Search, SortAsc, SortDesc, 
   Trash2, CheckSquare, Square, X, FolderPlus, Tag
 } from 'lucide-react'
 import { TaskList } from '../components/TaskList'
 import { TaskForm } from '../components/TaskForm'
-import { Button } from '@/shared/components/Button'
+import { ConfirmModal } from '../components/ConfirmModal'
 import { useToast } from '@/shared/components'
 import { useTasks } from '../hooks/useTasks'
 import { useTaskMutations } from '../hooks/useTaskMutations'
@@ -44,6 +44,15 @@ export function TasksPage() {
   // Selection states (bulk actions)
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
+
+  // Delete confirmation modal states
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean
+    type: 'single' | 'bulk'
+    taskId?: string
+    taskTitle?: string
+  }>({ isOpen: false, type: 'single' })
+  const [deleting, setDeleting] = useState(false)
 
   // Debounce search
   useEffect(() => {
@@ -111,16 +120,30 @@ export function TasksPage() {
     }
   }
 
-  const handleDeleteTask = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this task?')) return
+  const handleDeleteTask = (id: string) => {
+    const task = tasks.find(t => t.id === id)
+    setDeleteConfirm({
+      isOpen: true,
+      type: 'single',
+      taskId: id,
+      taskTitle: task?.title || 'this task',
+    })
+  }
 
+  const confirmDeleteTask = async () => {
+    if (!deleteConfirm.taskId) return
+
+    setDeleting(true)
     try {
-      await deleteTask(id)
+      await deleteTask(deleteConfirm.taskId)
       refetch()
       refetchStats()
       showToast('Task deleted', 'success')
+      setDeleteConfirm({ isOpen: false, type: 'single' })
     } catch (err) {
       showToast('Failed to delete task', 'error')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -145,10 +168,16 @@ export function TasksPage() {
     }
   }
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedIds.length === 0) return
-    if (!confirm(`Delete ${selectedIds.length} task(s)?`)) return
+    setDeleteConfirm({
+      isOpen: true,
+      type: 'bulk',
+    })
+  }
 
+  const confirmBulkDelete = async () => {
+    setDeleting(true)
     try {
       await bulkDelete(selectedIds)
       setSelectedIds([])
@@ -156,8 +185,11 @@ export function TasksPage() {
       refetch()
       refetchStats()
       showToast(`Deleted ${selectedIds.length} task(s)`, 'success')
+      setDeleteConfirm({ isOpen: false, type: 'single' })
     } catch (err) {
       showToast('Failed to delete tasks', 'error')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -233,15 +265,13 @@ export function TasksPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => router.push('/')}
-              className="text-gray-400 hover:text-gray-600"
+              className="flex items-center gap-2 px-3 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
+              <ArrowLeft className="w-4 h-4" />
+              <span className="text-sm">Back</span>
+            </button>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               Tasks
             </h1>
@@ -249,54 +279,46 @@ export function TasksPage() {
 
           <div className="flex items-center gap-2">
             {/* Selection Mode Toggle */}
-            <Button
-              variant={selectionMode ? 'primary' : 'outline'}
-              size="sm"
+            <button
               onClick={() => {
                 setSelectionMode(!selectionMode)
                 setSelectedIds([])
               }}
+              className={`p-2.5 rounded-xl transition-all duration-200 ${
+                selectionMode 
+                  ? 'bg-white/20 text-white' 
+                  : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+              title="Select multiple"
             >
               {selectionMode ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
-            </Button>
-
-            <Button
-              variant="primary"
-              onClick={() => {
-                setEditingTask(null)
-                setShowForm(true)
-              }}
-              disabled={mutating}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              New Task
-            </Button>
+            </button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-gray-600/50 transition-colors">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-200">
             <div className="text-3xl font-bold text-white">{displayStats.total}</div>
-            <div className="text-sm text-gray-400 mt-1">Total Tasks</div>
+            <div className="text-sm text-white/50 mt-1">Total Tasks</div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-green-500/30 transition-colors">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-green-500/10 hover:border-green-500/20 transition-all duration-200">
             <div className="text-3xl font-bold text-green-400">{displayStats.completed}</div>
-            <div className="text-sm text-gray-400 mt-1">Completed</div>
+            <div className="text-sm text-white/50 mt-1">Completed</div>
           </div>
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-yellow-500/30 transition-colors">
+          <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-yellow-500/10 hover:border-yellow-500/20 transition-all duration-200">
             <div className="text-3xl font-bold text-yellow-400">{displayStats.pending}</div>
-            <div className="text-sm text-gray-400 mt-1">Pending</div>
+            <div className="text-sm text-white/50 mt-1">Pending</div>
           </div>
         </div>
 
         {/* Bulk Actions Bar */}
         {selectionMode && selectedIds.length > 0 && (
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-6 flex items-center justify-between animate-scale-in">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-6 flex items-center justify-between animate-scale-in">
             <div className="flex items-center gap-3">
               <button 
                 onClick={handleSelectAll}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-white/60 hover:text-white transition-colors"
               >
                 {selectedIds.length === tasks.length ? (
                   <CheckSquare className="w-5 h-5" />
@@ -304,66 +326,58 @@ export function TasksPage() {
                   <Square className="w-5 h-5" />
                 )}
               </button>
-              <span className="text-blue-300 font-medium">
+              <span className="text-white/80 font-medium">
                 {selectedIds.length} task{selectedIds.length > 1 ? 's' : ''} selected
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={handleBulkComplete}
-                className="text-green-400 border-green-500/30 hover:bg-green-500/10"
+                className="flex items-center gap-1.5 px-3 py-2 text-green-400 hover:bg-green-500/10 rounded-xl transition-all"
               >
-                <CheckSquare className="w-4 h-4 mr-1" />
-                Complete
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <CheckSquare className="w-4 h-4" />
+                <span className="text-sm">Complete</span>
+              </button>
+              <button
                 onClick={handleBulkUncomplete}
-                className="text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/10"
+                className="flex items-center gap-1.5 px-3 py-2 text-yellow-400 hover:bg-yellow-500/10 rounded-xl transition-all"
               >
-                <Square className="w-4 h-4 mr-1" />
-                Uncomplete
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <Square className="w-4 h-4" />
+                <span className="text-sm">Uncomplete</span>
+              </button>
+              <button
                 onClick={handleBulkDelete}
-                className="text-red-400 border-red-500/30 hover:bg-red-500/10"
+                className="flex items-center gap-1.5 px-3 py-2 text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
               >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Delete
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
+                <Trash2 className="w-4 h-4" />
+                <span className="text-sm">Delete</span>
+              </button>
+              <button
                 onClick={() => {
                   setSelectedIds([])
                   setSelectionMode(false)
                 }}
-                className="text-gray-400"
+                className="p-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-all"
               >
                 <X className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
           </div>
         )}
 
         {/* Filters & Sort */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 mb-6">
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 mb-6">
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="flex-1 min-w-[200px]">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
                 <input
                   type="text"
                   placeholder="Search tasks..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 focus:bg-white/10 transition-all"
                 />
               </div>
             </div>
@@ -372,23 +386,23 @@ export function TasksPage() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
-              className="px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="completed">Completed</option>
+              <option value="all" className="bg-gray-900">All Status</option>
+              <option value="pending" className="bg-gray-900">Pending</option>
+              <option value="completed" className="bg-gray-900">Completed</option>
             </select>
 
             {/* Priority Filter */}
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value as TaskPriority | 'all')}
-              className="px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
             >
-              <option value="all">All Priorities</option>
-              <option value="high">🔴 High</option>
-              <option value="medium">🟡 Medium</option>
-              <option value="low">🟢 Low</option>
+              <option value="all" className="bg-gray-900">All Priorities</option>
+              <option value="high" className="bg-gray-900">High</option>
+              <option value="medium" className="bg-gray-900">Medium</option>
+              <option value="low" className="bg-gray-900">Low</option>
             </select>
 
             {/* Category Filter */}
@@ -396,22 +410,20 @@ export function TasksPage() {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
-                <option value="all">All Categories</option>
+                <option value="all" className="bg-gray-900">All Categories</option>
                 {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                  <option key={cat.id} value={cat.id} className="bg-gray-900">{cat.name}</option>
                 ))}
               </select>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setShowCategoryForm(true)}
-                className="!p-2"
+                className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
                 title="Add Category"
               >
                 <FolderPlus className="w-4 h-4" />
-              </Button>
+              </button>
             </div>
 
             {/* Sort */}
@@ -419,18 +431,16 @@ export function TasksPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortField)}
-                className="px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
-                <option value="created_at">Created Date</option>
-                <option value="due_date">Due Date</option>
-                <option value="priority">Priority</option>
-                <option value="title">Title</option>
+                <option value="created_at" className="bg-gray-900">Created Date</option>
+                <option value="due_date" className="bg-gray-900">Due Date</option>
+                <option value="priority" className="bg-gray-900">Priority</option>
+                <option value="title" className="bg-gray-900">Title</option>
               </select>
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={toggleSortOrder}
-                className="!p-2.5"
+                className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
                 title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
               >
                 {sortOrder === 'asc' ? (
@@ -438,44 +448,44 @@ export function TasksPage() {
                 ) : (
                   <SortDesc className="w-4 h-4" />
                 )}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Category Form Modal */}
         {showCategoryForm && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-gray-800 rounded-xl p-6 w-full max-w-md border border-gray-700 animate-scale-in">
-              <div className="flex items-center justify-between mb-4">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 w-full max-w-md border border-white/20 shadow-2xl animate-scale-in">
+              <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                  <Tag className="w-5 h-5" />
+                  <Tag className="w-5 h-5 text-white/70" />
                   New Category
                 </h3>
                 <button 
                   onClick={() => setShowCategoryForm(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-xl transition-all"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <form onSubmit={handleCreateCategory} className="space-y-4">
+              <form onSubmit={handleCreateCategory} className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Name
                   </label>
                   <input
                     type="text"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:bg-white/10 transition-all"
                     placeholder="Category name..."
                     required
                     autoFocus
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-white/70 mb-2">
                     Color
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -484,44 +494,66 @@ export function TasksPage() {
                         key={color}
                         type="button"
                         onClick={() => setNewCategoryColor(color)}
-                        className={`w-8 h-8 rounded-lg transition-transform ${newCategoryColor === color ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-gray-800' : 'hover:scale-105'}`}
+                        className={`w-8 h-8 rounded-xl transition-all duration-200 ${newCategoryColor === color ? 'scale-110 ring-2 ring-white ring-offset-2 ring-offset-transparent' : 'hover:scale-105'}`}
                         style={{ backgroundColor: color }}
                       />
                     ))}
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 pt-2">
-                  <Button
+                <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+                  <button
                     type="button"
-                    variant="outline"
                     onClick={() => setShowCategoryForm(false)}
+                    className="px-5 py-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-all"
                   >
                     Cancel
-                  </Button>
-                  <Button type="submit" variant="primary">
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-medium transition-all"
+                  >
                     Create
-                  </Button>
+                  </button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        {/* Task Form */}
+        {/* Task Form Modal */}
         {showForm && (
-          <div className="mb-6">
-            <TaskForm
-              task={editingTask}
-              categories={categories}
-              onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
-              onCancel={() => {
-                setShowForm(false)
-                setEditingTask(null)
-              }}
-              loading={mutating}
-            />
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div 
+              className="w-full max-w-lg animate-in fade-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <TaskForm
+                task={editingTask}
+                categories={categories}
+                onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+                onCancel={() => {
+                  setShowForm(false)
+                  setEditingTask(null)
+                }}
+                onCreateCategory={createCategory}
+                loading={mutating}
+              />
+            </div>
           </div>
         )}
+
+        {/* New Task Button */}
+        <button
+          onClick={() => {
+            setEditingTask(null)
+            setShowForm(true)
+          }}
+          disabled={mutating}
+          className="w-full mb-4 py-4 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 border-dashed hover:border-white/20 rounded-2xl text-white/60 hover:text-white transition-all duration-200 group disabled:opacity-50"
+        >
+          <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <span className="font-medium">Add New Task</span>
+        </button>
 
         {/* Task List */}
         <TaskList
@@ -536,6 +568,23 @@ export function TasksPage() {
           onSelect={handleSelectTask}
         />
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirm.isOpen}
+        title={deleteConfirm.type === 'bulk' ? 'Delete Tasks' : 'Delete Task'}
+        message={
+          deleteConfirm.type === 'bulk'
+            ? `Are you sure you want to delete ${selectedIds.length} selected task${selectedIds.length > 1 ? 's' : ''}? This action cannot be undone.`
+            : `Are you sure you want to delete "${deleteConfirm.taskTitle}"? This action cannot be undone.`
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={deleteConfirm.type === 'bulk' ? confirmBulkDelete : confirmDeleteTask}
+        onCancel={() => setDeleteConfirm({ isOpen: false, type: 'single' })}
+        loading={deleting}
+      />
     </div>
   )
 }

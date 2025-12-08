@@ -37,7 +37,7 @@ export default function AchievementsPage() {
 
   // ⭐ Phần UI cũ của bạn — giữ nguyên 100%
   return (
-    <div className="p-6 text-white">
+    <div className="p-6 text-white md:ml-0">
       <h1 className="text-3xl font-bold mb-6">🎖 Thành tích của bạn</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

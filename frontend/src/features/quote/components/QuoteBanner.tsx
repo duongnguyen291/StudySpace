@@ -66,7 +66,7 @@ export function QuoteBanner() {
               textShadow: "0 2px 10px rgba(0,0,0,0.6)" 
             }}
           >
-            "{quote.text}"
+            &ldquo;{quote.text}&rdquo;
           </p>
           
           {/* Tác giả */}
