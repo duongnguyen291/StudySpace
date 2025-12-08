@@ -13,6 +13,7 @@ import {
   Home,
   Timer,
   Brain,
+  BarChart3,
 } from 'lucide-react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import Link from 'next/link'
@@ -60,6 +61,12 @@ export function NavigationBar() {
       href: '/progress',
       icon: <TrendingUp className="w-5 h-5" />,
       description: 'Thống kê tiến độ'
+    },
+    {
+      label: 'Analytics',
+      href: '/analytics',
+      icon: <BarChart3 className="w-5 h-5" />,
+      description: 'Phân tích học tập'
     },
     {
       label: 'Thành tích',
