@@ -14,7 +14,7 @@ import {
   Timer,
   Brain,
   BarChart3,
-  Layers,
+  Target,
 } from 'lucide-react'
 import { useAuth } from '@/shared/hooks/useAuth'
 import Link from 'next/link'
@@ -33,6 +33,12 @@ export function NavigationBar() {
 
   // Danh sách các page feature
   const navItems: NavItem[] = [
+    {
+      label: 'Daily Goals',
+      href: '/daily-goals',
+      icon: <Target className="w-5 h-5" />,
+      description: 'Đặt mục tiêu hàng ngày'
+    },
     {
       label: 'Pomodoro',
       href: '/pomodoro',

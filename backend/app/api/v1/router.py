@@ -19,6 +19,7 @@ from app.api.v1 import (
     test_progress,
     analytics,
     chat,
+    daily_goals,
     quiz,
     flashcards,
     profile
@@ -50,6 +51,7 @@ api_router.include_router(test_achievements.router)
 api_router.include_router(profile.router)
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(categories.router, prefix="/categories", tags=["Categories"])
+api_router.include_router(daily_goals.router)
 
 # Quiz and Flashcards routes (added by feature/quiz branch)
 api_router.include_router(quiz.router, prefix="/quiz", tags=["Quiz"])
