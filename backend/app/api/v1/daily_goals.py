@@ -20,21 +20,8 @@ def get_today_goal(
     user_id: str = Depends(get_current_user_id_only),
     db: Session = Depends(get_db),
 ):
+    """Lấy goal của hôm nay"""
     goal = DailyGoalService.get_today(db, user_id)
-
-    if goal is None:
-        # Trả về default goal để FE hiển thị
-        return {
-            "id": None,
-            "user_id": user_id,
-            "goal_date": None,
-            "target_minutes": 0,
-            "target_quiz_count": 0,
-            "actual_minutes": 0,
-            "actual_quiz_count": 0,
-            "completed": False,
-        }
-
     return goal
 
 
@@ -47,25 +34,28 @@ def set_daily_goal(
     user_id: str = Depends(get_current_user_id_only),
     db: Session = Depends(get_db),
 ):
+    """Set daily goal cho hôm nay (phút học + số quiz)"""
     goal = DailyGoalService.create_or_update(
         db=db,
         user_id=user_id,
         target_minutes=payload.target_minutes,
-        target_quiz=payload.target_quiz_count
+        target_quiz_count=payload.target_quiz_count
     )
     return goal
 
-@router.post("/update")
+
+@router.post("/update", response_model=DailyGoalResponse)
 def update_goal(
     data: UpdateGoalModel,
     user_id: str = Depends(get_current_user_id_only),
     db: Session = Depends(get_db),
 ):
+    """Cập nhật goal cho một ngày cụ thể"""
     result = DailyGoalService.create_or_update(
         db=db,
         user_id=user_id,
-        target_minutes=data.minutes,
-        target_quiz=data.quizzes,
-        goal_date=data.goal_date  # optional
+        target_minutes=data.target_minutes,
+        target_quiz_count=data.target_quiz_count,
+        goal_date=data.goal_date  # optional, default hôm nay
     )
     return result
