@@ -82,6 +82,12 @@ export function NavigationBar() {
       description: 'Các huy chương'
     },
     {
+      label: 'Flashcards',
+      href: '/flashcards',
+      icon: <Layers className="w-5 h-5" />,
+      description: 'Ôn tập thẻ học'
+    },
+    {
       label: 'Quiz',
       href: '/quiz',
       icon: <Brain className="w-5 h-5" />,

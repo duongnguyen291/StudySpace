@@ -117,6 +117,23 @@ class QuizAttemptResultResponse(QuizAttemptResponse):
     answers: Optional[dict] = None
 
 
+class QuizAttemptQuestionDetail(BaseModel):
+    question_id: UUID
+    question_text: str
+    correct_answer: str
+    user_answer: Optional[str] = None
+    is_correct: bool
+
+
+class QuizAttemptHistoryItem(QuizAttemptResponse):
+    quiz_set_title: Optional[str] = None
+
+
+class QuizAttemptDetailWithAnswers(QuizAttemptResponse):
+    quiz_set_title: Optional[str] = None
+    questions: List[QuizAttemptQuestionDetail] = []
+
+
 # ============================================
 # CSV Import/Export Schemas
 # ============================================

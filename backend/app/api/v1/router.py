@@ -61,7 +61,6 @@ api_router.include_router(flashcards.router, prefix="/flashcards", tags=["Flashc
 # from app.api.v1 import tasks, quiz, flashcards, chat, analytics
 # api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 # api_router.include_router(quiz.router, prefix="/quiz", tags=["Quiz"])
-# api_router.include_router(flashcards.router, prefix="/flashcards", tags=["Flashcards"])
 # api_router.include_router(chat.router, prefix="/chat", tags=["AI Chat"])
 # api_router.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 

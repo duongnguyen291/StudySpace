@@ -55,6 +55,7 @@ export interface QuizAttempt {
   id: string
   user_id: string
   quiz_set_id: string
+  quiz_set_title?: string | null
   score?: number | null
   total_questions: number
   correct_answers: number
@@ -83,6 +84,19 @@ export interface QuizAttemptDetail extends QuizAttempt {
 
 export interface QuizAttemptResult extends QuizAttempt {
   answers?: Record<string, string> | null
+}
+
+export interface QuizAttemptQuestionDetail {
+  question_id: string
+  question_text: string
+  correct_answer: string
+  user_answer?: string | null
+  is_correct: boolean
+}
+
+export interface QuizAttemptDetailWithAnswers extends QuizAttempt {
+  quiz_set_title?: string | null
+  questions: QuizAttemptQuestionDetail[]
 }
 
 // CSV Types

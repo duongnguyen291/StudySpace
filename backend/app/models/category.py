@@ -36,7 +36,7 @@ class Category(Base):
     user = relationship("User", back_populates="categories")
     tasks = relationship("Task", back_populates="category", cascade="all, delete-orphan")
     # quiz_sets = relationship("QuizSet", back_populates="category")  # Uncomment when QuizSet model is created
-    # flashcard_decks = relationship("FlashcardDeck", back_populates="category")  # Uncomment when FlashcardDeck model is created
+    flashcard_decks = relationship("FlashcardDeck", back_populates="category", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Category(id={self.id}, name='{self.name}', user_id={self.user_id})>"

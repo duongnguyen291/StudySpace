@@ -41,5 +41,7 @@ class User(Base):
     )
     categories = relationship("Category", back_populates="user", cascade="all, delete-orphan")
     tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
+    flashcard_decks = relationship("FlashcardDeck", back_populates="user", cascade="all, delete-orphan")
+    flashcard_progress = relationship("FlashcardProgress", back_populates="user", cascade="all, delete-orphan")
 
 

@@ -10,6 +10,7 @@ import type {
   QuizAttempt,
   QuizAttemptCreate,
   QuizAttemptDetail,
+  QuizAttemptDetailWithAnswers,
   QuizAttemptSubmit,
   QuizAttemptResult,
   CSVImportResult,
@@ -121,6 +122,11 @@ export async function getUserAttempts(quizSetId?: string, skip = 0, limit = 50):
   const res = await apiClient.get('/quiz/attempts', {
     params: { quiz_set_id: quizSetId, skip, limit }
   })
+  return res.data
+}
+
+export async function getAttemptDetail(attemptId: string): Promise<QuizAttemptDetailWithAnswers> {
+  const res = await apiClient.get(`/quiz/attempts/${attemptId}`)
   return res.data
 }
 

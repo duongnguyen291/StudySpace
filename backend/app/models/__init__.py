@@ -14,6 +14,9 @@ from app.models.note import Note, NoteTag
 from app.models.category import Category
 from app.models.task import Task
 from app.models.quiz import QuizSet, QuizQuestion
+from app.models.flashcard_deck import FlashcardDeck
+from app.models.flashcard import Flashcard
+from app.models.flashcard_progress import FlashcardProgress
 
 __all__ = [
     "Base",
@@ -29,7 +32,10 @@ __all__ = [
     "Category",
     "Task",
     "StudySession",
-    "QuizAttempt",
+    "QuizAttempt"
     "QuizSet",
     "QuizQuestion",
+    "FlashcardDeck",
+    "Flashcard",
+    "FlashcardProgress"
 ]
