@@ -19,13 +19,10 @@ from app.api.v1 import (
     test_progress,
     analytics,
     chat,
-<<<<<<< HEAD
-    daily_goals
-=======
+    daily_goals,
     quiz,
     flashcards,
     profile
->>>>>>> origin/main
 )
 
 
