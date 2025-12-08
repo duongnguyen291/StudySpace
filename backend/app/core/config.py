@@ -29,11 +29,6 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
     ]
     
-    # Audio Storage
-    AUDIO_STORAGE_PATH: str = "static/audio"
-    MAX_AUDIO_FILE_SIZE: int = 100 * 1024 * 1024  # 100MB
-    ALLOWED_AUDIO_FORMATS: List[str] = [".mp3", ".wav", ".ogg", ".m4a", ".aac"]
-    
     # AI/LLM (Optional)
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
@@ -44,3 +39,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

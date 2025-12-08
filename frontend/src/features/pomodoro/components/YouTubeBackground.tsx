@@ -1,4 +1,3 @@
-// Component hiển thị YouTube video làm background toàn màn hình.
 'use client'
 
 import { useEffect, useRef } from 'react'
@@ -50,7 +49,7 @@ export const YouTubeBackground = ({ videoId, className = '' }: YouTubeBackground
         title="Background Video"
       />
       {/* Overlay for better text readability */}
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] pointer-events-none"></div>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"></div>
     </div>
   )
 }

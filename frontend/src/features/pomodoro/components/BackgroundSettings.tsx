@@ -1,5 +1,3 @@
-// Popup để nhập URL YouTube hoặc Video ID và lưu lại làm background video cho trang StudySpace của bạn.
-
 'use client'
 
 import { useState } from 'react'

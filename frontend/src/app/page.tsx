@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/shared/components/Button'
 import { useAuth } from '@/shared/hooks/useAuth'
+import { LoginModal } from '@/features/pomodoro/components/LoginModal'
+import { RegisterModal } from '@/features/pomodoro/components/RegisterModal'
 import { 
   Timer, 
   BookOpen, 
@@ -23,6 +25,8 @@ import {
 export default function LandingPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading, logout } = useAuth()
+  const [showLogin, setShowLogin] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
 
   const features = [
     {
@@ -133,7 +137,7 @@ export default function LandingPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/login')}
+                onClick={() => setShowLogin(true)}
                 className="border-white/20 text-white hover:bg-white/10"
               >
                 Đăng nhập
@@ -141,7 +145,7 @@ export default function LandingPage() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={() => router.push('/register')}
+                onClick={() => setShowRegister(true)}
                 className="bg-white text-gray-900 hover:bg-white/90"
               >
                 Đăng ký
@@ -370,6 +374,26 @@ export default function LandingPage() {
         </div>
       </footer>
 
+      {/* Modals */}
+      {showLogin && (
+        <LoginModal
+          onClose={() => setShowLogin(false)}
+          onSwitchToRegister={() => {
+            setShowLogin(false)
+            setShowRegister(true)
+          }}
+        />
+      )}
+
+      {showRegister && (
+        <RegisterModal
+          onClose={() => setShowRegister(false)}
+          onSwitchToLogin={() => {
+            setShowRegister(false)
+            setShowLogin(true)
+          }}
+        />
+      )}
     </div>
   )
 }

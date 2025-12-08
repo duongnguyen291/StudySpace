@@ -2,7 +2,6 @@
  * Pomodoro Service
  * API calls for Pomodoro feature
  */
-// Gọi API backend để tạo session Pomodoro, hoàn thành session, lưu lịch sử.
 import { apiClient } from '@/shared/utils/api'
 import type { PomodoroSession, PomodoroSessionCreate, PomodoroStats } from '../types/pomodoro.types'
 

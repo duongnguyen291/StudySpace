@@ -1,4 +1,3 @@
-// component hiển thị đồng hồ Pomodoro, không chứa logic đếm giờ.
 'use client'
 
 /**

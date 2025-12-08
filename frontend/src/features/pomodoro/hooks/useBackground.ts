@@ -2,8 +2,6 @@
  * Background Hook
  * Manages YouTube background video URL
  */
-
-// Lưu và quản lý URL video YouTube dùng làm background.
 import { useState, useEffect } from 'react'
 
 const DEFAULT_YOUTUBE_URL = 'https://www.youtube.com/watch?v=zF-__3RANT4'
