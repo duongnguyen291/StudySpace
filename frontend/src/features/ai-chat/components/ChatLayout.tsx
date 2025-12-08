@@ -15,7 +15,7 @@ interface ChatLayoutProps {
   onCreateNewConversation?: () => void
 }
 
-export const ChatLayout: React.FC<ChatLayoutProps> = ({
+export function ChatLayout({
   conversations,
   currentConversationId,
   messages,
@@ -27,8 +27,17 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   onSendMessage,
   onToggleStepByStepMode,
   onCreateNewConversation
-}) => {
+}: ChatLayoutProps) {
   const [input, setInput] = React.useState('')
+
+  const handleKeyDown = (e: any) => {
+    if (e?.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault?.()
+      if (!input.trim()) return
+      onSendMessage(input)
+      setInput('')
+    }
+  }
 
   // Parse step-by-step content
   const parseSteps = (content: string): string[] => {
@@ -58,7 +67,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: any) => {
     e.preventDefault()
     if (!input.trim()) return
     onSendMessage(input)
@@ -66,23 +75,24 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
   }
 
   return (
-    <div className="flex h-[calc(100vh-120px)] bg-slate-900 text-slate-100 rounded-xl border border-slate-800 overflow-hidden">
+    <div className="flex h-[calc(100vh-120px)] rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl overflow-hidden">
       {/* Sidebar conversations */}
-      <aside className="w-64 border-r border-slate-800 bg-slate-950/60 flex flex-col">
-        <div className="px-4 py-3 border-b border-slate-800 font-semibold text-sm uppercase tracking-wide text-slate-400">
-          Cuộc hội thoại
+      <aside className="w-72 border-r border-slate-800/70 bg-slate-950/70 backdrop-blur-sm flex flex-col">
+        <div className="px-4 py-4 border-b border-slate-800/70 flex items-center justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">💬 Cuộc hội thoại</p>
+            <p className="text-sm text-slate-300">Quản lý và tiếp tục chat</p>
+          </div>
+          <div className="h-8 w-px bg-slate-800/70" />
         </div>
-        <div className="px-3 py-2 border-b border-slate-800">
+        <div className="px-4 py-3 border-b border-slate-800/70">
           <button
             onClick={() => {
-              // Gọi callback để tạo conversation mới
-              if (onCreateNewConversation) {
-                onCreateNewConversation()
-              }
+              if (onCreateNewConversation) onCreateNewConversation()
             }}
-            className="w-full px-3 py-2 text-sm font-medium text-slate-200 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors flex items-center justify-center gap-2"
+            className="w-full px-3 py-2 text-sm font-semibold text-slate-100 bg-blue-600 hover:bg-blue-500 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
           >
-            <span>+</span>
+            <span>📝</span>
             <span>Cuộc hội thoại mới</span>
           </button>
         </div>
@@ -91,18 +101,22 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             <p className="p-4 text-sm text-slate-500">Chưa có cuộc hội thoại nào.</p>
           ) : (
             <ul className="py-2">
-              {conversations.map((conv) => (
+              {conversations.map((conv: ChatConversationSummary) => (
                 <li
                   key={conv.id}
-                  className={`px-3 py-2 text-sm cursor-pointer flex items-center justify-between group ${
-                    currentConversationId === conv.id ? 'bg-slate-800/80' : 'hover:bg-slate-800/40'
+                  className={`px-4 py-3 text-sm cursor-pointer flex items-center justify-between group transition-colors ${
+                    currentConversationId === conv.id
+                      ? 'bg-slate-800/80 border-l-2 border-blue-500'
+                      : 'hover:bg-slate-800/50'
                   }`}
                   onClick={() => onSelectConversation(conv.id)}
                 >
-                  <span className="truncate text-slate-200">{conv.title || 'Cuộc hội thoại'}</span>
+                  <div className="min-w-0">
+                    <span className="block truncate text-slate-100 font-medium">{conv.title || 'Cuộc hội thoại'}</span>
+                  </div>
                   <button
                     className="ml-2 text-xs text-slate-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => {
+                    onClick={(e: any) => {
                       e.stopPropagation()
                       onDeleteConversation(conv.id)
                     }}
@@ -117,19 +131,22 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
       </aside>
 
       {/* Main chat */}
-      <section className="flex-1 flex flex-col">
-        <header className="px-4 py-3 border-b border-slate-800 flex items-center justify-between bg-slate-950/60">
-          <div>
-            <h2 className="font-semibold text-slate-100 text-sm">AI Learning Assistant</h2>
-            <p className="text-xs text-slate-500">Hỏi bài, giải thích, gợi ý học tập...</p>
+      <section className="flex-1 flex flex-col bg-slate-950/60 backdrop-blur">
+        <header className="px-6 py-4 border-b border-slate-800/70 flex items-center justify-between bg-slate-950/70">
+          <div className="space-y-1">
+            <h2 className="font-semibold text-lg text-slate-50 flex items-center gap-2">
+              <span>🤖</span>
+              <span>AI Learning Assistant</span>
+            </h2>
+            <p className="text-sm text-slate-400">Hỏi bài, giải thích, gợi ý học tập...</p>
           </div>
           {currentConversationId && onToggleStepByStepMode && (
             <button
               onClick={() => onToggleStepByStepMode(!stepByStepMode)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors flex items-center gap-2 ${
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-2 border ${
                 stepByStepMode
-                  ? 'bg-blue-600 text-white hover:bg-blue-500'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  ? 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-600/30'
+                  : 'bg-slate-800/70 text-slate-200 border-slate-700 hover:bg-slate-700'
               }`}
               title="Bật/tắt chế độ giải thích từng bước"
             >
@@ -152,20 +169,24 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
           )}
         </header>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-slate-950">
           {error && (
-            <div className="text-xs text-red-400 bg-red-950/40 border border-red-900 rounded-md px-3 py-2 inline-block">
+            <div className="text-xs text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2 inline-block">
               {error}
             </div>
           )}
 
           {messages.length === 0 && !error && (
-            <div className="text-center text-sm text-slate-500 mt-10">
-              Bắt đầu bằng cách đặt câu hỏi cho AI về bài học, khái niệm, hoặc quiz của bạn.
+            <div className="text-center text-sm text-slate-400 mt-14 flex flex-col items-center gap-3">
+              <div className="text-3xl">✨</div>
+              <div className="max-w-xl leading-relaxed">
+                Bắt đầu bằng cách đặt câu hỏi cho AI về bài học, khái niệm, hoặc quiz của bạn. Hãy thử: <br />
+                <span className="text-slate-300">“Giải thích định luật Ohm từng bước”</span>
+              </div>
             </div>
           )}
 
-          {messages.map((msg) => {
+          {messages.map((msg: ChatMessage) => {
             const isAssistant = msg.role === 'assistant'
             const shouldRenderSteps = isAssistant && stepByStepMode
             const steps = shouldRenderSteps ? parseSteps(msg.content) : null
@@ -173,19 +194,19 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
             return (
               <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
-                  className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
+                  className={`max-w-[75%] rounded-2xl px-4 py-3 text-base shadow-lg ${
                     msg.role === 'user'
-                      ? 'bg-blue-600 text-white rounded-br-sm'
-                      : 'bg-slate-800/90 text-slate-50 rounded-bl-sm border border-slate-700/80'
+                      ? 'bg-blue-600 text-white rounded-br-md shadow-blue-600/20'
+                      : 'bg-slate-900/80 text-slate-50 rounded-bl-md border border-slate-800/80 shadow-black/30'
                   }`}
                 >
                   {shouldRenderSteps && steps && steps.length > 1 ? (
                     <div className="space-y-2">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-400">Giải thích từng bước:</span>
+                        <span className="text-xs font-semibold text-slate-300 flex items-center gap-1">🧭 Giải thích từng bước</span>
                         <button
                           onClick={() => copyToClipboard(msg.content)}
-                          className="text-xs text-slate-400 hover:text-slate-200 transition-colors flex items-center gap-1"
+                          className="text-xs text-slate-300 hover:text-slate-100 transition-colors flex items-center gap-1"
                           title="Copy toàn bộ"
                         >
                           <svg
@@ -209,15 +230,15 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
                         {steps.map((step, index) => (
                           <li
                             key={index}
-                            className="flex items-start gap-2 group/step bg-slate-900/50 rounded-lg px-2 py-1.5 border border-slate-700/50"
+                            className="flex items-start gap-3 group/step bg-slate-950/60 rounded-xl px-3 py-2 border border-slate-800/70"
                           >
-                            <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-600/20 text-blue-400 text-xs font-medium flex items-center justify-center mt-0.5">
+                            <span className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-600/20 text-blue-300 text-xs font-semibold flex items-center justify-center mt-0.5">
                               {index + 1}
                             </span>
                             <span className="flex-1 text-slate-100">{step}</span>
                             <button
                               onClick={() => copyToClipboard(step)}
-                              className="flex-shrink-0 opacity-0 group-hover/step:opacity-100 transition-opacity text-slate-400 hover:text-slate-200"
+                              className="flex-shrink-0 opacity-0 group-hover/step:opacity-100 transition-opacity text-slate-400 hover:text-slate-100"
                               title="Copy bước này"
                             >
                               <svg
@@ -240,7 +261,7 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
                       </ol>
                     </div>
                   ) : (
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
                   )}
                 </div>
               </div>
@@ -250,20 +271,21 @@ export const ChatLayout: React.FC<ChatLayoutProps> = ({
 
         {/* Composer */}
         <form
-          onSubmit={handleSubmit}
-          className="border-t border-slate-800 bg-slate-950/80 px-4 py-3 flex items-end gap-2"
+          onSubmit={(e: any) => handleSubmit(e)}
+          className="border-t border-slate-800/70 bg-slate-950/80 px-6 py-4 flex items-end gap-3 shadow-inner shadow-black/30"
         >
           <textarea
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e: any) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Nhập câu hỏi hoặc nội dung bạn muốn AI hỗ trợ..."
-            className="flex-1 resize-none rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+            className="flex-1 min-h-[56px] resize-none rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-base leading-relaxed text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent"
           />
           <button
             type="submit"
             disabled={isSending || !input.trim()}
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-sm hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
             {isSending ? 'Đang gửi...' : 'Gửi'}
           </button>
