@@ -39,7 +39,8 @@ import {
   TrendingUp,
   Home,
   MessageSquare,
-  Target
+  Target,
+  Layers,
 } from 'lucide-react'
 
 interface Tag {
@@ -107,6 +108,7 @@ export default function PomodoroPage() {
   const [showSoundMenu, setShowSoundMenu] = useState(false)
   const [showMusicWidget, setShowMusicWidget] = useState(false)
   const [musicWidgetSize, setMusicWidgetSize] = useState<'sm' | 'md' | 'lg'>('md')
+  const [showFlashcardWidget, setShowFlashcardWidget] = useState(false)
   const [selectedSound, setSelectedSound] = useState<'rain' | 'birds' | 'fire' | null>(null)
   const soundMenuRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -750,6 +752,14 @@ export default function PomodoroPage() {
                   >
                     <BookOpen className="w-4 h-4 text-orange-400" />
                     <span className="text-sm font-medium">Quiz</span>
+                  </button>
+
+                  <button
+                    onClick={() => { router.push('/flashcards'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Layers className="w-4 h-4 text-emerald-400" />
+                    <span className="text-sm font-medium">Flashcards</span>
                   </button>
 
                   <button
