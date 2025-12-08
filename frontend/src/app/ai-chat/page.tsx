@@ -9,7 +9,7 @@ export default function AIChatPage() {
     useChat()
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 px-4 py-6">
+    <main className="min-h-screen bg-slate-950 text-slate-50 px-4 py-6 md:ml-0">
       <div className="max-w-6xl mx-auto space-y-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-50">AI Learning Assistant</h1>
