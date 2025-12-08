@@ -5,9 +5,6 @@ from app.models.daily_goals import DailyGoal
 
 class DailyGoalService:
 
-    # ================================
-    # HÀM MỚI: Lấy goal của 1 ngày bất kỳ
-    # ================================
     @staticmethod
     def get_goal_for_date(db: Session, user_id: str, target_date: date):
         """
@@ -39,45 +36,45 @@ class DailyGoalService:
         # Nếu không có rule → return default
         if not rule:
             return {
+                "id": None,
+                "user_id": user_id,
+                "goal_date": target_date,
                 "target_minutes": 0,
                 "target_quiz_count": 0,
                 "actual_minutes": actual.actual_minutes if actual else 0,
                 "actual_quiz_count": actual.actual_quiz_count if actual else 0,
-                "completed": actual.completed if actual else False
+                "completed": actual.completed if actual else False,
             }
 
         # Merge rule + actual
         return {
+            "id": rule.id,
+            "user_id": rule.user_id,
+            "goal_date": rule.goal_date,
             "target_minutes": rule.target_minutes,
             "target_quiz_count": rule.target_quiz_count,
             "actual_minutes": actual.actual_minutes if actual else 0,
             "actual_quiz_count": actual.actual_quiz_count if actual else 0,
-            "completed": actual.completed if actual else False
+            "completed": actual.completed if actual else False,
         }
 
 
-    # ================================
-    # HÀM CŨ: sửa lại để dùng version rule
-    # ================================
     @staticmethod
     def get_today(db: Session, user_id: str):
+        """Lấy goal của hôm nay"""
         today = date.today()
-        # dùng hàm mới
         return DailyGoalService.get_goal_for_date(db, user_id, today)
 
 
-    # ================================
-    # HÀM CŨ: sửa lại để hỗ trợ set goal
-    # CHO NGÀY BẤT KỲ, không chỉ hôm nay
-    # ================================
     @staticmethod
     def create_or_update(
         db: Session,
         user_id: str,
         target_minutes: int,
-        target_quiz: int,
+        target_quiz_count: int,
         goal_date: date = None
     ):
+        """Tạo hoặc cập nhật goal cho một ngày"""
         # default → hôm nay
         if goal_date is None:
             goal_date = date.today()
@@ -92,20 +89,20 @@ class DailyGoalService:
             .first()
         )
 
-        # Nếu tồn tại → update rule
+        # Nếu tồn tại → update
         if goal:
             goal.target_minutes = target_minutes
-            goal.target_quiz_count = target_quiz
+            goal.target_quiz_count = target_quiz_count
         else:
-            # Tạo rule mới
+            # Tạo goal mới
             goal = DailyGoal(
                 user_id=user_id,
                 goal_date=goal_date,
                 target_minutes=target_minutes,
-                target_quiz_count=target_quiz,
+                target_quiz_count=target_quiz_count,
                 actual_minutes=0,
                 actual_quiz_count=0,
-                completed=False
+                completed=False,
             )
             db.add(goal)
 
