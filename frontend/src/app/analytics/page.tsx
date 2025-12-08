@@ -6,13 +6,54 @@ import { useAnalytics } from "@/features/analytics/hook/useAnalytics";
 import StudyTimeChart from "@/features/analytics/components/StudyTimeChart";
 import GoalChart from "@/features/analytics/components/GoalChart";
 
+function SkeletonLoader() {
+  return (
+    <div className="min-h-screen p-10 text-white">
+      <h1 className="text-4xl font-bold mb-10">📊 Analytics Dashboard</h1>
+
+      {/* Summary Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="bg-gray-800 p-6 rounded-xl animate-pulse">
+            <div className="h-4 bg-gray-700 rounded w-3/4 mb-3"></div>
+            <div className="h-8 bg-gray-700 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+
+      {/* Insights Skeleton */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">🔎 Insights</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-gray-800 p-4 rounded-xl animate-pulse">
+              <div className="h-4 bg-gray-700 rounded w-2/3 mb-3"></div>
+              <div className="h-6 bg-gray-700 rounded w-1/2"></div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {[1, 2].map((i) => (
+          <div key={i} className="bg-gray-800 p-6 rounded-xl animate-pulse">
+            <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
+            <div className="h-64 bg-gray-700 rounded"></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function AnalyticsPage() {
   const { user } = useAuth();
   const { studyTime, goals, summary, insights } = useAnalytics(user?.id || "");
 
   if (!user) return <div className="text-white p-10">Please log in</div>;
   if (!studyTime || !goals || !summary)
-    return <div className="text-white p-10">Loading data...</div>;
+    return <SkeletonLoader />;
 
   return (
     <div className="min-h-screen p-10 text-white">
@@ -50,21 +91,28 @@ export default function AnalyticsPage() {
               onClick={() => {
                 // Export studyTime as CSV if available
                 try {
-                  const rows = (studyTime || []).map((r: any) => ({ date: r.date || r.label || '', minutes: r.minutes ?? r.value ?? '' }))
-                  const header = 'date,minutes\n'
-                  const csv = header + rows.map((r: any) => `${r.date},${r.minutes}`).join('\n')
-                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-                  const url = URL.createObjectURL(blob)
-                  const a = document.createElement('a')
-                  a.href = url
-                  a.download = `studytime_export_${new Date().toISOString().slice(0,10)}.csv`
-                  document.body.appendChild(a)
-                  a.click()
-                  a.remove()
-                  URL.revokeObjectURL(url)
+                  if (!studyTime || !studyTime.labels || !studyTime.values) {
+                    console.error('Study time data not available');
+                    return;
+                  }
+                  const rows = studyTime.labels.map((label: string, index: number) => ({
+                    date: label,
+                    minutes: studyTime.values[index] ?? 0
+                  }));
+                  const header = 'date,minutes\n';
+                  const csv = header + rows.map((r: any) => `${r.date},${r.minutes}`).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `studytime_export_${new Date().toISOString().slice(0, 10)}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
                 } catch (err) {
                   // eslint-disable-next-line no-console
-                  console.error('Export failed', err)
+                  console.error('Export failed', err);
                 }
               }}
               className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-md text-white/80 text-sm"
