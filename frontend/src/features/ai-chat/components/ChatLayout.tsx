@@ -262,7 +262,22 @@ export function ChatLayout({
                       </ol>
                     </div>
                   ) : (
-                    <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                    <div className="relative group/message">
+                      <div className="whitespace-pre-wrap leading-relaxed pr-10">{msg.content}</div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => copyToClipboard(msg.content)}
+                          className={`mt-2 rounded-md px-2 py-1 text-[11px] font-medium border transition-opacity ${
+                            isAssistant
+                              ? 'bg-slate-800/90 border-slate-700 text-slate-200 hover:bg-slate-700/90'
+                              : 'bg-blue-700/90 border-blue-600 text-white hover:bg-blue-600/90'
+                          } opacity-0 group-hover/message:opacity-100`}
+                          title="Copy tin nhắn"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -273,7 +288,7 @@ export function ChatLayout({
         {/* Composer */}
         <form
           onSubmit={(e: any) => handleSubmit(e)}
-          className="border-t border-slate-800/70 bg-slate-950/80 px-6 py-4 flex items-end gap-3 shadow-inner shadow-black/30"
+          className="border-t border-slate-800/70 bg-slate-950/80 px-6 py-4 flex items-center gap-3 shadow-inner shadow-black/30"
         >
           <textarea
             value={input}
@@ -281,12 +296,12 @@ export function ChatLayout({
             onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Nhập câu hỏi hoặc nội dung bạn muốn AI hỗ trợ..."
-            className="flex-1 min-h-[56px] resize-none rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-base leading-relaxed text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent"
+            className="flex-1 h-14 resize-none rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3.5 text-base leading-normal text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent"
           />
           <button
             type="submit"
             disabled={isSending || !input.trim()}
-            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex h-14 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
             {isSending ? 'Đang gửi...' : 'Gửi'}
           </button>
