@@ -1,7 +1,7 @@
 """
 Daily Goals Model
 """
-from sqlalchemy import Column, String, Integer, Date, DateTime
+from sqlalchemy import Column, String, Integer, Date, DateTime, Index
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 import uuid
@@ -20,6 +20,11 @@ class DailyGoal(Base):
     actual_minutes = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Composite index for analytics queries
+    __table_args__ = (
+        Index('idx_daily_goals_user_date', 'user_id', 'goal_date'),
+    )
 
     def __repr__(self):
         return f"<DailyGoal(id={self.id}, user_id={self.user_id}, goal_date={self.goal_date}, target={self.target_minutes})>"
