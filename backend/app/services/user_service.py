@@ -2,6 +2,7 @@
 User Service
 Business logic for user operations
 """
+import logging
 from sqlalchemy.orm import Session
 from typing import Optional
 from uuid import UUID
@@ -13,6 +14,8 @@ from app.core.security import verify_password, get_password_hash, create_access_
 from app.core.config import settings
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -53,19 +56,26 @@ class UserService:
     
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
         """Authenticate user with email and password"""
+        logger.debug(f"Authenticating user with email: {email}")
         user = self.repo.get_by_email(email)
         if not user:
+            logger.warning(f"User not found with email: {email}")
             return None
         
-        if not verify_password(password, user.password_hash):
+        logger.debug(f"User found: {user.email}, checking password...")
+        password_valid = verify_password(password, user.password_hash)
+        if not password_valid:
+            logger.warning(f"Invalid password for user: {email}")
             return None
         
         if not user.is_active:
+            logger.warning(f"Login attempt for inactive user: {email}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User account is inactive"
             )
         
+        logger.info(f"Authentication successful for user: {email}")
         # Update last login
         self.repo.update_last_login(user.id)
         

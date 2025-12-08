@@ -35,6 +35,19 @@ export const useAuth = () => {
     } else {
       setAuthState((prev) => ({ ...prev, isLoading: false }))
     }
+
+    // Listen for profile updates to refresh user data
+    const handleProfileUpdate = () => {
+      const currentToken = localStorage.getItem('access_token')
+      if (currentToken) {
+        fetchUser()
+      }
+    }
+    window.addEventListener('profile-updated', handleProfileUpdate)
+
+    return () => {
+      window.removeEventListener('profile-updated', handleProfileUpdate)
+    }
   }, [])
 
   const fetchUser = async () => {
