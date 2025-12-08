@@ -32,6 +32,11 @@ export function ReviewSession({ session, onComplete, onClose }: ReviewSessionPro
   const currentCard = shuffledCards[currentIndex]
   const progress = ((currentIndex + 1) / shuffledCards.length) * 100
 
+  // Always reset flip when index changes
+  useEffect(() => {
+    setIsFlipped(false)
+  }, [currentIndex])
+
   const handleConfidence = (level: number) => {
     if (!currentCard) return
 
@@ -136,8 +141,10 @@ export function ReviewSession({ session, onComplete, onClose }: ReviewSessionPro
         <div className="flex-1 flex items-center justify-center p-6 min-h-[400px]">
           <div className="w-full max-w-2xl h-[400px]">
             <FlashcardCard
+              key={currentCard.flashcard.id}
               flashcard={currentCard.flashcard}
-              onFlip={() => setIsFlipped(!isFlipped)}
+              flipped={isFlipped}
+              onFlip={() => setIsFlipped((prev) => !prev)}
               showHint={!!currentCard.flashcard.hint}
             />
           </div>

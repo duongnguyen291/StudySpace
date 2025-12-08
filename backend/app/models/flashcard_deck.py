@@ -35,11 +35,6 @@ class FlashcardDeck(Base):
         back_populates="deck",
         cascade="all, delete-orphan",
     )
-    progress = relationship(
-        "FlashcardProgress",
-        back_populates="deck",
-        cascade="all, delete-orphan",
-    )
 
     def to_dict(self) -> dict:
         """Serialize deck to dictionary for simple responses."""

@@ -231,13 +231,13 @@ class FlashcardProgressRepository:
     def get_or_create(
         self,
         user_id: UUID,
-        flashcard_id: UUID
+        flashcard_id: UUID,
     ) -> FlashcardProgress:
         """Get existing progress or create new one"""
         progress = self.db.query(FlashcardProgress).filter(
             and_(
                 FlashcardProgress.user_id == user_id,
-                FlashcardProgress.flashcard_id == flashcard_id
+                FlashcardProgress.flashcard_id == flashcard_id,
             )
         ).first()
         

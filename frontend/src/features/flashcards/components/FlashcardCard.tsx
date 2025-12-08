@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { RotateCcw, Lightbulb } from 'lucide-react'
 import type { Flashcard } from '../types/flashcard.types'
 import { Button } from '@/shared/components/Button'
@@ -10,6 +10,7 @@ interface FlashcardCardProps {
   onFlip?: () => void
   showHint?: boolean
   className?: string
+  flipped?: boolean
 }
 
 export function FlashcardCard({
@@ -17,9 +18,17 @@ export function FlashcardCard({
   onFlip,
   showHint = false,
   className = '',
+  flipped,
 }: FlashcardCardProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [showHintText, setShowHintText] = useState(showHint)
+
+  // Sync flip state from parent when provided
+  useEffect(() => {
+    if (typeof flipped === 'boolean') {
+      setIsFlipped(flipped)
+    }
+  }, [flipped])
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped)

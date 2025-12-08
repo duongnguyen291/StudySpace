@@ -1,9 +1,8 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { ThemeProvider, GlobalHeader } from '@/shared/components'
+import { ThemeProvider, GlobalHeader, Providers } from '@/shared/components'
 import { AppShell } from './AppShell'
-import { Providers } from '@/shared/components'
 // Import axios HTTPS patch early
 import '@/lib/axios-https-patch'
 
@@ -19,8 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="vi">
       <body className={inter.className}>
         <ThemeProvider>
-          <GlobalHeader />
-          {children}
+          <Providers>
+            <GlobalHeader />
+            {children}
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
