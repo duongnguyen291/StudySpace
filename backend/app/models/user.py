@@ -29,9 +29,12 @@ class User(Base):
     
     # Relationships
     settings = relationship("UserSettings", back_populates="user", uselist=False)
-    chat_conversations = relationship(
-        "ChatConversation",
+    achievements = relationship(
+        "UserAchievement",
         back_populates="user",
-        cascade="all, delete-orphan",
+        cascade="all, delete-orphan"
     )
+    categories = relationship("Category", back_populates="user", cascade="all, delete-orphan")
+    tasks = relationship("Task", back_populates="user", cascade="all, delete-orphan")
+
 
