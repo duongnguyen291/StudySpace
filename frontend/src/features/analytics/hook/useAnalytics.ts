@@ -6,26 +6,41 @@ export function useAnalytics(userId: string) {
   const [goals, setGoals] = useState<any>(null);
   const [summary, setSummary] = useState<any>(null);
   const [progress, setProgress] = useState<any>(null);
+  const [insights, setInsights] = useState<any>(null);
 
   useEffect(() => {
     if (!userId) return;
 
-    AnalyticsService.getStudyTime(userId).then((res) =>
-      setStudyTime(res.data)
-    );
+    AnalyticsService.getStudyTime(userId)
+      .then((res) => setStudyTime(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch study time:", err);
+      });
 
-    AnalyticsService.getGoals(userId).then((res) =>
-      setGoals(res.data)
-    );
+    AnalyticsService.getGoals(userId)
+      .then((res) => setGoals(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch goals:", err);
+      });
 
-    AnalyticsService.getDashboardSummary(userId).then((res) =>
-      setSummary(res.data)
-    );
+    AnalyticsService.getDashboardSummary(userId)
+      .then((res) => setSummary(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch dashboard summary:", err);
+      });
 
-    AnalyticsService.getProgress(userId).then((res) =>
-      setProgress(res.data)
-    );
+    AnalyticsService.getProgress(userId)
+      .then((res) => setProgress(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch progress:", err);
+      });
+
+    AnalyticsService.getInsights(userId)
+      .then((res) => setInsights(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch insights:", err);
+      });
   }, [userId]);
 
-  return { studyTime, goals, summary, progress };
+  return { studyTime, goals, summary, progress, insights };
 }

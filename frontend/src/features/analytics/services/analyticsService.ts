@@ -1,15 +1,18 @@
-import api from "@/shared/utils/api";
+import { apiClient as api } from "@/shared/utils/api";
 
 export const AnalyticsService = {
   getStudyTime: (userId: string) =>
-    api.get(`/analytics/study-time?user_id=${userId}`),
+    api.get(`/analytics/study-time`),
 
   getGoals: (userId: string) =>
-    api.get(`/analytics/goals?user_id=${userId}`),
+    api.get(`/analytics/goals`),
 
   getDashboardSummary: (userId: string) =>
-    api.get(`/analytics/dashboard?user_id=${userId}`),
+    api.get(`/analytics/dashboard`),
 
   getProgress: (userId: string) =>
-    api.get(`/analytics/progress?user_id=${userId}`),
+    api.get(`/analytics/progress`),
+
+  getInsights: (userId: string) =>
+    api.get(`/analytics/insights`),
 };
