@@ -34,7 +34,8 @@ import {
   CheckSquare,
   BookOpen,
   TrendingUp,
-  Home
+  Home,
+  MessageSquare
 } from 'lucide-react'
 
 interface Tag {
@@ -171,10 +172,10 @@ export default function PomodoroPage() {
 
   // Effect: Show custom input if session type is custom and not active
   useEffect(() => {
-    if (!isActive && sessionType === 'custom_timer') {
-      setShowCustomInput(true)
+    if (!isActive) {
+      setShowCustomInput(false)
     }
-  }, [isActive, sessionType])
+  }, [isActive])
 
   // Effect: Audio Player
   useEffect(() => {
@@ -314,7 +315,7 @@ export default function PomodoroPage() {
                   className="flex items-center gap-2 bg-white/10 border-white/20 text-white hover:bg-white/20"
                 >
                   <LogOut className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
             ) : (
               <div className="flex items-center gap-3">
@@ -533,11 +534,6 @@ export default function PomodoroPage() {
                         onClick={() => { setSessionType('long_break'); setMinutes(15); setSeconds(0); setShowCustomInput(false) }}
                         label="15'" tooltip="Nghỉ dài"
                       />
-                       <PresetButton 
-                        active={sessionType === 'custom_timer'} 
-                        onClick={() => { setSessionType('custom_timer'); setShowCustomInput(v => !v) }}
-                        icon={<Grid3x3 className="w-3 h-3" />} tooltip="Tùy chỉnh"
-                      />
                     </div>
                   )}
 
@@ -689,11 +685,19 @@ export default function PomodoroPage() {
                   </div>
                   
                   <button
-                    onClick={() => { router.push('/achievements'); setShowMainMenu(false); }}
+                    onClick={() => { router.push('/notes'); setShowMainMenu(false); }}
                     className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
                   >
-                    <Award className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm font-medium">Thành tích</span>
+                    <BookOpen className="w-4 h-4 text-green-400" />
+                    <span className="text-sm font-medium">Ghi chú</span>
+                  </button>
+
+                  <button
+                    onClick={() => { router.push('/music'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Music className="w-4 h-4 text-pink-400" />
+                    <span className="text-sm font-medium">Âm nhạc</span>
                   </button>
                   
                   <button
@@ -705,19 +709,35 @@ export default function PomodoroPage() {
                   </button>
                   
                   <button
-                    onClick={() => { router.push('/notes'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <BookOpen className="w-4 h-4 text-green-400" />
-                    <span className="text-sm font-medium">Ghi chú</span>
-                  </button>
-                  
-                  <button
                     onClick={() => { router.push('/progress'); setShowMainMenu(false); }}
                     className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
                   >
                     <TrendingUp className="w-4 h-4 text-purple-400" />
                     <span className="text-sm font-medium">Tiến độ</span>
+                  </button>
+                  
+                  <button
+                    onClick={() => { router.push('/achievements'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <Award className="w-4 h-4 text-yellow-400" />
+                    <span className="text-sm font-medium">Thành tích</span>
+                  </button>
+
+                  <button
+                    onClick={() => { router.push('/quiz'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <BookOpen className="w-4 h-4 text-orange-400" />
+                    <span className="text-sm font-medium">Quiz</span>
+                  </button>
+
+                  <button
+                    onClick={() => { router.push('/ai-chat'); setShowMainMenu(false); }}
+                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <MessageSquare className="w-4 h-4 text-cyan-400" />
+                    <span className="text-sm font-medium">Chat AI</span>
                   </button>
 
                   <div className="mt-2 pt-2 border-t border-white/10">

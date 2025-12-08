@@ -126,7 +126,7 @@ export default function QuizPage() {
   const totalQuestions = quizSets.reduce((sum, q) => sum + q.question_count, 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 md:ml-0">
       {/* Background Pattern */}
       <div className="fixed inset-0 opacity-30 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-transparent to-transparent" />
