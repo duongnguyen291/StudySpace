@@ -19,7 +19,7 @@ from app.schemas.quiz import (
     QuizQuestionCreate, QuizQuestionResponse,
     QuizAttemptCreate, QuizAttemptSubmit, QuizAttemptResponse,
     QuizAttemptDetailResponse, QuizAttemptResultResponse,
-    QuizAttemptDetailWithAnswers,
+    QuizAttemptDetailWithAnswers, QuizAttemptHistoryItem,
     CSVImportResult, CSVPreviewResponse
 )
 
@@ -351,7 +351,7 @@ async def submit_attempt(
     )
 
 
-@router.get("/attempts", response_model=List[QuizAttemptResponse])
+@router.get("/attempts", response_model=List[QuizAttemptHistoryItem])
 async def get_attempts(
     quiz_set_id: Optional[UUID] = None,
     skip: int = 0,
@@ -362,10 +362,11 @@ async def get_attempts(
     """Get user's quiz attempts"""
     attempts = quiz_service.get_user_attempts(db, current_user.id, quiz_set_id, skip=skip, limit=limit)
     
-    return [QuizAttemptResponse(
+    return [QuizAttemptHistoryItem(
         id=a.id,
         user_id=a.user_id,
         quiz_set_id=a.quiz_set_id,
+        quiz_set_title=a.quiz_set.title if a.quiz_set else None,
         score=a.score,
         total_questions=a.total_questions,
         correct_answers=a.correct_answers,

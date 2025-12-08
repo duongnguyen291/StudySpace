@@ -55,6 +55,7 @@ export interface QuizAttempt {
   id: string
   user_id: string
   quiz_set_id: string
+  quiz_set_title?: string | null
   score?: number | null
   total_questions: number
   correct_answers: number

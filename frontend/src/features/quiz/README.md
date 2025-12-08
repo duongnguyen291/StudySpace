@@ -2,7 +2,7 @@
 
 ## Overview
 
-This feature provides a complete quiz system with CSV import/export and shuffle mode.
+This feature provides a complete quiz system with CSV import/export, shuffle mode, and history tracking.
 
 ## Features
 
@@ -37,6 +37,11 @@ question,answer,type,options,explanation
 - **Shuffle Toggle**: Enable/disable question randomization before starting
 - **Client-side Shuffle**: Questions are shuffled in the browser, no server storage needed
 - **No Repetition**: Each question appears exactly once per session
+
+### 3. Quiz History & Analytics
+- **Attempt History**: View past attempts with quiz titles, scores, and timing
+- **Per-question Review**: Inspect your answers vs. correct answers for each attempt
+- **Trend Line**: Quick sparkline of recent scores
 
 ## Components
 

@@ -155,6 +155,9 @@ export default function QuizHistory({ quizSetId, limit = 10 }: Props): JSX.Eleme
                 <span className="text-emerald-400 text-xs">✓ Completed</span>
               )}
             </div>
+            <p className="text-slate-300 text-sm truncate">
+              {attempt.quiz_set_title || 'Quiz'}
+            </p>
             <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
               <span>⏱️ {formatTime(attempt.time_spent_seconds)}</span>
               <span>📅 {formatDate(attempt.created_at)}</span>
