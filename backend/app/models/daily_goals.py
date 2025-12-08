@@ -18,7 +18,6 @@ class DailyGoal(Base):
     goal_date = Column(Date, nullable=False, index=True)
     target_minutes = Column(Integer, nullable=False, default=0)
     actual_minutes = Column(Integer, nullable=False, default=0)
-    notes = Column(String(500), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
 
