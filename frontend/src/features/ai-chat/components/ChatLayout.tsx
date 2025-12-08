@@ -75,7 +75,7 @@ export function ChatLayout({
   }
 
   return (
-    <div className="flex h-[calc(100vh-120px)] rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl overflow-hidden">
+    <div className="flex h-[calc(100vh-120px)] w-full rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl overflow-hidden">
       {/* Sidebar conversations */}
       <aside className="w-72 border-r border-slate-800/70 bg-slate-950/70 backdrop-blur-sm flex flex-col">
         <div className="px-4 py-4 border-b border-slate-800/70 flex items-center justify-between">
