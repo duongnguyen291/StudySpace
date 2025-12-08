@@ -17,7 +17,8 @@ from app.api.v1 import (
     notes,
     progress,
     test_progress,
-    analytics
+    analytics,
+    chat
 )
 
 
@@ -27,6 +28,10 @@ api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 api_router.include_router(pomodoro.router, prefix="/pomodoro", tags=["Pomodoro"])
 api_router.include_router(notes.router, prefix="/notes", tags=["Notes"])
+api_router.include_router(chat.router, prefix="/chat", tags=["AI Chat"])
+
+# TODO: Uncomment when these modules are created
+# from app.api.v1 import tasks, quiz, flashcards, profile, analytics
 api_router.include_router(progress.router, prefix="/progress", tags=["Progress Tracker"])
 api_router.include_router(test_progress.router)
 api_router.include_router(analytics.router, prefix="/analytics")
@@ -46,6 +51,5 @@ api_router.include_router(categories.router, prefix="/categories", tags=["Catego
 # from app.api.v1 import quiz, flashcards, chat, profile, analytics
 # api_router.include_router(quiz.router, prefix="/quiz", tags=["Quiz"])
 # api_router.include_router(flashcards.router, prefix="/flashcards", tags=["Flashcards"])
-# api_router.include_router(chat.router, prefix="/chat", tags=["AI Chat"])
 # api_router.include_router(profile.router, prefix="/profile", tags=["Profile"])
 

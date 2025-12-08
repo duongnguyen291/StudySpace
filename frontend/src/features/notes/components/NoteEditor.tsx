@@ -5,6 +5,7 @@ import { Button } from '@/shared/components/Button'
 import { RichTextEditor } from './RichTextEditor'
 import { ExportButton } from './ExportButton'
 import { ThemeSelector } from './ThemeSelector'
+import { NoteCategorySelector } from './NoteCategorySelector'
 import { X, Save, Trash2 } from 'lucide-react'
 import type { Note, NoteCreate, NoteUpdate } from '../types/note.types'
 import type { NoteTheme } from '../constants/note-themes'
@@ -23,6 +24,7 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
   const [content, setContent] = useState(initial?.content ?? '')
   const [tagsInput, setTagsInput] = useState((initial?.tags || []).join(','))
   const [theme, setTheme] = useState<NoteTheme>(initial?.theme || DEFAULT_THEME)
+  const [categoryId, setCategoryId] = useState<string | null>(initial?.category_id ?? null)
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
@@ -32,6 +34,7 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
     setContent(initial?.content ?? '')
     setTagsInput((initial?.tags || []).join(','))
     setTheme(initial?.theme || DEFAULT_THEME)
+    setCategoryId(initial?.category_id ?? null)
   }, [open, initial])
 
   if (!open) return null
@@ -62,6 +65,7 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
       content: content?.trim() || '',
       tags: parseTags(tagsInput),
       theme: theme,
+      category_id: categoryId,
     }
 
     setSaving(true)
@@ -129,12 +133,43 @@ export const NoteEditor = ({ initial = null, open, onClose, onSubmit, onDelete }
         </div>
 
         <div className="space-y-4">
-          {/* Theme Selector - Only show for regular notes */}
+          {/* Theme Selector & Category - Only show for regular notes */}
           {!initial?.is_quick_note && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: currentTheme.textColorHex }}>
+                  Theme
+                </label>
+                <ThemeSelector
+                  selectedTheme={theme}
+                  onThemeChange={setTheme}
+                  disabled={saving}
+                  textColor={currentTheme.textColorHex}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: currentTheme.textColorHex }}>
+                  Danh mục
+                </label>
+                <NoteCategorySelector
+                  selectedCategoryId={categoryId}
+                  onCategoryChange={setCategoryId}
+                  disabled={saving}
+                  textColor={currentTheme.textColorHex}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Category for quick notes */}
+          {initial?.is_quick_note && (
             <div>
-              <ThemeSelector
-                selectedTheme={theme}
-                onThemeChange={setTheme}
+              <label className="block text-sm font-medium mb-2" style={{ color: currentTheme.textColorHex }}>
+                Danh mục
+              </label>
+              <NoteCategorySelector
+                selectedCategoryId={categoryId}
+                onCategoryChange={setCategoryId}
                 disabled={saving}
                 textColor={currentTheme.textColorHex}
               />
