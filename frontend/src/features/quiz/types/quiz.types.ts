@@ -85,6 +85,19 @@ export interface QuizAttemptResult extends QuizAttempt {
   answers?: Record<string, string> | null
 }
 
+export interface QuizAttemptQuestionDetail {
+  question_id: string
+  question_text: string
+  correct_answer: string
+  user_answer?: string | null
+  is_correct: boolean
+}
+
+export interface QuizAttemptDetailWithAnswers extends QuizAttempt {
+  quiz_set_title?: string | null
+  questions: QuizAttemptQuestionDetail[]
+}
+
 // CSV Types
 export interface CSVImportError {
   line: number

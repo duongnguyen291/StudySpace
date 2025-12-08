@@ -19,7 +19,8 @@ from app.schemas.quiz import (
     QuizQuestionCreate,
     QuizAttemptCreate, QuizAttemptSubmit,
     CSVImportError, CSVImportResult, CSVPreviewRow, CSVPreviewResponse,
-    QuizQuestionForAttempt
+    QuizQuestionForAttempt,
+    QuizAttemptQuestionDetail
 )
 
 
@@ -424,6 +425,57 @@ class QuizService:
         if quiz_set_id:
             query = query.filter(QuizAttempt.quiz_set_id == quiz_set_id)
         return query.order_by(QuizAttempt.created_at.desc()).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def get_attempt_with_details(db: Session, attempt_id: UUID, user_id: UUID) -> Optional[Tuple[QuizAttempt, List[QuizAttemptQuestionDetail], str]]:
+        """Return attempt with per-question correctness details"""
+        attempt = db.query(QuizAttempt).filter(
+            QuizAttempt.id == attempt_id,
+            QuizAttempt.user_id == user_id
+        ).first()
+
+        if not attempt:
+            return None
+
+        questions = db.query(QuizQuestion).filter(
+            QuizQuestion.quiz_set_id == attempt.quiz_set_id
+        ).all()
+        question_map = {str(q.id): q for q in questions}
+        answers = attempt.answers or {}
+
+        details: List[QuizAttemptQuestionDetail] = []
+        correct_count = 0
+
+        for q_id, question in question_map.items():
+            user_answer = answers.get(q_id)
+            is_correct = False
+            if user_answer is not None:
+                is_correct = user_answer.strip().lower() == question.correct_answer.strip().lower()
+            if is_correct:
+                correct_count += 1
+
+            details.append(
+                QuizAttemptQuestionDetail(
+                    question_id=question.id,
+                    question_text=question.question_text,
+                    correct_answer=question.correct_answer,
+                    user_answer=user_answer,
+                    is_correct=is_correct
+                )
+            )
+
+        # Ensure summary fields are consistent
+        attempt.correct_answers = correct_count
+        attempt.total_questions = len(question_map)
+        attempt.score = (correct_count / attempt.total_questions * 100) if attempt.total_questions > 0 else 0
+        db.commit()
+        db.refresh(attempt)
+
+        quiz_set_title = None
+        if attempt.quiz_set:
+            quiz_set_title = attempt.quiz_set.title
+
+        return attempt, details, quiz_set_title
 
 
 quiz_service = QuizService()

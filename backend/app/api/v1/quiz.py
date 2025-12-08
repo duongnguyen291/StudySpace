@@ -19,6 +19,7 @@ from app.schemas.quiz import (
     QuizQuestionCreate, QuizQuestionResponse,
     QuizAttemptCreate, QuizAttemptSubmit, QuizAttemptResponse,
     QuizAttemptDetailResponse, QuizAttemptResultResponse,
+    QuizAttemptDetailWithAnswers,
     CSVImportResult, CSVPreviewResponse
 )
 
@@ -353,11 +354,13 @@ async def submit_attempt(
 @router.get("/attempts", response_model=List[QuizAttemptResponse])
 async def get_attempts(
     quiz_set_id: Optional[UUID] = None,
+    skip: int = 0,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Get user's quiz attempts"""
-    attempts = quiz_service.get_user_attempts(db, current_user.id, quiz_set_id)
+    attempts = quiz_service.get_user_attempts(db, current_user.id, quiz_set_id, skip=skip, limit=limit)
     
     return [QuizAttemptResponse(
         id=a.id,
@@ -370,3 +373,30 @@ async def get_attempts(
         completed_at=a.completed_at,
         created_at=a.created_at
     ) for a in attempts]
+
+
+@router.get("/attempts/{attempt_id}", response_model=QuizAttemptDetailWithAnswers)
+async def get_attempt_detail(
+    attempt_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get a specific attempt with per-question answers/correctness"""
+    result = quiz_service.get_attempt_with_details(db, attempt_id, current_user.id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Attempt not found")
+
+    attempt, details, quiz_set_title = result
+    return QuizAttemptDetailWithAnswers(
+        id=attempt.id,
+        user_id=attempt.user_id,
+        quiz_set_id=attempt.quiz_set_id,
+        quiz_set_title=quiz_set_title,
+        score=attempt.score,
+        total_questions=attempt.total_questions,
+        correct_answers=attempt.correct_answers,
+        time_spent_seconds=attempt.time_spent_seconds,
+        completed_at=attempt.completed_at,
+        created_at=attempt.created_at,
+        questions=details
+    )
