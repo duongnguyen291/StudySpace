@@ -28,3 +28,27 @@ class Category(Base):
     color = Column(String(7), default="#3B82F6", nullable=False)  # Hex color code
     icon = Column(String(50), default="folder", nullable=False)
     
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    
+    # Relationships
+    user = relationship("User", back_populates="categories")
+    tasks = relationship("Task", back_populates="category", cascade="all, delete-orphan")
+    # quiz_sets = relationship("QuizSet", back_populates="category")  # Uncomment when QuizSet model is created
+    # flashcard_decks = relationship("FlashcardDeck", back_populates="category")  # Uncomment when FlashcardDeck model is created
+    
+    def __repr__(self):
+        return f"<Category(id={self.id}, name='{self.name}', user_id={self.user_id})>"
+    
+    def to_dict(self):
+        """Convert model to dictionary"""
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "name": self.name,
+            "color": self.color,
+            "icon": self.icon,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat()
+        }
