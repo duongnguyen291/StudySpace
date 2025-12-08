@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, cast, Date, extract
+from sqlalchemy import func, cast, Date, extract, text
 from datetime import date, timedelta
 
 from app.models.study_session import StudySession
@@ -7,7 +7,8 @@ from app.models.daily_goals import DailyGoal
 
 
 def _daily_minutes_map(db: Session, user_id: str, start: date, end: date):
-    day_col = cast(StudySession.start_time, Date).label("day")
+    # Using DATE() function instead of cast for better performance
+    day_col = func.date(StudySession.start_time).label("day")
     rows = (
         db.query(
             day_col,
@@ -25,7 +26,7 @@ def _daily_minutes_map(db: Session, user_id: str, start: date, end: date):
 def get_study_minutes_last_7_days(db: Session, user_id: str):
     today = date.today()
     week_ago = today - timedelta(days=6)
-    day_col = cast(StudySession.start_time, Date).label("day")
+    day_col = func.date(StudySession.start_time).label("day")
 
     rows = (
         db.query(
@@ -134,9 +135,25 @@ def get_insights(db: Session, user_id: str):
     seven_days_ago = today - timedelta(days=6)
     thirty_days_ago = today - timedelta(days=29)
 
-    # Minutes per day maps
-    last7_map = _daily_minutes_map(db, user_id, seven_days_ago, today)
-    last30_map = _daily_minutes_map(db, user_id, thirty_days_ago, today)
+    # Get all data in one query to avoid N+1
+    day_col = func.date(StudySession.start_time).label("day")
+    all_sessions = (
+        db.query(
+            day_col,
+            func.coalesce(func.sum(StudySession.duration_minutes), 0).label("minutes")
+        )
+        .filter(
+            StudySession.user_id == user_id,
+            StudySession.start_time >= thirty_days_ago,
+            StudySession.start_time <= today + timedelta(days=1),
+        )
+        .group_by(day_col)
+        .all()
+    )
+    
+    # Build maps from single query
+    last30_map = {r.day: int(r.minutes) for r in all_sessions}
+    last7_map = {r.day: int(r.minutes) for r in all_sessions if r.day >= seven_days_ago}
 
     # Avg minutes/day (7d)
     avg_7d = 0
