@@ -80,7 +80,7 @@ export function ChatLayout({
       <aside className="w-72 border-r border-slate-800/70 bg-slate-950/70 backdrop-blur-sm flex flex-col">
         <div className="px-4 py-4 border-b border-slate-800/70 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">💬 Cuộc hội thoại</p>
+            <p className="text-sm uppercase tracking-[0.18em] text-slate-200 font-semibold">💬 Cuộc hội thoại</p>
             <p className="text-sm text-slate-300">Quản lý và tiếp tục chat</p>
           </div>
           <div className="h-8 w-px bg-slate-800/70" />
@@ -104,14 +104,15 @@ export function ChatLayout({
               {conversations.map((conv: ChatConversationSummary) => (
                 <li
                   key={conv.id}
-                  className={`px-4 py-3 text-sm cursor-pointer flex items-center justify-between group transition-colors ${
+                  className={`px-4 py-3 text-sm cursor-pointer flex items-center justify-between group transition-colors border-t border-slate-800/60 first:border-t-0 ${
                     currentConversationId === conv.id
                       ? 'bg-slate-800/80 border-l-2 border-blue-500'
                       : 'hover:bg-slate-800/50'
                   }`}
                   onClick={() => onSelectConversation(conv.id)}
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-[4px] bg-slate-600/80 flex-shrink-0" />
                     <span className="block truncate text-slate-100 font-medium">{conv.title || 'Cuộc hội thoại'}</span>
                   </div>
                   <button
