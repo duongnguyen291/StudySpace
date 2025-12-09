@@ -1,11 +1,11 @@
 """
 Quiz Schemas
-Simple format: just question and answer
+Multiple choice format: 1 question with 4 options
 """
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ============================================
@@ -14,14 +14,27 @@ from pydantic import BaseModel, Field
 
 class QuizQuestionCreate(BaseModel):
     question_text: str = Field(..., min_length=1)
-    correct_answer: str = Field(..., min_length=1)
+    options: List[str] = Field(..., min_length=4, max_length=4, description="Exactly 4 answer options")
+    correct_answer_index: int = Field(..., ge=0, le=3, description="Index of correct answer (0-3)")
+    explanation: Optional[str] = None
+
+    @field_validator('options')
+    @classmethod
+    def validate_options(cls, v):
+        if len(v) != 4:
+            raise ValueError('Must have exactly 4 options')
+        if not all(opt.strip() for opt in v):
+            raise ValueError('All options must be non-empty')
+        return v
 
 
 class QuizQuestionResponse(BaseModel):
     id: UUID
     quiz_set_id: UUID
     question_text: str
-    correct_answer: str
+    options: List[str]
+    correct_answer_index: int
+    explanation: Optional[str] = None
     order_index: int
     created_at: datetime
 
@@ -30,9 +43,10 @@ class QuizQuestionResponse(BaseModel):
 
 
 class QuizQuestionForAttempt(BaseModel):
-    """Question for quiz attempt (hides answer)"""
+    """Question for quiz attempt (hides correct answer)"""
     id: UUID
     question_text: str
+    options: List[str]
     order_index: int
 
     class Config:
@@ -86,7 +100,7 @@ class QuizAttemptCreate(BaseModel):
 
 class QuizAttemptAnswer(BaseModel):
     question_id: UUID
-    user_answer: str
+    selected_option_index: int = Field(..., ge=0, le=3, description="Index of selected option (0-3)")
 
 
 class QuizAttemptSubmit(BaseModel):
@@ -120,9 +134,11 @@ class QuizAttemptResultResponse(QuizAttemptResponse):
 class QuizAttemptQuestionDetail(BaseModel):
     question_id: UUID
     question_text: str
-    correct_answer: str
-    user_answer: Optional[str] = None
+    options: List[str]
+    correct_answer_index: int
+    selected_option_index: Optional[int] = None
     is_correct: bool
+    explanation: Optional[str] = None
 
 
 class QuizAttemptHistoryItem(QuizAttemptResponse):
@@ -135,7 +151,7 @@ class QuizAttemptDetailWithAnswers(QuizAttemptResponse):
 
 
 # ============================================
-# CSV Import/Export Schemas
+# CSV Import/Export Schemas (for future use)
 # ============================================
 
 class CSVImportError(BaseModel):
@@ -153,7 +169,8 @@ class CSVImportResult(BaseModel):
 class CSVPreviewRow(BaseModel):
     line: int
     question: str
-    answer: str
+    options: List[str]
+    correct_index: int
     is_valid: bool = True
     error: Optional[str] = None
 

@@ -20,8 +20,13 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null)
-  const [newQuestion, setNewQuestion] = useState<QuizQuestionCreate>({ question_text: '', correct_answer: '' })
   const [showAddForm, setShowAddForm] = useState(false)
+
+  // New question form state
+  const [newQuestion, setNewQuestion] = useState('')
+  const [newOptions, setNewOptions] = useState(['', '', '', ''])
+  const [correctIndex, setCorrectIndex] = useState<number>(0)
+  const [explanation, setExplanation] = useState('')
 
   // Form state
   const [title, setTitle] = useState('')
@@ -42,6 +47,14 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
       setIsPublic(data.is_public)
     } catch (err) {
       console.error('Failed to load quiz set:', err)
+      // Show error to user
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load quiz'
+      if (errorMessage.includes('404') || errorMessage.includes('not found')) {
+        // Quiz might not exist or user doesn't have access
+        alert('Quiz not found. It may have been deleted or you may not have permission to view it.')
+      } else {
+        alert(`Error loading quiz: ${errorMessage}`)
+      }
     } finally {
       setIsLoading(false)
     }
@@ -69,14 +82,22 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
   }
 
   const handleAddQuestion = async () => {
-    if (!newQuestion.question_text.trim() || !newQuestion.correct_answer.trim()) {
-      alert('Please fill in both question and answer')
+    if (!newQuestion.trim() || newOptions.some(opt => !opt.trim())) {
+      alert('Please fill in the question and all 4 options')
       return
     }
 
     try {
-      await addQuestion(quizSetId, newQuestion)
-      setNewQuestion({ question_text: '', correct_answer: '' })
+      await addQuestion(quizSetId, {
+        question_text: newQuestion.trim(),
+        options: newOptions.map(opt => opt.trim()),
+        correct_answer_index: correctIndex,
+        explanation: explanation.trim() || undefined,
+      })
+      setNewQuestion('')
+      setNewOptions(['', '', '', ''])
+      setCorrectIndex(0)
+      setExplanation('')
       setShowAddForm(false)
       await loadQuizSet()
     } catch (err) {
@@ -106,6 +127,12 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
       console.error('Failed to delete question:', err)
       alert('Failed to delete question')
     }
+  }
+
+  const handleOptionChange = (index: number, value: string) => {
+    const updated = [...newOptions]
+    updated[index] = value
+    setNewOptions(updated)
   }
 
   if (isLoading) {
@@ -223,17 +250,41 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
               <div className="space-y-3">
                 <input
                   type="text"
-                  value={newQuestion.question_text}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, question_text: e.target.value })}
+                  value={newQuestion}
+                  onChange={(e) => setNewQuestion(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   placeholder="Question"
                 />
-                <input
-                  type="text"
-                  value={newQuestion.correct_answer}
-                  onChange={(e) => setNewQuestion({ ...newQuestion, correct_answer: e.target.value })}
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">Options (4 required) *</label>
+                  <div className="space-y-2">
+                    {newOptions.map((opt, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="correctOption"
+                          checked={correctIndex === idx}
+                          onChange={() => setCorrectIndex(idx)}
+                          className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500"
+                        />
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => handleOptionChange(idx, e.target.value)}
+                          placeholder={`Option ${String.fromCharCode(65 + idx)}...`}
+                          className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">Select the radio button next to the correct answer</p>
+                </div>
+                <textarea
+                  value={explanation}
+                  onChange={(e) => setExplanation(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Correct Answer"
+                  placeholder="Explanation (optional)"
+                  rows={2}
                 />
                 <div className="flex gap-2">
                   <button
@@ -245,7 +296,10 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
                   <button
                     onClick={() => {
                       setShowAddForm(false)
-                      setNewQuestion({ question_text: '', correct_answer: '' })
+                      setNewQuestion('')
+                      setNewOptions(['', '', '', ''])
+                      setCorrectIndex(0)
+                      setExplanation('')
                     }}
                     className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition text-sm"
                   >
@@ -295,23 +349,35 @@ interface QuestionItemProps {
 
 function QuestionItem({ question, isEditing, onEdit, onCancel, onUpdate, onDelete }: QuestionItemProps) {
   const [questionText, setQuestionText] = useState(question.question_text)
-  const [correctAnswer, setCorrectAnswer] = useState(question.correct_answer)
+  const [options, setOptions] = useState(question.options)
+  const [correctIndex, setCorrectIndex] = useState(question.correct_answer_index)
+  const [explanation, setExplanation] = useState(question.explanation || '')
 
   useEffect(() => {
     if (isEditing) {
       setQuestionText(question.question_text)
-      setCorrectAnswer(question.correct_answer)
+      setOptions(question.options)
+      setCorrectIndex(question.correct_answer_index)
+      setExplanation(question.explanation || '')
     }
   }, [isEditing, question])
 
+  const handleOptionChange = (index: number, value: string) => {
+    const updated = [...options]
+    updated[index] = value
+    setOptions(updated)
+  }
+
   const handleSave = () => {
-    if (!questionText.trim() || !correctAnswer.trim()) {
-      alert('Please fill in both question and answer')
+    if (!questionText.trim() || options.some(opt => !opt.trim())) {
+      alert('Please fill in the question and all 4 options')
       return
     }
     onUpdate(question.id, {
       question_text: questionText.trim(),
-      correct_answer: correctAnswer.trim()
+      options: options.map(opt => opt.trim()),
+      correct_answer_index: correctIndex,
+      explanation: explanation.trim() || undefined,
     })
   }
 
@@ -326,12 +392,35 @@ function QuestionItem({ question, isEditing, onEdit, onCancel, onUpdate, onDelet
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             placeholder="Question"
           />
-          <input
-            type="text"
-            value={correctAnswer}
-            onChange={(e) => setCorrectAnswer(e.target.value)}
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-2">Options *</label>
+            <div className="space-y-2">
+              {options.map((opt, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name={`correctOption-${question.id}`}
+                    checked={correctIndex === idx}
+                    onChange={() => setCorrectIndex(idx)}
+                    className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500"
+                  />
+                  <input
+                    type="text"
+                    value={opt}
+                    onChange={(e) => handleOptionChange(idx, e.target.value)}
+                    placeholder={`Option ${String.fromCharCode(65 + idx)}...`}
+                    className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+          <textarea
+            value={explanation}
+            onChange={(e) => setExplanation(e.target.value)}
             className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Correct Answer"
+            placeholder="Explanation (optional)"
+            rows={2}
           />
           <div className="flex gap-2">
             <button
@@ -356,11 +445,28 @@ function QuestionItem({ question, isEditing, onEdit, onCancel, onUpdate, onDelet
     <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
-          <div className="text-white font-medium mb-2">{question.question_text}</div>
-          <div className="text-sm text-slate-400">
-            <span className="text-slate-500">Answer: </span>
-            <span className="text-emerald-400">{question.correct_answer}</span>
+          <div className="text-white font-medium mb-3">{question.question_text}</div>
+          <div className="space-y-1.5">
+            {question.options.map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-sm">
+                <span className={`w-5 h-5 flex items-center justify-center rounded ${
+                  idx === question.correct_answer_index 
+                    ? 'bg-emerald-500 text-white' 
+                    : 'bg-slate-700 text-slate-400'
+                }`}>
+                  {idx === question.correct_answer_index ? '✓' : String.fromCharCode(65 + idx)}
+                </span>
+                <span className={idx === question.correct_answer_index ? 'text-emerald-400 font-medium' : 'text-slate-400'}>
+                  {opt}
+                </span>
+              </div>
+            ))}
           </div>
+          {question.explanation && (
+            <div className="mt-2 text-xs text-slate-500 italic">
+              {question.explanation}
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <button
@@ -382,4 +488,3 @@ function QuestionItem({ question, isEditing, onEdit, onCancel, onUpdate, onDelet
     </div>
   )
 }
-

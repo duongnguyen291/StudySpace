@@ -210,10 +210,31 @@ export default function QuizHistory({ quizSetId, limit = 10 }: Props): JSX.Eleme
                       {q.is_correct ? 'Correct' : 'Wrong'}
                     </span>
                   </div>
-                  {!q.is_correct && (
-                    <div className="text-xs text-slate-400 space-y-1">
-                      <p>Your answer: <span className="text-white">{q.user_answer ?? '—'}</span></p>
-                      <p>Correct answer: <span className="text-emerald-300">{q.correct_answer}</span></p>
+                  <div className="mt-2 space-y-2">
+                    {q.options.map((opt, idx) => {
+                      const isSelected = q.selected_option_index === idx
+                      const isCorrect = q.correct_answer_index === idx
+                      return (
+                        <div
+                          key={idx}
+                          className={`text-xs px-2 py-1 rounded ${
+                            isCorrect
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : isSelected
+                              ? 'bg-red-500/20 text-red-300 border border-red-500/30'
+                              : 'bg-slate-800/50 text-slate-400'
+                          }`}
+                        >
+                          <span className="font-medium">{String.fromCharCode(65 + idx)}:</span> {opt}
+                          {isCorrect && <span className="ml-2">✓ Correct</span>}
+                          {isSelected && !isCorrect && <span className="ml-2">✗ Your answer</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  {q.explanation && (
+                    <div className="mt-2 text-xs text-slate-500 italic">
+                      💡 {q.explanation}
                     </div>
                   )}
                 </div>
