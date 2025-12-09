@@ -1,0 +1,39 @@
+@startuml
+title Dark/Light Mode Toggle Flow
+
+actor User
+participant "ThemeToggle\n(button)" as Toggle
+participant "useTheme\n(React hook)" as Hook
+participant "localStorage" as LS
+participant "document.documentElement\n(<html> class)" as DOM
+participant "UI Components\n(e.g., LandingPage)" as UI
+
+== Initial load ==
+User -> UI: open page
+UI -> Hook: useTheme() mount
+Hook -> LS: getItem("theme")
+LS --> Hook: savedTheme?
+Hook -> DOM: detect prefers-color-scheme (dark/light)
+Hook -> Hook: set theme = savedTheme or systemTheme
+Hook -> DOM: applyTheme(theme)\n(add/remove .dark class)
+Hook -> LS: setItem("theme", theme)
+
+== Toggle theme ==
+User -> Toggle: click "Dark/Light Mode"
+Toggle -> Hook: toggleTheme()
+Hook -> Hook: newTheme = light?dark:light
+Hook -> DOM: applyTheme(newTheme)\n(add/remove .dark class)
+Hook -> LS: setItem("theme", newTheme)
+Hook -> UI: state update (theme)
+UI -> UI: re-render with new colors\n(dark <-> light)
+
+== Persisted revisit ==
+User -> UI: revisit site
+UI -> Hook: useTheme() mount
+Hook -> LS: getItem("theme")
+LS --> Hook: savedTheme (if exists)
+Hook -> DOM: applyTheme(savedTheme)
+UI -> UI: render with saved theme
+
+@enduml
+

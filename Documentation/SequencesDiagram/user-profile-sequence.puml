@@ -1,0 +1,53 @@
+@startuml
+title User Profile Flow (View + Update Avatar)
+
+actor User
+participant "Landing/Pomodoro\nAvatar Button" as Entry
+participant "Next.js Router" as Router
+participant "ProfilePage\n(React component)" as Page
+participant "useAuth hook" as Auth
+participant "useProfile hook" as ProfileHook
+participant "apiClient\n(Axios)" as API
+participant "FastAPI /profile\nrouter" as APIProfile
+participant "Security\nget_current_user_id" as Sec
+participant "ProfileService" as Service
+participant "DB\n(users, study_sessions)" as DB
+participant "Uploads\n/uploads/avatars" as Uploads
+
+== Navigate to profile ==
+User -> Entry: click avatar
+Entry -> Router: router.push("/profile")
+Router -> Page: render ProfilePage
+Page -> Auth: get auth state\n(token, user)
+Page -> ProfileHook: fetchProfile()
+
+== Fetch profile ==
+ProfileHook -> API: GET /profile/me\nAuthorization: Bearer token
+API -> Sec: validate JWT, get user_id
+Sec -> APIProfile: pass user_id
+APIProfile -> Service: get_profile(user_id)
+Service -> DB: load user, sum study_sessions\n(completed TRUE)
+DB --> Service: user + total_minutes
+Service -> APIProfile: ProfileResponse\n(total_study_hours)
+APIProfile -> API: 200 OK\nprofile payload
+API --> ProfileHook: profile data
+ProfileHook -> Page: set profile state\n(show name, email, avatar, hours)
+
+== Upload avatar ==
+User -> Page: select image in AvatarUpload
+Page -> ProfileHook: uploadAvatar(file)
+ProfileHook -> API: POST /profile/me/avatar\nmultipart/form-data + token
+API -> Sec: validate JWT -> user_id
+API -> APIProfile: handle upload
+APIProfile -> Uploads: save file\n/uploads/avatars/{user_id}.ext
+APIProfile -> Service: update_profile(user_id, avatar_url)
+Service -> DB: update user.avatar_url
+Service -> Service: recalc total_study_hours
+Service -> APIProfile: updated ProfileResponse
+APIProfile -> API: 200 OK\nupdated profile
+API --> ProfileHook: new profile
+ProfileHook -> Auth: dispatch "profile-updated"\nrefresh auth user
+ProfileHook -> Page: update UI\n(new avatar shown)
+
+@enduml
+
