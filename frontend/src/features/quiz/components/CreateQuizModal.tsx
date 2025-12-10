@@ -17,26 +17,41 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
   
   // New question form state
   const [newQuestion, setNewQuestion] = useState('')
-  const [newAnswer, setNewAnswer] = useState('')
+  const [newOptions, setNewOptions] = useState(['', '', '', ''])
+  const [correctIndex, setCorrectIndex] = useState<number>(0)
+  const [explanation, setExplanation] = useState('')
 
   if (!isOpen) return null
 
   const handleAddQuestion = () => {
-    if (!newQuestion.trim() || !newAnswer.trim()) return
+    if (!newQuestion.trim() || newOptions.some(opt => !opt.trim())) {
+      alert('Please fill in the question and all 4 options')
+      return
+    }
 
     setQuestions([...questions, {
       question_text: newQuestion.trim(),
-      correct_answer: newAnswer.trim(),
+      options: newOptions.map(opt => opt.trim()),
+      correct_answer_index: correctIndex,
+      explanation: explanation.trim() || undefined,
     }])
 
     // Reset form
     setNewQuestion('')
-    setNewAnswer('')
+    setNewOptions(['', '', '', ''])
+    setCorrectIndex(0)
+    setExplanation('')
     setShowAddQuestion(false)
   }
 
   const handleRemoveQuestion = (index: number) => {
     setQuestions(questions.filter((_, i) => i !== index))
+  }
+
+  const handleOptionChange = (index: number, value: string) => {
+    const updated = [...newOptions]
+    updated[index] = value
+    setNewOptions(updated)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,7 +79,7 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
       />
       
       {/* Modal */}
-      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl">
+      <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-slate-800 rounded-2xl border border-slate-700 shadow-2xl">
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 bg-slate-800 border-b border-slate-700">
           <h2 className="text-xl font-bold text-white">Create New Quiz</h2>
@@ -125,21 +140,38 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
             {questions.length > 0 && (
               <div className="space-y-2 mb-4">
                 {questions.map((q, idx) => (
-                  <div key={idx} className="flex items-start gap-3 p-3 bg-slate-900/50 rounded-lg border border-slate-700">
-                    <span className="shrink-0 w-6 h-6 flex items-center justify-center bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
-                      {idx + 1}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{q.question_text}</p>
-                      <p className="text-slate-500 text-xs mt-0.5">→ {q.correct_answer}</p>
+                  <div key={idx} className="p-3 bg-slate-900/50 rounded-lg border border-slate-700">
+                    <div className="flex items-start gap-3">
+                      <span className="shrink-0 w-6 h-6 flex items-center justify-center bg-emerald-500/20 text-emerald-400 text-xs font-medium rounded-full">
+                        {idx + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium mb-2">{q.question_text}</p>
+                        <div className="space-y-1">
+                          {q.options.map((opt, optIdx) => (
+                            <div key={optIdx} className="flex items-center gap-2 text-xs">
+                              <span className={`w-4 h-4 flex items-center justify-center rounded ${
+                                optIdx === q.correct_answer_index 
+                                  ? 'bg-emerald-500 text-white' 
+                                  : 'bg-slate-700 text-slate-400'
+                              }`}>
+                                {optIdx === q.correct_answer_index ? '✓' : String.fromCharCode(65 + optIdx)}
+                              </span>
+                              <span className={optIdx === q.correct_answer_index ? 'text-emerald-400 font-medium' : 'text-slate-400'}>
+                                {opt}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQuestion(idx)}
+                        className="shrink-0 p-1 text-slate-500 hover:text-red-400 transition"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveQuestion(idx)}
-                      className="shrink-0 p-1 text-slate-500 hover:text-red-400 transition"
-                    >
-                      ✕
-                    </button>
                   </div>
                 ))}
               </div>
@@ -152,33 +184,70 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
                   <span className="font-medium text-white">New Question</span>
                   <button
                     type="button"
-                    onClick={() => setShowAddQuestion(false)}
+                    onClick={() => {
+                      setShowAddQuestion(false)
+                      setNewQuestion('')
+                      setNewOptions(['', '', '', ''])
+                      setCorrectIndex(0)
+                      setExplanation('')
+                    }}
                     className="text-slate-400 hover:text-white"
                   >
                     ✕
                   </button>
                 </div>
 
-                <input
-                  type="text"
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                  placeholder="Question..."
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-emerald-500 outline-none"
-                />
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">Question *</label>
+                  <input
+                    type="text"
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder="Enter your question..."
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-emerald-500 outline-none"
+                  />
+                </div>
 
-                <input
-                  type="text"
-                  value={newAnswer}
-                  onChange={(e) => setNewAnswer(e.target.value)}
-                  placeholder="Answer..."
-                  className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-emerald-500 outline-none"
-                />
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">Options (4 required) *</label>
+                  <div className="space-y-2">
+                    {newOptions.map((opt, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="correctOption"
+                          checked={correctIndex === idx}
+                          onChange={() => setCorrectIndex(idx)}
+                          className="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500"
+                        />
+                        <input
+                          type="text"
+                          value={opt}
+                          onChange={(e) => handleOptionChange(idx, e.target.value)}
+                          placeholder={`Option ${String.fromCharCode(65 + idx)}...`}
+                          className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-emerald-500 outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">Select the radio button next to the correct answer</p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">Explanation (optional)</label>
+                  <textarea
+                    value={explanation}
+                    onChange={(e) => setExplanation(e.target.value)}
+                    placeholder="Explain why this is the correct answer..."
+                    rows={2}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:border-emerald-500 outline-none resize-none"
+                  />
+                </div>
 
                 <button
                   type="button"
                   onClick={handleAddQuestion}
-                  disabled={!newQuestion.trim() || !newAnswer.trim()}
+                  disabled={!newQuestion.trim() || newOptions.some(opt => !opt.trim())}
                   className="w-full py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
                 >
                   Add Question
@@ -188,7 +257,7 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
 
             {questions.length === 0 && !showAddQuestion && (
               <p className="text-sm text-slate-500 italic">
-                No questions added yet. You can add them now or import from CSV later.
+                No questions added yet. Click "Add Question" to create your first question.
               </p>
             )}
           </div>

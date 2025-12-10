@@ -1,7 +1,7 @@
 ﻿'use client'
 import React, { useState, useCallback } from 'react'
 import type { CSVPreviewRow, CSVImportError, QuizSet } from '../types/quiz.types'
-import { importCsv, exportCsv, getQuizSets, downloadBlob } from '../services/quizService'
+import { importCsv, exportCsv, getQuizSets, downloadBlob, downloadTemplate, previewCsv } from '../services/quizService'
 
 interface Props {
   onImportSuccess?: (quizSetId: string) => void
@@ -19,61 +19,25 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
   const [quizSets, setQuizSets] = useState<QuizSet[]>([])
   const [selectedExportId, setSelectedExportId] = useState('')
 
-  // Simple CSV parser for question,answer format
-  const parseCSV = (text: string) => {
-    const lines = text.split(/\r?\n/).filter(l => l.trim())
-    if (lines.length < 2) {
-      setErrors([{ line: 0, message: 'File is empty or has no data rows' }])
-      setPreviewRows([])
-      return
-    }
-
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/^"|"$/g, ''))
-    const qIdx = headers.indexOf('question')
-    const aIdx = headers.indexOf('answer')
-
-    if (qIdx === -1 || aIdx === -1) {
-      setErrors([{ line: 1, message: 'CSV must have "question" and "answer" columns' }])
-      setPreviewRows([])
-      return
-    }
-
-    const rows: CSVPreviewRow[] = []
-    const newErrors: CSVImportError[] = []
-
-    for (let i = 1; i < lines.length; i++) {
-      // Simple CSV split (handles basic quoted values)
-      const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''))
-      const question = cols[qIdx] || ''
-      const answer = cols[aIdx] || ''
-
-      const isValid = !!question && !!answer
-      if (!isValid) {
-        newErrors.push({ line: i + 1, message: 'Missing question or answer' })
-      }
-
-      rows.push({
-        line: i + 1,
-        question,
-        answer,
-        is_valid: isValid,
-        error: isValid ? null : 'Missing data'
-      })
-    }
-
-    setPreviewRows(rows)
-    setErrors(newErrors)
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     setSelectedFile(file)
     setResult(null)
+    setIsLoading(true)
 
-    const reader = new FileReader()
-    reader.onload = () => parseCSV(String(reader.result || ''))
-    reader.readAsText(file)
+    try {
+      // Use backend preview API to validate and parse CSV
+      const preview = await previewCsv(file)
+      setPreviewRows(preview.rows)
+      setErrors(preview.errors)
+    } catch (err) {
+      console.error('Failed to preview CSV:', err)
+      setErrors([{ line: 0, message: 'Failed to parse CSV file. Please check the format.' }])
+      setPreviewRows([])
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleImport = async () => {
@@ -124,10 +88,14 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
     setIsLoading(false)
   }
 
-  const downloadTemplate = () => {
-    const template = 'question,answer\n"What is 2+2?","4"\n"Capital of France?","Paris"'
-    const blob = new Blob([template], { type: 'text/csv' })
-    downloadBlob(blob, 'quiz-template.csv')
+  const handleDownloadTemplate = async () => {
+    try {
+      const blob = await downloadTemplate()
+      downloadBlob(blob, 'quiz-template.csv')
+    } catch (err) {
+      console.error('Failed to download template:', err)
+      alert('Failed to download template. Please try again.')
+    }
   }
 
   const validCount = previewRows.filter(r => r.is_valid).length
@@ -189,7 +157,7 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
                     <input type="file" accept=".csv" onChange={handleFileChange} className="hidden" />
                     <span className="text-slate-400">{selectedFile ? `📄 ${selectedFile.name}` : '📁 Choose CSV'}</span>
                   </label>
-                  <button onClick={downloadTemplate} className="px-4 py-3 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm">
+                  <button onClick={handleDownloadTemplate} className="px-4 py-3 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 text-sm">
                     📋 Template
                   </button>
                 </div>
@@ -220,13 +188,33 @@ export default function QuizImportExport({ onImportSuccess }: Props): JSX.Elemen
 
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {previewRows.slice(0, 10).map(row => (
-                  <div key={row.line} className={`flex items-center gap-3 p-3 rounded-lg ${row.is_valid ? 'bg-slate-900/50' : 'bg-red-500/10'}`}>
-                    <span className={`w-5 h-5 flex items-center justify-center rounded-full text-xs ${row.is_valid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                      {row.is_valid ? '✓' : '✗'}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm truncate">{row.question}</p>
-                      <p className="text-slate-500 text-xs truncate">→ {row.answer}</p>
+                  <div key={row.line} className={`p-3 rounded-lg ${row.is_valid ? 'bg-slate-900/50' : 'bg-red-500/10'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className={`w-5 h-5 flex items-center justify-center rounded-full text-xs shrink-0 ${row.is_valid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {row.is_valid ? '✓' : '✗'}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white text-sm font-medium mb-2">{row.question}</p>
+                        <div className="space-y-1">
+                          {row.options.map((opt, idx) => (
+                            <div key={idx} className="flex items-center gap-2 text-xs">
+                              <span className={`w-4 h-4 flex items-center justify-center rounded ${
+                                idx === row.correct_index 
+                                  ? 'bg-emerald-500 text-white' 
+                                  : 'bg-slate-700 text-slate-400'
+                              }`}>
+                                {idx === row.correct_index ? '✓' : String.fromCharCode(65 + idx)}
+                              </span>
+                              <span className={idx === row.correct_index ? 'text-emerald-400 font-medium' : 'text-slate-400'}>
+                                {opt}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        {row.error && (
+                          <p className="text-red-400 text-xs mt-2">⚠️ {row.error}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
