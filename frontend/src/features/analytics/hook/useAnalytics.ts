@@ -7,6 +7,8 @@ export function useAnalytics(userId: string) {
   const [summary, setSummary] = useState<any>(null);
   const [progress, setProgress] = useState<any>(null);
   const [insights, setInsights] = useState<any>(null);
+  const [heatmap, setHeatmap] = useState<any>(null);
+  const [trends, setTrends] = useState<any>(null);
 
   useEffect(() => {
     if (!userId) return;
@@ -40,7 +42,19 @@ export function useAnalytics(userId: string) {
       .catch((err) => {
         console.error("Failed to fetch insights:", err);
       });
+
+    AnalyticsService.getHeatmap(userId, 365)
+      .then((res) => setHeatmap(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch heatmap:", err);
+      });
+
+    AnalyticsService.getTrends(userId)
+      .then((res) => setTrends(res.data))
+      .catch((err) => {
+        console.error("Failed to fetch trends:", err);
+      });
   }, [userId]);
 
-  return { studyTime, goals, summary, progress, insights };
+  return { studyTime, goals, summary, progress, insights, heatmap, trends };
 }
