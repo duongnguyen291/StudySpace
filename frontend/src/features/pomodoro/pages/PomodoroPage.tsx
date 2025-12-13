@@ -41,6 +41,7 @@ import {
   MessageSquare,
   Target,
   Layers,
+  Settings,
 } from 'lucide-react'
 
 interface Tag {
@@ -97,6 +98,13 @@ export default function PomodoroPage() {
   const [customHours, setCustomHours] = useState(0)
   const [customMinutes, setCustomMinutes] = useState(25)
 
+  // --- Cycle Settings State ---
+  const [showCycleSettings, setShowCycleSettings] = useState(false)
+  const [workDuration, setWorkDuration] = useState(25) // phút
+  const [breakDuration, setBreakDuration] = useState(5) // phút
+  const [longBreakDuration, setLongBreakDuration] = useState(15) // phút
+  const [numberOfCycles, setNumberOfCycles] = useState(4) // số chu kỳ
+
   // --- Display & Font State ---
   const [displayMode, setDisplayMode] = useState<'pomodoro' | 'clock'>('pomodoro')
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -116,6 +124,7 @@ export default function PomodoroPage() {
   // --- Menu State ---
   const [showMainMenu, setShowMainMenu] = useState(false)
   const mainMenuRef = useRef<HTMLDivElement>(null)
+  const cycleSettingsRef = useRef<HTMLDivElement>(null)
 
   // --- Tags State ---
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS)
@@ -138,7 +147,12 @@ export default function PomodoroPage() {
     setMinutes,
     setSeconds,
     sessionType
-  } = usePomodoroTimer()
+  } = usePomodoroTimer({
+    workDuration,
+    shortBreakDuration: breakDuration,
+    longBreakDuration,
+    longBreakEvery: numberOfCycles
+  })
 
   // Effect: Clock Mode Tick
   useEffect(() => {
@@ -149,6 +163,26 @@ export default function PomodoroPage() {
       return () => clearInterval(timer)
     }
   }, [displayMode])
+
+  // Effect: Update document title with timer countdown when active
+  useEffect(() => {
+    if (isActive && !isPaused && displayMode === 'pomodoro') {
+      const formatTime = (mins: number, secs: number) => {
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+      }
+      const sessionLabel = getSessionTypeLabel()
+      document.title = `${formatTime(minutes, seconds)} - ${sessionLabel} | StudySpace`
+    } else {
+      document.title = 'StudySpace - Pomodoro Timer'
+    }
+
+    return () => {
+      // Reset title when component unmounts or timer stops
+      if (!isActive) {
+        document.title = 'StudySpace - Pomodoro Timer'
+      }
+    }
+  }, [isActive, isPaused, minutes, seconds, displayMode, getSessionTypeLabel])
 
   // Effect: Close Menus on Click Outside
   useEffect(() => {
@@ -162,12 +196,15 @@ export default function PomodoroPage() {
       if (mainMenuRef.current && !mainMenuRef.current.contains(event.target as Node)) {
         setShowMainMenu(false)
       }
+      if (cycleSettingsRef.current && !cycleSettingsRef.current.contains(event.target as Node)) {
+        setShowCycleSettings(false)
+      }
     }
-    if (showSoundMenu || showFontMenu || showMainMenu) {
+    if (showSoundMenu || showFontMenu || showMainMenu || showCycleSettings) {
       document.addEventListener('mousedown', handleClickOutside)
       return () => document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [showSoundMenu, showFontMenu, showMainMenu])
+  }, [showSoundMenu, showFontMenu, showMainMenu, showCycleSettings])
 
   // Effect: Auto hide custom input when timer starts
   useEffect(() => {
@@ -292,6 +329,115 @@ export default function PomodoroPage() {
 
             {isAuthenticated ? (
               <div className="flex items-center gap-2">
+                {/* Nút Main Menu với Dropdown */}
+                <div className="relative" ref={mainMenuRef}>
+                  <button 
+                    onClick={() => setShowMainMenu(!showMainMenu)}
+                    className={`p-2 rounded-lg transition-colors ${showMainMenu ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+                    title="Menu"
+                  >
+                    <Grid3x3 className="w-5 h-5" />
+                  </button>
+                  
+                  {showMainMenu && (
+                    <div className="absolute top-full right-0 mt-3 w-56 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 animate-in fade-in slide-in-from-top-2 z-50">
+                      <div className="px-3 py-2 mb-2 border-b border-white/10">
+                        <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Điều hướng</span>
+                      </div>
+                      
+                      <button
+                        onClick={() => { router.push('/daily-goals'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Target className="w-4 h-4 text-red-400" />
+                        <span className="text-sm font-medium">Daily Goals</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => { router.push('/notes'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <BookOpen className="w-4 h-4 text-green-400" />
+                        <span className="text-sm font-medium">Ghi chú</span>
+                      </button>
+
+                      <button
+                        onClick={() => { router.push('/music'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Music className="w-4 h-4 text-pink-400" />
+                        <span className="text-sm font-medium">Âm nhạc</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => { router.push('/analytics'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <BarChart2 className="w-4 h-4 text-indigo-400" />
+                        <span className="text-sm font-medium">Phân tích</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => { router.push('/tasks'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <CheckSquare className="w-4 h-4 text-blue-400" />
+                        <span className="text-sm font-medium">Nhiệm vụ</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => { router.push('/progress'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <TrendingUp className="w-4 h-4 text-purple-400" />
+                        <span className="text-sm font-medium">Tiến độ</span>
+                      </button>
+                      
+                      <button
+                        onClick={() => { router.push('/achievements'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Award className="w-4 h-4 text-yellow-400" />
+                        <span className="text-sm font-medium">Thành tích</span>
+                      </button>
+
+                      <button
+                        onClick={() => { router.push('/quiz'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <BookOpen className="w-4 h-4 text-orange-400" />
+                        <span className="text-sm font-medium">Quiz</span>
+                      </button>
+
+                      <button
+                        onClick={() => { router.push('/flashcards'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <Layers className="w-4 h-4 text-emerald-400" />
+                        <span className="text-sm font-medium">Flashcards</span>
+                      </button>
+
+                      <button
+                        onClick={() => { router.push('/ai-chat'); setShowMainMenu(false); }}
+                        className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                      >
+                        <MessageSquare className="w-4 h-4 text-cyan-400" />
+                        <span className="text-sm font-medium">Chat AI</span>
+                      </button>
+
+                      <div className="mt-2 pt-2 border-t border-white/10">
+                        <button
+                          onClick={() => { router.push('/'); setShowMainMenu(false); }}
+                          className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
+                        >
+                          <Home className="w-4 h-4 text-gray-400" />
+                          <span className="text-sm font-medium">Trang chủ</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => router.push('/profile')}
                   className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -524,22 +670,136 @@ export default function PomodoroPage() {
 
                   {/* 5. PRESETS & CUSTOM TIMER */}
                   {!isActive && (
-                    <div className="flex items-center gap-6 pt-2 animate-in fade-in slide-in-from-bottom-2">
-                      <PresetButton 
-                        active={sessionType === 'work' && minutes === 25 && !showCustomInput} 
-                        onClick={() => { setSessionType('work'); setMinutes(25); setSeconds(0); setShowCustomInput(false) }}
-                        label="25'" tooltip="Làm việc"
-                      />
-                      <PresetButton 
-                        active={sessionType === 'short_break' && minutes === 5 && !showCustomInput} 
-                        onClick={() => { setSessionType('short_break'); setMinutes(5); setSeconds(0); setShowCustomInput(false) }}
-                        label="5'" tooltip="Nghỉ ngắn"
-                      />
-                      <PresetButton 
-                        active={sessionType === 'long_break' && minutes === 15 && !showCustomInput} 
-                        onClick={() => { setSessionType('long_break'); setMinutes(15); setSeconds(0); setShowCustomInput(false) }}
-                        label="15'" tooltip="Nghỉ dài"
-                      />
+                    <div className="flex flex-col items-center gap-4 pt-2 animate-in fade-in slide-in-from-bottom-2">
+                      <div className="flex items-center gap-6">
+                        <PresetButton 
+                          active={sessionType === 'work' && minutes === workDuration && !showCustomInput} 
+                          onClick={() => { setSessionType('work'); setMinutes(workDuration); setSeconds(0); setShowCustomInput(false) }}
+                          label={`${workDuration}'`} tooltip="Làm việc"
+                        />
+                        <PresetButton 
+                          active={sessionType === 'short_break' && minutes === breakDuration && !showCustomInput} 
+                          onClick={() => { setSessionType('short_break'); setMinutes(breakDuration); setSeconds(0); setShowCustomInput(false) }}
+                          label={`${breakDuration}'`} tooltip="Nghỉ ngắn"
+                        />
+                        <PresetButton 
+                          active={sessionType === 'long_break' && minutes === longBreakDuration && !showCustomInput} 
+                          onClick={() => { setSessionType('long_break'); setMinutes(longBreakDuration); setSeconds(0); setShowCustomInput(false) }}
+                          label={`${longBreakDuration}'`} tooltip="Nghỉ dài"
+                        />
+                        <button
+                          onClick={() => setShowCycleSettings(!showCycleSettings)}
+                          className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                            showCycleSettings
+                              ? 'bg-white border-white text-black scale-110 shadow-[0_0_15px_rgba(255,255,255,0.4)]'
+                              : 'bg-transparent border-white/20 text-white/60 hover:border-white/50 hover:text-white hover:bg-white/5'
+                          }`}
+                          title="Cài đặt chu kỳ"
+                        >
+                          <Settings className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Cycle Settings Panel */}
+                      {showCycleSettings && (
+                        <div ref={cycleSettingsRef} className="mt-4 p-6 bg-black/70 backdrop-blur-xl border border-white/10 rounded-2xl animate-in zoom-in-95 shadow-2xl w-full max-w-md">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-white font-bold text-lg">Cài đặt chu kỳ</h3>
+                            <button
+                              onClick={() => setShowCycleSettings(false)}
+                              className="text-white/50 hover:text-white transition-colors"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Work Duration */}
+                            <div>
+                              <label className="text-white/70 text-xs font-medium mb-2 block text-center">
+                                Thời gian học (phút)
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={120}
+                                value={workDuration}
+                                onChange={(e) => {
+                                  const val = Math.max(1, Math.min(120, Number(e.target.value)))
+                                  setWorkDuration(val)
+                                  if (sessionType === 'work' && !isActive) {
+                                    setMinutes(val)
+                                  }
+                                }}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center text-base font-semibold focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
+                              />
+                            </div>
+
+                            {/* Break Duration */}
+                            <div>
+                              <label className="text-white/70 text-xs font-medium mb-2 block text-center">
+                                Nghỉ ngắn (phút)
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                value={breakDuration}
+                                onChange={(e) => {
+                                  const val = Math.max(1, Math.min(60, Number(e.target.value)))
+                                  setBreakDuration(val)
+                                  if (sessionType === 'short_break' && !isActive) {
+                                    setMinutes(val)
+                                  }
+                                }}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center text-base font-semibold focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
+                              />
+                            </div>
+
+                            {/* Long Break Duration */}
+                            <div>
+                              <label className="text-white/70 text-xs font-medium mb-2 block text-center">
+                                Nghỉ dài (phút)
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={60}
+                                value={longBreakDuration}
+                                onChange={(e) => {
+                                  const val = Math.max(1, Math.min(60, Number(e.target.value)))
+                                  setLongBreakDuration(val)
+                                  if (sessionType === 'long_break' && !isActive) {
+                                    setMinutes(val)
+                                  }
+                                }}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center text-base font-semibold focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
+                              />
+                            </div>
+
+                            {/* Number of Cycles */}
+                            <div>
+                              <label className="text-white/70 text-xs font-medium mb-2 block text-center">
+                                Số chu kỳ
+                              </label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={20}
+                                value={numberOfCycles}
+                                onChange={(e) => {
+                                  const val = Math.max(1, Math.min(20, Number(e.target.value)))
+                                  setNumberOfCycles(val)
+                                }}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-center text-base font-semibold focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/15"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-white/50 text-xs mt-3 text-center">
+                            Nghỉ dài sau mỗi {numberOfCycles} chu kỳ học
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -673,115 +933,6 @@ export default function PomodoroPage() {
               icon={<Music className="w-5 h-5" />} 
               tooltip="Music Player" 
             />
-            
-            {/* Nút Main Menu với Dropdown */}
-            <div className="relative" ref={mainMenuRef}>
-              <button 
-                onClick={() => setShowMainMenu(!showMainMenu)}
-                className={`p-2 rounded-lg transition-colors ${showMainMenu ? 'bg-white/10 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-                title="Menu"
-              >
-                <Grid3x3 className="w-5 h-5" />
-              </button>
-              
-              {showMainMenu && (
-                <div className="absolute bottom-full left-0 mb-3 w-56 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 animate-in fade-in slide-in-from-bottom-2">
-                  <div className="px-3 py-2 mb-2 border-b border-white/10">
-                    <span className="text-[10px] text-white/50 uppercase tracking-wider font-semibold">Điều hướng</span>
-                  </div>
-                  
-                  <button
-                    onClick={() => { router.push('/daily-goals'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <Target className="w-4 h-4 text-red-400" />
-                    <span className="text-sm font-medium">Daily Goals</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => { router.push('/notes'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <BookOpen className="w-4 h-4 text-green-400" />
-                    <span className="text-sm font-medium">Ghi chú</span>
-                  </button>
-
-                  <button
-                    onClick={() => { router.push('/music'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <Music className="w-4 h-4 text-pink-400" />
-                    <span className="text-sm font-medium">Âm nhạc</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => { router.push('/analytics'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <BarChart2 className="w-4 h-4 text-indigo-400" />
-                    <span className="text-sm font-medium">Phân tích</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => { router.push('/tasks'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <CheckSquare className="w-4 h-4 text-blue-400" />
-                    <span className="text-sm font-medium">Nhiệm vụ</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => { router.push('/progress'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <TrendingUp className="w-4 h-4 text-purple-400" />
-                    <span className="text-sm font-medium">Tiến độ</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => { router.push('/achievements'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <Award className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm font-medium">Thành tích</span>
-                  </button>
-
-                  <button
-                    onClick={() => { router.push('/quiz'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <BookOpen className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm font-medium">Quiz</span>
-                  </button>
-
-                  <button
-                    onClick={() => { router.push('/flashcards'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <Layers className="w-4 h-4 text-emerald-400" />
-                    <span className="text-sm font-medium">Flashcards</span>
-                  </button>
-
-                  <button
-                    onClick={() => { router.push('/ai-chat'); setShowMainMenu(false); }}
-                    className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <MessageSquare className="w-4 h-4 text-cyan-400" />
-                    <span className="text-sm font-medium">Chat AI</span>
-                  </button>
-
-                  <div className="mt-2 pt-2 border-t border-white/10">
-                    <button
-                      onClick={() => { router.push('/'); setShowMainMenu(false); }}
-                      className="w-full px-3 py-2.5 rounded-lg flex items-center gap-3 text-white/70 hover:bg-white/10 hover:text-white transition-colors"
-                    >
-                      <Home className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm font-medium">Trang chủ</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
 
             {/* Thêm nút chọn Font chữ */}
             <div className="relative" ref={fontMenuRef}>
