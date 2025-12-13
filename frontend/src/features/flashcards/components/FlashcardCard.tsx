@@ -59,7 +59,7 @@ export function FlashcardCard({
           <div className="flex-1 flex flex-col justify-center items-center text-center">
             <div className="mb-4">
               <span className="text-sm font-medium text-blue-200 uppercase tracking-wide">
-                Question
+                Câu hỏi
               </span>
             </div>
             <h3 className="text-2xl font-bold mb-4 leading-relaxed">
@@ -74,7 +74,7 @@ export function FlashcardCard({
                 className="mt-4 flex items-center gap-2 text-blue-200 hover:text-white transition-colors"
               >
                 <Lightbulb className="w-4 h-4" />
-                <span className="text-sm">Show Hint</span>
+                <span className="text-sm">Hiện gợi ý</span>
               </button>
             )}
             {showHintText && flashcard.hint && (
@@ -84,7 +84,7 @@ export function FlashcardCard({
             )}
           </div>
           <div className="text-center">
-            <p className="text-sm text-blue-200">Click to flip</p>
+            <p className="text-sm text-blue-200">Nhấn để lật</p>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ export function FlashcardCard({
         >
           <div className="mb-4">
             <span className="text-sm font-medium text-green-200 uppercase tracking-wide">
-              Answer
+              Câu trả lời
             </span>
           </div>
           <h3 className="text-2xl font-bold leading-relaxed">
@@ -117,7 +117,7 @@ export function FlashcardCard({
               className="bg-white/10 border-white/30 text-white hover:bg-white/20"
             >
               <RotateCcw className="w-4 h-4 mr-2" />
-              Flip Back
+              Lật lại
             </Button>
           </div>
         </div>

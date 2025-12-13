@@ -5,7 +5,7 @@ export function AchievementEmpty() {
     <div className="flex flex-col items-center text-center py-16 space-y-4">
       <Image
         src="/icons/achievements/default.png"
-        alt="No achievements"
+        alt="Chưa có thành tựu"
         width={80}
         height={80}
       />

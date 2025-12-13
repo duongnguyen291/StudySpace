@@ -257,7 +257,7 @@ export const BackgroundSettings = ({ currentUrl, onClose, onSave }: BackgroundSe
                       src={`https://www.youtube.com/embed/${previewVideoId}?autoplay=0&mute=1&controls=1&modestbranding=1`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
-                      title="Background Preview"
+                      title="Xem trước Background"
                     />
                   </div>
                 </div>
@@ -323,7 +323,7 @@ export const BackgroundSettings = ({ currentUrl, onClose, onSave }: BackgroundSe
                       src={`https://www.youtube.com/embed/${extractVideoIdFromUrl(url) || url}?autoplay=0&mute=1&controls=1&modestbranding=1`}
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                       allowFullScreen
-                      title="Background Preview"
+                      title="Xem trước Background"
                     />
                   </div>
                 </div>

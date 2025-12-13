@@ -89,9 +89,9 @@ export function TasksPage() {
       setShowForm(false)
       refetch()
       refetchStats()
-      showToast('Task created successfully!', 'success')
+      showToast('Đã tạo nhiệm vụ thành công!', 'success')
     } catch (err) {
-      showToast('Failed to create task', 'error')
+      showToast('Không thể tạo nhiệm vụ', 'error')
     }
   }
 
@@ -104,9 +104,9 @@ export function TasksPage() {
       setShowForm(false)
       refetch()
       refetchStats()
-      showToast('Task updated successfully!', 'success')
+      showToast('Đã cập nhật nhiệm vụ thành công!', 'success')
     } catch (err) {
-      showToast('Failed to update task', 'error')
+      showToast('Không thể cập nhật nhiệm vụ', 'error')
     }
   }
 
@@ -116,7 +116,7 @@ export function TasksPage() {
       refetch()
       refetchStats()
     } catch (err) {
-      showToast('Failed to toggle task', 'error')
+      showToast('Không thể chuyển trạng thái nhiệm vụ', 'error')
     }
   }
 
@@ -126,7 +126,7 @@ export function TasksPage() {
       isOpen: true,
       type: 'single',
       taskId: id,
-      taskTitle: task?.title || 'this task',
+      taskTitle: task?.title || 'nhiệm vụ này',
     })
   }
 
@@ -138,10 +138,10 @@ export function TasksPage() {
       await deleteTask(deleteConfirm.taskId)
       refetch()
       refetchStats()
-      showToast('Task deleted', 'success')
+      showToast('Đã xóa nhiệm vụ', 'success')
       setDeleteConfirm({ isOpen: false, type: 'single' })
     } catch (err) {
-      showToast('Failed to delete task', 'error')
+      showToast('Không thể xóa nhiệm vụ', 'error')
     } finally {
       setDeleting(false)
     }
@@ -184,10 +184,10 @@ export function TasksPage() {
       setSelectionMode(false)
       refetch()
       refetchStats()
-      showToast(`Deleted ${selectedIds.length} task(s)`, 'success')
+      showToast(`Đã xóa ${selectedIds.length} nhiệm vụ`, 'success')
       setDeleteConfirm({ isOpen: false, type: 'single' })
     } catch (err) {
-      showToast('Failed to delete tasks', 'error')
+      showToast('Không thể xóa nhiệm vụ', 'error')
     } finally {
       setDeleting(false)
     }
@@ -201,9 +201,9 @@ export function TasksPage() {
       setSelectedIds([])
       refetch()
       refetchStats()
-      showToast(`Completed ${selectedIds.length} task(s)`, 'success')
+      showToast(`Đã hoàn thành ${selectedIds.length} nhiệm vụ`, 'success')
     } catch (err) {
-      showToast('Failed to complete tasks', 'error')
+      showToast('Không thể hoàn thành nhiệm vụ', 'error')
     }
   }
 
@@ -215,9 +215,9 @@ export function TasksPage() {
       setSelectedIds([])
       refetch()
       refetchStats()
-      showToast(`Uncompleted ${selectedIds.length} task(s)`, 'success')
+      showToast(`Đã hủy hoàn thành ${selectedIds.length} nhiệm vụ`, 'success')
     } catch (err) {
-      showToast('Failed to uncomplete tasks', 'error')
+      showToast('Không thể hủy hoàn thành nhiệm vụ', 'error')
     }
   }
 
@@ -233,9 +233,9 @@ export function TasksPage() {
       await createCategory(data)
       setNewCategoryName('')
       setShowCategoryForm(false)
-      showToast('Category created!', 'success')
+      showToast('Đã tạo danh mục!', 'success')
     } catch (err) {
-      showToast('Failed to create category', 'error')
+      showToast('Không thể tạo danh mục', 'error')
     }
   }
 
@@ -374,7 +374,7 @@ export function TasksPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/40" />
                 <input
                   type="text"
-                  placeholder="Search tasks..."
+                  placeholder="Tìm kiếm nhiệm vụ..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 focus:bg-white/10 transition-all"
@@ -388,9 +388,9 @@ export function TasksPage() {
               onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
               className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
             >
-              <option value="all" className="bg-gray-900">All Status</option>
-              <option value="pending" className="bg-gray-900">Pending</option>
-              <option value="completed" className="bg-gray-900">Completed</option>
+              <option value="all" className="bg-gray-900">Tất cả trạng thái</option>
+              <option value="pending" className="bg-gray-900">Đang chờ</option>
+              <option value="completed" className="bg-gray-900">Hoàn thành</option>
             </select>
 
             {/* Priority Filter */}
@@ -399,10 +399,10 @@ export function TasksPage() {
               onChange={(e) => setFilterPriority(e.target.value as TaskPriority | 'all')}
               className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
             >
-              <option value="all" className="bg-gray-900">All Priorities</option>
-              <option value="high" className="bg-gray-900">High</option>
-              <option value="medium" className="bg-gray-900">Medium</option>
-              <option value="low" className="bg-gray-900">Low</option>
+              <option value="all" className="bg-gray-900">Tất cả độ ưu tiên</option>
+              <option value="high" className="bg-gray-900">Cao</option>
+              <option value="medium" className="bg-gray-900">Trung bình</option>
+              <option value="low" className="bg-gray-900">Thấp</option>
             </select>
 
             {/* Category Filter */}
@@ -412,7 +412,7 @@ export function TasksPage() {
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
-                <option value="all" className="bg-gray-900">All Categories</option>
+                <option value="all" className="bg-gray-900">Tất cả danh mục</option>
                 {categories.map((cat) => (
                   <option key={cat.id} value={cat.id} className="bg-gray-900">{cat.name}</option>
                 ))}
@@ -420,7 +420,7 @@ export function TasksPage() {
               <button
                 onClick={() => setShowCategoryForm(true)}
                 className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
-                title="Add Category"
+                title="Thêm danh mục"
               >
                 <FolderPlus className="w-4 h-4" />
               </button>
@@ -433,15 +433,15 @@ export function TasksPage() {
                 onChange={(e) => setSortBy(e.target.value as SortField)}
                 className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-white/20 transition-all"
               >
-                <option value="created_at" className="bg-gray-900">Created Date</option>
-                <option value="due_date" className="bg-gray-900">Due Date</option>
-                <option value="priority" className="bg-gray-900">Priority</option>
-                <option value="title" className="bg-gray-900">Title</option>
+                <option value="created_at" className="bg-gray-900">Ngày tạo</option>
+                <option value="due_date" className="bg-gray-900">Hạn chót</option>
+                <option value="priority" className="bg-gray-900">Độ ưu tiên</option>
+                <option value="title" className="bg-gray-900">Tiêu đề</option>
               </select>
               <button
                 onClick={toggleSortOrder}
                 className="p-2.5 text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all duration-200"
-                title={sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+                title={sortOrder === 'asc' ? 'Tăng dần' : 'Giảm dần'}
               >
                 {sortOrder === 'asc' ? (
                   <SortAsc className="w-4 h-4" />
@@ -460,7 +460,7 @@ export function TasksPage() {
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                   <Tag className="w-5 h-5 text-white/70" />
-                  New Category
+                  Danh mục mới
                 </h3>
                 <button 
                   onClick={() => setShowCategoryForm(false)}
@@ -472,21 +472,21 @@ export function TasksPage() {
               <form onSubmit={handleCreateCategory} className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-white/70 mb-2">
-                    Name
+                    Tên
                   </label>
                   <input
                     type="text"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-white/20 focus:bg-white/10 transition-all"
-                    placeholder="Category name..."
+                    placeholder="Tên danh mục..."
                     required
                     autoFocus
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-white/70 mb-2">
-                    Color
+                    Màu sắc
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {categoryColors.map((color) => (
@@ -506,13 +506,13 @@ export function TasksPage() {
                     onClick={() => setShowCategoryForm(false)}
                     className="px-5 py-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-xl font-medium transition-all"
                   >
-                    Cancel
+                    Hủy
                   </button>
                   <button
                     type="submit"
                     className="px-5 py-2.5 bg-white/20 hover:bg-white/30 text-white rounded-xl font-medium transition-all"
                   >
-                    Create
+                    Tạo
                   </button>
                 </div>
               </form>

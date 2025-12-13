@@ -660,7 +660,7 @@ export default function PomodoroPage() {
                         <Button
                           onClick={handleReset}
                           className="h-12 w-12 p-0 flex items-center justify-center bg-white/5 hover:bg-white/15 border border-white/10 text-white/70 hover:text-white rounded-xl backdrop-blur-md transition-all"
-                          title="Reset"
+                          title="Đặt lại"
                         >
                           <RotateCcw className="w-5 h-5" />
                         </Button>

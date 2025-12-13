@@ -102,7 +102,7 @@ export function useChat(options: UseChatOptions = {}) {
             // Nếu server tạo conversation mới
             const merged: ChatConversationDetail = {
               id: res.conversation_id,
-              title: prev?.title ?? 'New Conversation',
+              title: prev?.title ?? 'Cuộc trò chuyện mới',
               created_at: optimisticUser.created_at,
               updated_at: new Date().toISOString(),
               last_message_at: new Date().toISOString(),

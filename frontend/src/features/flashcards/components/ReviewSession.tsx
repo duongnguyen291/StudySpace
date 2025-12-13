@@ -106,9 +106,9 @@ export function ReviewSession({ session, onComplete, onClose }: ReviewSessionPro
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-800">
           <div>
-            <h2 className="text-2xl font-bold text-white">Review Session</h2>
+            <h2 className="text-2xl font-bold text-white">Phiên ôn tập</h2>
             <p className="text-sm text-gray-400 mt-1">
-              {session.mode === 'random' ? 'Random Mode' : 'Spaced Repetition Mode'}
+              {session.mode === 'random' ? 'Chế độ ngẫu nhiên' : 'Chế độ lặp lại ngắt quãng'}
             </p>
           </div>
           <button
@@ -123,10 +123,10 @@ export function ReviewSession({ session, onComplete, onClose }: ReviewSessionPro
         <div className="px-6 py-4 border-b border-gray-800">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-400">
-              Card {currentIndex + 1} of {shuffledCards.length}
+              Thẻ {currentIndex + 1} / {shuffledCards.length}
             </span>
             <span className="text-sm text-gray-400">
-              {Math.round(progress)}% Complete
+              {Math.round(progress)}% Hoàn thành
             </span>
           </div>
           <div className="w-full bg-gray-800 rounded-full h-2">
@@ -159,20 +159,20 @@ export function ReviewSession({ session, onComplete, onClose }: ReviewSessionPro
             disabled={currentIndex === 0}
           >
             <ChevronLeft className="w-4 h-4 mr-2" />
-            Previous
+            Trước
           </Button>
 
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={handleSkip}>
-              Skip
+              Bỏ qua
             </Button>
             {currentIndex === shuffledCards.length - 1 ? (
               <Button variant="primary" onClick={completeSession}>
-                Complete Review
+                Hoàn thành ôn tập
               </Button>
             ) : (
               <Button variant="primary" onClick={handleNext}>
-                Next
+                Tiếp
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             )}

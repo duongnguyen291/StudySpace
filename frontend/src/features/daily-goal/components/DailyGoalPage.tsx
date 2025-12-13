@@ -146,7 +146,7 @@ export default function DailyGoalForm() {
         >
           {savedStatus === "saving" && <span className="animate-spin">⏳</span>}
           {savedStatus === "success" && <CheckCircle2 className="w-5 h-5" />}
-          {savedStatus === "success" ? "Goal Saved!" : savedStatus === "saving" ? "Saving..." : "Save Goal"}
+          {savedStatus === "success" ? "Đã lưu mục tiêu!" : savedStatus === "saving" ? "Đang lưu..." : "Lưu mục tiêu"}
         </button>
 
         {/* Current Goal Summary */}

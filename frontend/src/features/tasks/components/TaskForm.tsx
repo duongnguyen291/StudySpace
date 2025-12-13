@@ -123,10 +123,10 @@ export function TaskForm({ task, categories, onSubmit, onCancel, onCreateCategor
           </div> */}
           <div>
             <h3 className="text-xl font-bold text-white">
-              {task ? 'Edit Task' : 'New Task'}
+              {task ? 'Sửa nhiệm vụ' : 'Nhiệm vụ mới'}
             </h3>
             <p className="text-xs text-white/50">
-              {task ? 'Update your task details' : 'Create a new task to track'}
+              {task ? 'Cập nhật chi tiết nhiệm vụ' : 'Tạo nhiệm vụ mới để theo dõi'}
             </p>
           </div>
         </div>
@@ -142,14 +142,14 @@ export function TaskForm({ task, categories, onSubmit, onCancel, onCreateCategor
         {/* Title */}
         <div>
           <label className="block text-sm font-medium text-white/70 mb-2">
-            Title <span className="text-rose-400">*</span>
+            Tiêu đề <span className="text-rose-400">*</span>
           </label>
           <input
             type="text"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white/10 transition-all duration-200"
-            placeholder="What needs to be done?"
+            placeholder="Cần làm gì?"
             required
             maxLength={255}
             autoFocus
@@ -159,13 +159,13 @@ export function TaskForm({ task, categories, onSubmit, onCancel, onCreateCategor
         {/* Description */}
         <div>
           <label className="block text-sm font-medium text-white/70 mb-2">
-            Description
+            Mô tả
           </label>
           <textarea
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 focus:bg-white/10 resize-none transition-all duration-200"
-            placeholder="Add more details..."
+            placeholder="Thêm chi tiết..."
             rows={3}
           />
         </div>
@@ -198,7 +198,7 @@ export function TaskForm({ task, categories, onSubmit, onCancel, onCreateCategor
                     ? 'bg-blue-500 text-white' 
                     : 'bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
                 }`}
-                title="Add new category"
+                title="Thêm danh mục mới"
               >
                 <Plus className="w-5 h-5" />
               </button>
@@ -212,7 +212,7 @@ export function TaskForm({ task, categories, onSubmit, onCancel, onCreateCategor
                 type="text"
                 value={newCategoryName}
                 onChange={(e) => setNewCategoryName(e.target.value)}
-                placeholder="Category name..."
+                placeholder="Tên danh mục..."
                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                 autoFocus
               />
@@ -334,7 +334,7 @@ export function TaskForm({ task, categories, onSubmit, onCancel, onCreateCategor
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 Saving...
               </span>
-            ) : task ? 'Update Task' : 'Create Task'}
+            ) : task ? 'Cập nhật nhiệm vụ' : 'Tạo nhiệm vụ'}
           </button>
         </div>
       </form>

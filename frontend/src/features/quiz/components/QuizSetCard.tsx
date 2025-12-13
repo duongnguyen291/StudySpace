@@ -70,13 +70,13 @@ export default function QuizSetCard({
           disabled={quizSet.question_count === 0}
           className="flex-1 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-500/20"
         >
-          ▶ Start Quiz
+          ▶ Bắt đầu Quiz
         </button>
         
         <button
           onClick={onEdit}
           className="p-2.5 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition"
-          title="Edit"
+          title="Sửa"
         >
           ✏️
         </button>
@@ -84,7 +84,7 @@ export default function QuizSetCard({
         <button
           onClick={onExport}
           className="p-2.5 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-slate-700 hover:text-white transition"
-          title="Export CSV"
+          title="Xuất CSV"
         >
           📤
         </button>
@@ -93,7 +93,7 @@ export default function QuizSetCard({
           onClick={onDelete}
           disabled={isDeleting}
           className="p-2.5 bg-slate-700/50 text-slate-300 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition disabled:opacity-50"
-          title="Delete"
+          title="Xóa"
         >
           {isDeleting ? '⏳' : '🗑️'}
         </button>
