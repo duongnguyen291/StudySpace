@@ -15,4 +15,10 @@ export const AnalyticsService = {
 
   getInsights: (userId: string) =>
     api.get(`/analytics/insights`),
+
+  getHeatmap: (userId: string, days: number = 365) =>
+    api.get(`/analytics/heatmap`, { params: { days } }),
+
+  getTrends: (userId: string) =>
+    api.get(`/analytics/trends`),
 };

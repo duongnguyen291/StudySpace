@@ -250,14 +250,14 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
                   disabled={!newQuestion.trim() || newOptions.some(opt => !opt.trim())}
                   className="w-full py-2 bg-emerald-500/20 text-emerald-400 rounded-lg hover:bg-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
                 >
-                  Add Question
+                  Thêm câu hỏi
                 </button>
               </div>
             )}
 
             {questions.length === 0 && !showAddQuestion && (
               <p className="text-sm text-slate-500 italic">
-                No questions added yet. Click "Add Question" to create your first question.
+                Chưa có câu hỏi nào. Nhấn "Thêm câu hỏi" để tạo câu hỏi đầu tiên.
               </p>
             )}
           </div>
@@ -269,14 +269,14 @@ export default function CreateQuizModal({ isOpen, onClose, onSubmit, isLoading }
               onClick={onClose}
               className="flex-1 px-4 py-3 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 transition font-medium"
             >
-              Cancel
+              Hủy
             </button>
             <button
               type="submit"
               disabled={isLoading || !title.trim()}
               className="flex-1 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold shadow-lg shadow-emerald-500/20"
             >
-              {isLoading ? '⏳ Creating...' : '✓ Create Quiz'}
+              {isLoading ? '⏳ Đang tạo...' : '✓ Tạo Quiz'}
             </button>
           </div>
         </form>

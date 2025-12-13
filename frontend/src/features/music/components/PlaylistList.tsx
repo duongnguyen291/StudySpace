@@ -34,7 +34,7 @@ export const PlaylistList = ({
       const data = await musicService.getPlaylists(filterType || undefined)
       setPlaylists(data)
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to load playlists')
+      setError(err.response?.data?.detail || 'Không thể tải danh sách phát')
     } finally {
       setIsLoading(false)
     }
@@ -63,7 +63,7 @@ export const PlaylistList = ({
   if (playlists.length === 0) {
     return (
       <div className={cn('flex items-center justify-center p-8', className)}>
-        <p className="text-white/70 text-sm">No playlists available</p>
+        <p className="text-white/70 text-sm">Không có playlist nào</p>
       </div>
     )
   }

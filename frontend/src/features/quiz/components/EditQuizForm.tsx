@@ -224,7 +224,7 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
               disabled={isSaving || !title.trim()}
               className="px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 transition font-medium"
             >
-              {isSaving ? 'Saving...' : 'Save Quiz Info'}
+              {isSaving ? 'Đang lưu...' : 'Lưu thông tin Quiz'}
             </button>
           </div>
         </div>
@@ -239,24 +239,24 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
               onClick={() => setShowAddForm(!showAddForm)}
               className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition text-sm font-medium"
             >
-              {showAddForm ? 'Cancel' : '+ Add Question'}
+              {showAddForm ? 'Hủy' : '+ Thêm câu hỏi'}
             </button>
           </div>
 
           {/* Add Question Form */}
           {showAddForm && (
             <div className="bg-slate-800/50 rounded-lg p-4 mb-4 border border-slate-700">
-              <h4 className="text-sm font-medium text-slate-300 mb-3">New Question</h4>
+              <h4 className="text-sm font-medium text-slate-300 mb-3">Câu hỏi mới</h4>
               <div className="space-y-3">
                 <input
                   type="text"
                   value={newQuestion}
                   onChange={(e) => setNewQuestion(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Question"
+                  placeholder="Câu hỏi"
                 />
                 <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-2">Options (4 required) *</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">Tùy chọn (cần 4) *</label>
                   <div className="space-y-2">
                     {newOptions.map((opt, idx) => (
                       <div key={idx} className="flex items-center gap-2">
@@ -271,19 +271,19 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
                           type="text"
                           value={opt}
                           onChange={(e) => handleOptionChange(idx, e.target.value)}
-                          placeholder={`Option ${String.fromCharCode(65 + idx)}...`}
+                          placeholder={`Tùy chọn ${String.fromCharCode(65 + idx)}...`}
                           className="flex-1 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">Select the radio button next to the correct answer</p>
+                  <p className="text-xs text-slate-500 mt-2">Chọn nút radio bên cạnh câu trả lời đúng</p>
                 </div>
                 <textarea
                   value={explanation}
                   onChange={(e) => setExplanation(e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  placeholder="Explanation (optional)"
+                  placeholder="Giải thích (tùy chọn)"
                   rows={2}
                 />
                 <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
                     onClick={handleAddQuestion}
                     className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition text-sm font-medium"
                   >
-                    Add
+                    Thêm
                   </button>
                   <button
                     onClick={() => {
@@ -303,7 +303,7 @@ export default function EditQuizForm({ quizSetId, onBack, onSave }: Props) {
                     }}
                     className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition text-sm"
                   >
-                    Cancel
+                    Hủy
                   </button>
                 </div>
               </div>
@@ -472,14 +472,14 @@ function QuestionItem({ question, isEditing, onEdit, onCancel, onUpdate, onDelet
           <button
             onClick={onEdit}
             className="p-2 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition text-sm"
-            title="Edit"
+            title="Sửa"
           >
             ✏️
           </button>
           <button
             onClick={() => onDelete(question.id)}
             className="p-2 bg-slate-700 text-red-400 rounded-lg hover:bg-red-500/20 transition text-sm"
-            title="Delete"
+            title="Xóa"
           >
             🗑️
           </button>

@@ -11,7 +11,7 @@ interface GoalChartProps {
 
 export default function GoalChart({ data }: GoalChartProps) {
   if (!data || !data.labels || !data.values) {
-    return <div className="text-gray-500">No data available</div>;
+    return <div className="text-gray-500">Chưa có dữ liệu</div>;
   }
 
   const maxValue = Math.max(...data.values, 100);
@@ -24,7 +24,7 @@ export default function GoalChart({ data }: GoalChartProps) {
   return (
     <div className="w-full h-auto p-6 bg-white dark:bg-gray-800 rounded-lg">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Completion %
+        Tỷ lệ hoàn thành %
       </h3>
       <svg
         viewBox={`0 0 ${totalWidth} ${chartHeight + padding}`}

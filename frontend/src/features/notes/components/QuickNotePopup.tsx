@@ -68,7 +68,7 @@ export const QuickNotePopup = () => {
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
             }}
-            aria-label="Close quick note"
+            aria-label="Đóng ghi chú nhanh"
           >
             <X className="w-4 h-4" />
           </button>

@@ -114,8 +114,8 @@ export default function MusicPlayerPage() {
                   <Music className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-white">Music Player</h1>
-                  <p className="text-gray-300">Select a playlist to start playing</p>
+                  <h1 className="text-3xl font-bold text-white">Trình phát nhạc</h1>
+                  <p className="text-gray-300">Chọn playlist để bắt đầu phát</p>
                 </div>
               </div>
 
@@ -126,20 +126,20 @@ export default function MusicPlayerPage() {
                   size="sm"
                   onClick={() => router.push('/')}
                   className="border-white/20 text-white hover:bg-white/10 bg-white/10"
-                  title="Home"
+                  title="Trang chủ"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Home
+                  Trang chủ
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => router.push('/pomodoro')}
                   className="border-white/20 text-white hover:bg-white/10 bg-white/10"
-                  title="Pomodoro Timer"
+                  title="Đồng hồ Pomodoro"
                 >
                   <Timer className="w-4 h-4 mr-2" />
-                  Timer
+                  Đồng hồ
                 </Button>
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function MusicPlayerPage() {
                 className="border-white/20 text-white hover:bg-white/10 bg-white/10"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                Filter
+                Lọc
               </Button>
             </div>
 
@@ -174,7 +174,7 @@ export default function MusicPlayerPage() {
                         : 'bg-white/10 text-white hover:bg-white/20'
                     )}
                   >
-                    {type ? type.charAt(0).toUpperCase() + type.slice(1) : 'All'}
+                    {type ? type.charAt(0).toUpperCase() + type.slice(1) : 'Tất cả'}
                   </button>
                 ))}
               </div>
@@ -185,20 +185,22 @@ export default function MusicPlayerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Playlist List */}
             <div className="lg:col-span-1">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-white">Playlists</h2>
-                <PlaylistList
-                  onSelectPlaylist={handleSelectPlaylist}
-                  selectedPlaylistId={selectedPlaylist?.id}
-                  filterType={filterType}
-                />
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-6 flex flex-col h-[calc(100vh-12rem)]">
+                <h2 className="text-xl font-semibold mb-4 text-white flex-shrink-0">Danh sách phát</h2>
+                <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <PlaylistList
+                    onSelectPlaylist={handleSelectPlaylist}
+                    selectedPlaylistId={selectedPlaylist?.id}
+                    filterType={filterType}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Music Player */}
             <div className="lg:col-span-2">
               <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-white">Now Playing</h2>
+                <h2 className="text-xl font-semibold mb-4 text-white">Đang phát</h2>
                 <MusicPlayer 
                   playlist={selectedPlaylist}
                   playlists={playlists}

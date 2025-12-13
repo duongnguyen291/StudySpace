@@ -11,7 +11,7 @@ export const QuickNoteFloatingButton = () => {
       type="button"
       onClick={open}
       className="fixed bottom-4 right-4 z-30 rounded-full w-12 h-12 bg-blue-600 text-white shadow-lg flex items-center justify-center hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-      aria-label="Open quick note"
+      aria-label="Mở ghi chú nhanh"
     >
       <PenLine className="w-5 h-5" />
     </button>

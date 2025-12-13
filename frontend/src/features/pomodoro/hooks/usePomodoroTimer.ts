@@ -43,8 +43,11 @@ export const usePomodoroTimer = ({
   // customApplied cho biết đã Apply custom để không ghi đè baseline khi chuyển sang custom_timer
   const [customApplied, setCustomApplied] = useState(false)
 
-  // Ref interval
+  // Ref interval và timestamp để đảm bảo chạy chính xác khi tab không active
   const intervalRef = useRef<number | null>(null)
+  const startTimeRef = useRef<number | null>(null)
+  const pausedTimeRef = useRef<number | null>(null)
+  const handleCompleteSessionRef = useRef<() => void>()
 
   // Derived hiển thị
   const minutes = Math.floor(remainingSeconds / 60)
@@ -78,28 +81,50 @@ export const usePomodoroTimer = ({
     setCustomApplied(false) // rời custom
   }, [sessionType, getStandardDurationMinutes, customApplied])
 
-  // QUẢN LÝ INTERVAL
+  // QUẢN LÝ INTERVAL - Sử dụng Date timestamps để đảm bảo chính xác khi tab không active
   useEffect(() => {
     if (!isActive || isPaused) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current)
         intervalRef.current = null
       }
+      if (isPaused && startTimeRef.current) {
+        // Lưu thời gian đã trôi qua khi pause
+        const elapsed = Math.floor((Date.now() - startTimeRef.current) / 1000)
+        pausedTimeRef.current = elapsed
+      }
       return
     }
 
+    // Khi resume hoặc start mới
     if (!intervalRef.current) {
+      // Tính toán thời gian đã trôi qua nếu đang resume
+      const alreadyElapsed = pausedTimeRef.current || 0
+      const targetRemaining = baselineSeconds - alreadyElapsed
+      
+      if (targetRemaining <= 0) {
+        handleCompleteSessionRef.current?.()
+        return
+      }
+
+      // Lưu thời gian bắt đầu (trừ đi thời gian đã trôi qua)
+      startTimeRef.current = Date.now() - (alreadyElapsed * 1000)
+      pausedTimeRef.current = null
+
       intervalRef.current = window.setInterval(() => {
-        setRemainingSeconds(prev => {
-          if (prev <= 1) {
-            clearInterval(intervalRef.current!)
-            intervalRef.current = null
-            handleCompleteSession()
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+        const now = Date.now()
+        const elapsed = Math.floor((now - startTimeRef.current!) / 1000)
+        const newRemaining = Math.max(0, baselineSeconds - elapsed)
+        
+        setRemainingSeconds(newRemaining)
+        
+        if (newRemaining <= 0) {
+          clearInterval(intervalRef.current!)
+          intervalRef.current = null
+          startTimeRef.current = null
+          handleCompleteSessionRef.current?.()
+        }
+      }, 100) // Update mỗi 100ms để mượt hơn, nhưng tính toán dựa trên timestamp
     }
 
     return () => {
@@ -108,7 +133,7 @@ export const usePomodoroTimer = ({
         intervalRef.current = null
       }
     }
-  }, [isActive, isPaused])
+  }, [isActive, isPaused, baselineSeconds])
 
   const logWorkSession = useCallback(
     (durationMinutes: number) => {
@@ -163,6 +188,11 @@ export const usePomodoroTimer = ({
     }
   }, [sessionType, baselineSeconds, cycleCount, longBreakEvery, logWorkSession])
 
+  // Cập nhật ref với callback mới nhất
+  useEffect(() => {
+    handleCompleteSessionRef.current = handleCompleteSession
+  }, [handleCompleteSession])
+
   // Start
   const handleStart = useCallback(() => {
     if (isActive && isPaused) {
@@ -170,6 +200,9 @@ export const usePomodoroTimer = ({
       return
     }
     if (isActive) return
+    // Reset refs khi start mới
+    startTimeRef.current = null
+    pausedTimeRef.current = null
     setIsActive(true)
     setIsPaused(false)
   }, [isActive, isPaused])
@@ -198,6 +231,9 @@ export const usePomodoroTimer = ({
       clearInterval(intervalRef.current)
       intervalRef.current = null
     }
+    // Reset tất cả refs
+    startTimeRef.current = null
+    pausedTimeRef.current = null
     setIsActive(false)
     setIsPaused(false)
     setRemainingSeconds(baselineSeconds)

@@ -48,12 +48,12 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
         )}
       </div>
       <h3 className="text-xl font-semibold text-gray-300 mb-2">
-        {hasFilters ? 'No matching tasks' : 'No tasks yet'}
+        {hasFilters ? 'Không có nhiệm vụ phù hợp' : 'Chưa có nhiệm vụ nào'}
       </h3>
       <p className="text-gray-500 max-w-sm mx-auto">
         {hasFilters 
-          ? 'Try adjusting your filters or search query'
-          : 'Create your first task to get started on your productivity journey!'
+          ? 'Thử điều chỉnh bộ lọc hoặc từ khóa tìm kiếm'
+          : 'Tạo nhiệm vụ đầu tiên để bắt đầu hành trình năng suất của bạn!'
         }
       </p>
     </div>

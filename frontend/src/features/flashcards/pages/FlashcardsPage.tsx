@@ -62,7 +62,7 @@ export function FlashcardsPage() {
         setDecks(response.decks)
       }
     } catch (error) {
-      showToast('Failed to load decks', 'error')
+      showToast('Không thể tải bộ thẻ', 'error')
       console.error(error)
     } finally {
       setLoading(false)
@@ -76,7 +76,7 @@ export function FlashcardsPage() {
         setFlashcards(response.flashcards)
       }
     } catch (error) {
-      showToast('Failed to load flashcards', 'error')
+      showToast('Không thể tải thẻ', 'error')
       console.error(error)
     }
   }
@@ -96,9 +96,9 @@ export function FlashcardsPage() {
       setDeckDescription('')
       setShowDeckForm(false)
       loadDecks()
-      showToast('Deck created successfully!', 'success')
+      showToast('Đã tạo bộ thẻ thành công!', 'success')
     } catch (error) {
-      showToast('Failed to create deck', 'error')
+      showToast('Không thể tạo bộ thẻ', 'error')
     }
   }
 
@@ -117,14 +117,14 @@ export function FlashcardsPage() {
       setDeckDescription('')
       setShowDeckForm(false)
       loadDecks()
-      showToast('Deck updated successfully!', 'success')
+      showToast('Đã cập nhật bộ thẻ thành công!', 'success')
     } catch (error) {
-      showToast('Failed to update deck', 'error')
+      showToast('Không thể cập nhật bộ thẻ', 'error')
     }
   }
 
   const handleDeleteDeck = async (deckId: string) => {
-    if (!confirm('Are you sure you want to delete this deck? All flashcards will be deleted.')) return
+    if (!confirm('Bạn có chắc muốn xóa bộ thẻ này? Tất cả thẻ sẽ bị xóa.')) return
 
     try {
       await flashcardService.deleteDeck(deckId)
@@ -133,9 +133,9 @@ export function FlashcardsPage() {
         setFlashcards([])
       }
       loadDecks()
-      showToast('Deck deleted', 'success')
+      showToast('Đã xóa bộ thẻ', 'success')
     } catch (error) {
-      showToast('Failed to delete deck', 'error')
+      showToast('Không thể xóa bộ thẻ', 'error')
     }
   }
 
@@ -162,40 +162,40 @@ export function FlashcardsPage() {
       setFlashcardHint('')
       setShowFlashcardForm(false)
       loadFlashcards(selectedDeck.id)
-      showToast('Flashcard created!', 'success')
+      showToast('Đã tạo thẻ thành công!', 'success')
     } catch (error) {
-      showToast('Failed to create flashcard', 'error')
+      showToast('Không thể tạo thẻ', 'error')
     }
   }
 
   const handleDeleteFlashcard = async (flashcardId: string) => {
     if (!selectedDeck) return
-    if (!confirm('Are you sure you want to delete this flashcard?')) return
+    if (!confirm('Bạn có chắc muốn xóa thẻ này?')) return
 
     try {
       await flashcardService.deleteFlashcard(flashcardId, selectedDeck.id)
       loadFlashcards(selectedDeck.id)
-      showToast('Flashcard deleted', 'success')
+      showToast('Đã xóa thẻ', 'success')
     } catch (error) {
-      showToast('Failed to delete flashcard', 'error')
+      showToast('Không thể xóa thẻ', 'error')
     }
   }
 
   const handleImportCsv = async () => {
     if (!selectedDeck) return
     if (!csvFile) {
-      showToast('Please choose a CSV file', 'error')
+      showToast('Vui lòng chọn file CSV', 'error')
       return
     }
     setCsvImporting(true)
     try {
       const res = await flashcardService.importFlashcardsCsv(selectedDeck.id, csvFile)
-      showToast(`Imported ${res.flashcards_imported} cards`, 'success')
+      showToast(`Đã nhập ${res.flashcards_imported} thẻ`, 'success')
       loadFlashcards(selectedDeck.id)
       setCsvFile(null)
     } catch (error) {
       console.error(error)
-      showToast('Failed to import CSV', 'error')
+      showToast('Không thể nhập CSV', 'error')
     } finally {
       setCsvImporting(false)
     }
@@ -212,7 +212,7 @@ export function FlashcardsPage() {
         setReviewSession(session)
       }
     } catch (error) {
-      showToast('Failed to start review session', 'error')
+      showToast('Không thể bắt đầu phiên ôn tập', 'error')
       console.error(error)
     }
   }
@@ -223,12 +223,12 @@ export function FlashcardsPage() {
     try {
       await flashcardService.submitReviewResults(results)
       setReviewSession(null)
-      showToast('Review completed!', 'success')
+      showToast('Đã hoàn thành ôn tập!', 'success')
       if (selectedDeck) {
         loadFlashcards(selectedDeck.id)
       }
     } catch (error) {
-      showToast('Failed to submit review results', 'error')
+      showToast('Không thể nộp kết quả ôn tập', 'error')
       console.error(error)
     }
   }
@@ -313,7 +313,7 @@ export function FlashcardsPage() {
             <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">
-                  {editingFlashcard ? 'Edit Flashcard' : 'New Flashcard'}
+                  {editingFlashcard ? 'Sửa thẻ' : 'Thẻ mới'}
                 </h3>
                 <button
                   onClick={() => {
@@ -328,40 +328,40 @@ export function FlashcardsPage() {
               <form onSubmit={handleCreateFlashcard} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Question *
+                    Câu hỏi *
                   </label>
                   <textarea
                     value={flashcardQuestion}
                     onChange={(e) => setFlashcardQuestion(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter question..."
+                    placeholder="Nhập câu hỏi..."
                     rows={3}
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Answer *
+                    Câu trả lời *
                   </label>
                   <textarea
                     value={flashcardAnswer}
                     onChange={(e) => setFlashcardAnswer(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter answer..."
+                    placeholder="Nhập câu trả lời..."
                     rows={3}
                     required
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Hint (Optional)
+                    Gợi ý (Tùy chọn)
                   </label>
                   <input
                     type="text"
                     value={flashcardHint}
                     onChange={(e) => setFlashcardHint(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Optional hint..."
+                    placeholder="Gợi ý tùy chọn..."
                   />
                 </div>
                 <div className="flex justify-end gap-3">
@@ -373,10 +373,10 @@ export function FlashcardsPage() {
                       setEditingFlashcard(null)
                     }}
                   >
-                    Cancel
+                    Hủy
                   </Button>
                   <Button type="submit" variant="primary">
-                    {editingFlashcard ? 'Update' : 'Create'} Card
+                    {editingFlashcard ? 'Cập nhật' : 'Tạo'} Thẻ
                   </Button>
                 </div>
               </form>
@@ -470,7 +470,7 @@ export function FlashcardsPage() {
           <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
-                {editingDeck ? 'Edit Deck' : 'New Deck'}
+                {editingDeck ? 'Sửa bộ thẻ' : 'Bộ thẻ mới'}
               </h3>
               <button
                 onClick={() => {
@@ -485,27 +485,27 @@ export function FlashcardsPage() {
             <form onSubmit={editingDeck ? handleUpdateDeck : handleCreateDeck} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Title *
+                  Tiêu đề *
                 </label>
                 <input
                   type="text"
                   value={deckTitle}
                   onChange={(e) => setDeckTitle(e.target.value)}
                   className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Deck title..."
+                  placeholder="Tiêu đề bộ thẻ..."
                   required
                   autoFocus
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Description
+                  Mô tả
                 </label>
                 <textarea
                   value={deckDescription}
                   onChange={(e) => setDeckDescription(e.target.value)}
                   className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Deck description..."
+                  placeholder="Mô tả bộ thẻ..."
                   rows={3}
                 />
               </div>
@@ -518,10 +518,10 @@ export function FlashcardsPage() {
                     setEditingDeck(null)
                   }}
                 >
-                  Cancel
+                  Hủy
                 </Button>
                 <Button type="submit" variant="primary">
-                  {editingDeck ? 'Update' : 'Create'} Deck
+                  {editingDeck ? 'Cập nhật' : 'Tạo'} Bộ thẻ
                 </Button>
               </div>
             </form>

@@ -39,10 +39,10 @@ export function TaskItem({
     if (!task.due_date) return null
     const dueDate = new Date(task.due_date)
     
-    if (task.completed) return { label: 'Completed', color: 'text-green-400 bg-green-500/10' }
-    if (isPast(dueDate) && !isToday(dueDate)) return { label: 'Overdue', color: 'text-red-400 bg-red-500/10' }
-    if (isToday(dueDate)) return { label: 'Today', color: 'text-orange-400 bg-orange-500/10' }
-    if (isTomorrow(dueDate)) return { label: 'Tomorrow', color: 'text-yellow-400 bg-yellow-500/10' }
+    if (task.completed) return { label: 'Hoàn thành', color: 'text-green-400 bg-green-500/10' }
+    if (isPast(dueDate) && !isToday(dueDate)) return { label: 'Quá hạn', color: 'text-red-400 bg-red-500/10' }
+    if (isToday(dueDate)) return { label: 'Hôm nay', color: 'text-orange-400 bg-orange-500/10' }
+    if (isTomorrow(dueDate)) return { label: 'Ngày mai', color: 'text-yellow-400 bg-yellow-500/10' }
     return null
   }
 
