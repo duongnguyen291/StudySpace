@@ -185,13 +185,15 @@ export default function MusicPlayerPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Playlist List */}
             <div className="lg:col-span-1">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-6">
-                <h2 className="text-xl font-semibold mb-4 text-white">Playlists</h2>
-                <PlaylistList
-                  onSelectPlaylist={handleSelectPlaylist}
-                  selectedPlaylistId={selectedPlaylist?.id}
-                  filterType={filterType}
-                />
+              <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/20 p-6 flex flex-col h-[calc(100vh-12rem)]">
+                <h2 className="text-xl font-semibold mb-4 text-white flex-shrink-0">Playlists</h2>
+                <div className="flex-1 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                  <PlaylistList
+                    onSelectPlaylist={handleSelectPlaylist}
+                    selectedPlaylistId={selectedPlaylist?.id}
+                    filterType={filterType}
+                  />
+                </div>
               </div>
             </div>
 
