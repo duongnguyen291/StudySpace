@@ -301,7 +301,8 @@ class AIChatService:
                 "Bạn là một AI Learning Assistant thông minh, giúp học sinh và sinh viên học tập hiệu quả. "
                 "Bạn có thể giải thích khái niệm, trả lời câu hỏi, gợi ý phương pháp học tập, "
                 "và hỗ trợ tạo quiz/flashcards. Hãy trả lời bằng tiếng Việt, ngắn gọn và dễ hiểu. "
-                "Không dùng các ký hiệu như **,-,#,..."
+                "QUAN TRỌNG: KHÔNG sử dụng bất kỳ ký hiệu markdown nào như ** (bold), * (italic), # (heading), "
+                "- (bullet), hoặc bất kỳ định dạng markdown nào khác. Chỉ trả về văn bản thuần túy."
             )
             
             # Thêm study context vào system instruction nếu có
@@ -386,6 +387,9 @@ class AIChatService:
                             reply_parts.append(part_text)
             reply = "\n".join(reply_parts).strip() or "Xin lỗi, tôi chưa có câu trả lời phù hợp."
             
+            # Loại bỏ markdown khỏi reply
+            reply = self._clean_markdown(reply)
+            
             # Gemini không trả về token count trực tiếp, ước tính
             tokens_used = max(len(reply) // 4, 1)
             
@@ -403,6 +407,35 @@ class AIChatService:
             )
             tokens_used = max(len(reply) // 4, 1)
             return reply, tokens_used
+
+    def _clean_markdown(self, text: str) -> str:
+        """
+        Loại bỏ các ký hiệu markdown khỏi text.
+        """
+        import re
+        # Loại bỏ ** (bold) - phải có ít nhất 1 ký tự giữa **
+        text = re.sub(r'\*\*([^*\n]+)\*\*', r'\1', text)
+        # Loại bỏ * (italic) - nhưng không phải * đơn lẻ
+        text = re.sub(r'(?<!\*)\*([^*\n\*]+)\*(?!\*)', r'\1', text)
+        # Loại bỏ # (headings) - giữ lại text sau #
+        text = re.sub(r'^#+\s+', '', text, flags=re.MULTILINE)
+        # Loại bỏ ` (inline code)
+        text = re.sub(r'`([^`\n]+)`', r'\1', text)
+        # Loại bỏ ``` (code blocks)
+        text = re.sub(r'```[^\n]*\n([^`]*)```', r'\1', text, flags=re.DOTALL)
+        # Loại bỏ __ (bold/underline)
+        text = re.sub(r'__([^_\n]+)__', r'\1', text)
+        # Loại bỏ _ (italic) - nhưng không phải _ đơn lẻ
+        text = re.sub(r'(?<!_)_([^_\n_]+)_(?!_)', r'\1', text)
+        # Loại bỏ []() links nhưng giữ text
+        text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text)
+        # Loại bỏ các ký tự markdown còn sót lại (chỉ khi đứng đơn lẻ hoặc lặp lại)
+        text = re.sub(r'\*\*+', '', text)  # Loại bỏ ** hoặc ***
+        text = re.sub(r'__+', '', text)    # Loại bỏ __ hoặc ___
+        # Loại bỏ * hoặc _ đơn lẻ ở đầu/cuối từ (nhưng giữ trong từ)
+        text = re.sub(r'\s+\*\s+', ' ', text)  # * đơn lẻ với khoảng trắng
+        text = re.sub(r'\s+_\s+', ' ', text)   # _ đơn lẻ với khoảng trắng
+        return text.strip()
 
     def _get_predefined_reply(self, message: str) -> str | None:
         """Return predefined reply for specific prompts."""
