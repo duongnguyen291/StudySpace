@@ -1,5 +1,5 @@
-@startuml StudySpace_Database_Schema
-
+@startuml
+skinparam linetype ortho
 !define TABLE(name) class name << (T,#FFAAAA) >>
 !define PK(x) <b><color:red>PK:</color> x</b>
 !define FK(x) <color:blue>FK:</color> x
@@ -28,11 +28,12 @@ TABLE(user_settings) {
   pomodoro_work_duration: INTEGER DEFAULT 25
   pomodoro_break_duration: INTEGER DEFAULT 5
   pomodoro_long_break_duration: INTEGER DEFAULT 15
-  default_music_playlist: VARCHAR(50)
+  default_music_playlist: VARCHAR(50) NULL
   notification_enabled: BOOLEAN DEFAULT TRUE
   language: VARCHAR(10) DEFAULT 'vi'
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
+  UNIQUE(user_id)
 }
 
 ' ============================================
@@ -54,14 +55,15 @@ TABLE(study_sessions) {
 TABLE(daily_goals) {
   PK(id): UUID
   FK(user_id): UUID
-  goal_date: DATE
-  target_minutes: INTEGER
-  target_quiz_count: INTEGER
+  NOT_NULL(goal_date): DATE
+  target_minutes: INTEGER DEFAULT 0
+  target_quiz_count: INTEGER DEFAULT 0
   actual_minutes: INTEGER DEFAULT 0
   actual_quiz_count: INTEGER DEFAULT 0
   completed: BOOLEAN DEFAULT FALSE
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
+  UNIQUE(user_id, goal_date)
 }
 
 
@@ -86,9 +88,20 @@ TABLE(user_achievements) {
 TABLE(categories) {
   PK(id): UUID
   FK(user_id): UUID
-  name: VARCHAR(100)
-  color: VARCHAR(7)
-  icon: VARCHAR(50)
+  NOT_NULL(name): VARCHAR(100)
+  color: VARCHAR(7) DEFAULT '#3B82F6'
+  icon: VARCHAR(50) DEFAULT 'folder'
+  created_at: TIMESTAMP
+  updated_at: TIMESTAMP
+}
+
+TABLE(note_categories) {
+  PK(id): UUID
+  FK(user_id): UUID
+  NOT_NULL(name): VARCHAR(100)
+  color: VARCHAR(7) DEFAULT '#3B82F6'
+  icon: VARCHAR(50) DEFAULT 'folder'
+  is_default: BOOLEAN DEFAULT FALSE
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
 }
@@ -97,9 +110,12 @@ TABLE(notes) {
   PK(id): UUID
   FK(user_id): UUID
   FK(category_id): UUID NULL
-  title: VARCHAR(255)
+  NOT_NULL(title): VARCHAR(255)
   content: TEXT
   is_pinned: BOOLEAN DEFAULT FALSE
+  is_quick_note: BOOLEAN DEFAULT FALSE
+  source_context: TEXT
+  theme: VARCHAR(50) DEFAULT 'standard'
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
 }
@@ -115,9 +131,10 @@ TABLE(tasks) {
   PK(id): UUID
   FK(user_id): UUID
   FK(category_id): UUID NULL
-  title: VARCHAR(255)
+  NOT_NULL(title): VARCHAR(255)
   description: TEXT
-  priority: VARCHAR(10)
+  priority: VARCHAR(10) DEFAULT 'medium'
+  start_date: DATE NULL
   due_date: DATE NULL
   completed: BOOLEAN DEFAULT FALSE
   completed_at: TIMESTAMP NULL
@@ -132,8 +149,8 @@ TABLE(quiz_sets) {
   PK(id): UUID
   FK(user_id): UUID
   FK(category_id): UUID NULL
-  title: VARCHAR(255)
-  description: TEXT
+  NOT_NULL(title): VARCHAR(255)
+  description: TEXT NULL
   is_public: BOOLEAN DEFAULT FALSE
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
@@ -142,12 +159,11 @@ TABLE(quiz_sets) {
 TABLE(quiz_questions) {
   PK(id): UUID
   FK(quiz_set_id): UUID
-  question_text: TEXT
-  question_type: VARCHAR(20)
-  options: JSONB
-  correct_answer: TEXT
+  NOT_NULL(question_text): TEXT
+  NOT_NULL(options): JSONB
+  NOT_NULL(correct_answer_index): INTEGER
   explanation: TEXT
-  order_index: INTEGER
+  order_index: INTEGER DEFAULT 0
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
 }
@@ -156,20 +172,21 @@ TABLE(quiz_attempts) {
   PK(id): UUID
   FK(user_id): UUID
   FK(quiz_set_id): UUID
-  score: DECIMAL(5,2)
-  total_questions: INTEGER
-  correct_answers: INTEGER
-  time_spent_seconds: INTEGER
-  completed_at: TIMESTAMP
-  answers: JSONB
+  score: DECIMAL(5,2) NULL
+  NOT_NULL(total_questions): INTEGER
+  correct_answers: INTEGER DEFAULT 0
+  time_spent_seconds: INTEGER NULL
+  answers: JSONB NULL
+  completed_at: TIMESTAMP NULL
+  created_at: TIMESTAMP
 }
 
 TABLE(flashcard_decks) {
   PK(id): UUID
   FK(user_id): UUID
   FK(category_id): UUID NULL
-  title: VARCHAR(255)
-  description: TEXT
+  NOT_NULL(title): VARCHAR(255)
+  description: TEXT NULL
   is_public: BOOLEAN DEFAULT FALSE
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
@@ -178,10 +195,10 @@ TABLE(flashcard_decks) {
 TABLE(flashcards) {
   PK(id): UUID
   FK(deck_id): UUID
-  question: TEXT
-  answer: TEXT
+  NOT_NULL(question): TEXT
+  NOT_NULL(answer): TEXT
   hint: TEXT NULL
-  order_index: INTEGER
+  order_index: INTEGER DEFAULT 0
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
 }
@@ -191,11 +208,12 @@ TABLE(flashcard_progress) {
   FK(user_id): UUID
   FK(flashcard_id): UUID
   confidence_level: INTEGER DEFAULT 0
-  last_reviewed: TIMESTAMP
-  next_review: TIMESTAMP
+  last_reviewed: TIMESTAMP NULL
+  next_review: TIMESTAMP NULL
   review_count: INTEGER DEFAULT 0
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
+  UNIQUE(user_id, flashcard_id)
 }
 
 ' ============================================
@@ -204,18 +222,18 @@ TABLE(flashcard_progress) {
 TABLE(chat_conversations) {
   PK(id): UUID
   FK(user_id): UUID
-  title: VARCHAR(255)
+  title: VARCHAR(255) DEFAULT 'New Conversation'
   created_at: TIMESTAMP
   updated_at: TIMESTAMP
-  last_message_at: TIMESTAMP
+  last_message_at: TIMESTAMP NULL
 }
 
 TABLE(chat_messages) {
   PK(id): UUID
   FK(conversation_id): UUID
-  role: VARCHAR(20)
-  content: TEXT
-  tokens_used: INTEGER
+  NOT_NULL(role): VARCHAR(20)
+  NOT_NULL(content): TEXT
+  tokens_used: INTEGER DEFAULT 0
   created_at: TIMESTAMP
 }
 
@@ -224,9 +242,9 @@ TABLE(chat_messages) {
 ' ============================================
 TABLE(quotes) {
   PK(id): UUID
-  quote_text: TEXT
-  author: VARCHAR(100)
-  category: VARCHAR(50)
+  NOT_NULL(quote_text): TEXT
+  author: VARCHAR(100) NULL
+  category: VARCHAR(50) DEFAULT 'motivation'
   language: VARCHAR(10) DEFAULT 'vi'
   is_active: BOOLEAN DEFAULT TRUE
   created_at: TIMESTAMP
@@ -234,12 +252,12 @@ TABLE(quotes) {
 
 TABLE(music_playlists) {
   PK(id): UUID
-  name: VARCHAR(100)
-  description: TEXT
-  playlist_type: VARCHAR(50)
-  audio_url: VARCHAR(500)
-  thumbnail_url: VARCHAR(500)
-  duration_minutes: INTEGER
+  NOT_NULL(name): VARCHAR(100)
+  description: TEXT NULL
+  playlist_type: VARCHAR(50) NULL
+  audio_url: VARCHAR(500) NULL
+  thumbnail_url: VARCHAR(500) NULL
+  duration_minutes: INTEGER NULL
   is_active: BOOLEAN DEFAULT TRUE
   created_at: TIMESTAMP
 }
@@ -252,6 +270,7 @@ users ||--o{ study_sessions : "has"
 users ||--o{ daily_goals : "has"
 users ||--o{ user_achievements : "earns"
 users ||--o{ categories : "creates"
+users ||--o{ note_categories : "creates"
 users ||--o{ notes : "creates"
 users ||--o{ tasks : "creates"
 users ||--o{ quiz_sets : "creates"
@@ -260,11 +279,11 @@ users ||--o{ flashcard_decks : "creates"
 users ||--o{ flashcard_progress : "tracks"
 users ||--o{ chat_conversations : "has"
 
-categories ||--o{ notes : "categorizes"
 categories ||--o{ tasks : "categorizes"
 categories ||--o{ quiz_sets : "categorizes"
 categories ||--o{ flashcard_decks : "categorizes"
 
+note_categories ||--o{ notes : "categorizes"
 notes ||--o{ note_tags : "has"
 
 quiz_sets ||--o{ quiz_questions : "contains"
@@ -278,6 +297,4 @@ chat_conversations ||--o{ chat_messages : "contains"
 daily_goals ||--o{ study_sessions : "contributes_to"
 
 achievements ||--o{ user_achievements : "mapped"
-
 @enduml
-
