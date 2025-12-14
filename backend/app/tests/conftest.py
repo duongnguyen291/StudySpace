@@ -12,6 +12,11 @@ from app.models.achievement import Achievement
 from app.models.category import Category
 from app.models.music import MusicPlaylist
 from app.models.note import Note, NoteCategory, NoteTag
+from app.models.task import Task
+from app.models.study_session import StudySession
+from app.models.quiz_attempt import QuizAttempt
+from app.models.user_achievement import UserAchievement
+from app.models.user_settings import UserSettings
 
 
 # Create in-memory SQLite database for testing
