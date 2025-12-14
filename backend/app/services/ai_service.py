@@ -9,8 +9,11 @@ from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import extract, func
+from datetime import date, timedelta
 
 from app.repositories.chat_repo import ChatRepository
+from app.repositories.study_session_repo import StudySessionRepository
 from app.schemas.chat import (
     ChatConversationCreate,
     ChatConversationDetail,
@@ -20,6 +23,7 @@ from app.schemas.chat import (
     ChatSendMessageResponse,
 )
 from app.models.chat import ChatConversation
+from app.models.study_session import StudySession
 
 
 class AIChatService:
@@ -33,6 +37,7 @@ class AIChatService:
     def __init__(self, db: Session):
         self.db = db
         self.repo = ChatRepository(db)
+        self.study_session_repo = StudySessionRepository(db)
 
     # Conversation operations
     def create_conversation(
@@ -107,10 +112,14 @@ class AIChatService:
             # Load conversation history để AI có context
             conversation_history = self.repo.get_messages(conversation.id)
 
-            # Generate AI reply với conversation history và step-by-step mode
+            # Load study data context nếu message liên quan đến phân tích học tập
+            study_context = self._get_study_context(user_id, payload.message)
+
+            # Generate AI reply với conversation history, study context và step-by-step mode
             ai_reply, tokens_used = self._generate_ai_reply(
                 message=payload.message,
                 conversation_history=conversation_history,
+                study_context=study_context,
                 step_by_step_mode=payload.step_by_step_mode
             )
 
@@ -159,10 +168,111 @@ class AIChatService:
             )
         return conversation
 
+    def _get_study_context(self, user_id: UUID, message: str) -> dict | None:
+        """
+        Lấy dữ liệu học tập của user nếu message liên quan đến phân tích học tập.
+        """
+        # Kiểm tra nếu message có từ khóa liên quan đến phân tích học tập
+        analysis_keywords = [
+            'phân tích', 'thói quen', 'học tập', 'dữ liệu', 'nhận xét',
+            'lời khuyên', 'giờ học', 'tuần', 'cải thiện', 'mục tiêu',
+            'đánh giá', 'thống kê', 'xu hướng', 'hiệu quả'
+        ]
+        
+        message_lower = message.lower()
+        is_analysis_request = any(keyword in message_lower for keyword in analysis_keywords)
+        
+        if not is_analysis_request:
+            return None
+        
+        try:
+            today = date.today()
+            week_ago = today - timedelta(days=7)
+            month_ago = today - timedelta(days=30)
+            
+            # Lấy thống kê 7 ngày qua
+            week_sessions = self.study_session_repo.get_by_date_range(
+                user_id=user_id,
+                start_date=week_ago,
+                end_date=today
+            )
+            
+            # Lấy thống kê 30 ngày qua
+            month_sessions = self.study_session_repo.get_by_date_range(
+                user_id=user_id,
+                start_date=month_ago,
+                end_date=today
+            )
+            
+            # Tính tổng thời gian
+            week_minutes = sum(s.duration_minutes or 0 for s in week_sessions if s.completed)
+            month_minutes = sum(s.duration_minutes or 0 for s in month_sessions if s.completed)
+            
+            # Thống kê theo loại session
+            week_stats = {}
+            for session in week_sessions:
+                if session.completed and session.duration_minutes:
+                    session_type = session.session_type or 'unknown'
+                    week_stats[session_type] = week_stats.get(session_type, 0) + session.duration_minutes
+            
+            # Thống kê theo giờ trong ngày (7 ngày qua)
+            hour_stats = (
+                self.db.query(
+                    extract('hour', StudySession.start_time).label('hour'),
+                    func.sum(StudySession.duration_minutes).label('total_minutes')
+                )
+                .filter(
+                    StudySession.user_id == user_id,
+                    StudySession.completed == True,
+                    StudySession.start_time >= week_ago,
+                    StudySession.start_time <= today
+                )
+                .group_by(extract('hour', StudySession.start_time))
+                .order_by(extract('hour', StudySession.start_time))
+                .all()
+            )
+            
+            # Tìm giờ học tốt nhất
+            best_hour = None
+            max_minutes = 0
+            for stat in hour_stats:
+                if stat.total_minutes and stat.total_minutes > max_minutes:
+                    max_minutes = stat.total_minutes
+                    best_hour = int(stat.hour)
+            
+            # Thống kê theo ngày trong tuần
+            daily_stats = self.study_session_repo.get_daily_stats(
+                user_id=user_id,
+                start_date=week_ago,
+                end_date=today
+            )
+            
+            return {
+                'week_minutes': week_minutes,
+                'month_minutes': month_minutes,
+                'week_sessions_count': len([s for s in week_sessions if s.completed]),
+                'session_type_stats': week_stats,
+                'best_hour': best_hour,
+                'daily_stats': [
+                    {
+                        'date': str(stat['date']),
+                        'minutes': stat['total_minutes'],
+                        'sessions': stat['session_count']
+                    }
+                    for stat in daily_stats
+                ]
+            }
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error getting study context: {str(e)}")
+            return None
+
     def _generate_ai_reply(
         self, 
         message: str, 
         conversation_history: list = None,
+        study_context: dict | None = None,
         step_by_step_mode: bool = False
     ) -> Tuple[str, int]:
         """
@@ -190,9 +300,42 @@ class AIChatService:
             system_instruction = (
                 "Bạn là một AI Learning Assistant thông minh, giúp học sinh và sinh viên học tập hiệu quả. "
                 "Bạn có thể giải thích khái niệm, trả lời câu hỏi, gợi ý phương pháp học tập, "
-                "và hỗ trợ tạo quiz/flashcards. Hãy trả lời bằng tiếng Việt, ngắn gọn và dễ hiểu."
-                "không dùng các ký hiệu như **,-,#,..."
+                "và hỗ trợ tạo quiz/flashcards. Hãy trả lời bằng tiếng Việt, ngắn gọn và dễ hiểu. "
+                "QUAN TRỌNG: KHÔNG sử dụng bất kỳ ký hiệu markdown nào như ** (bold), * (italic), # (heading), "
+                "- (bullet), hoặc bất kỳ định dạng markdown nào khác. Chỉ trả về văn bản thuần túy."
             )
+            
+            # Thêm study context vào system instruction nếu có
+            if study_context:
+                context_text = "\n\nDỮ LIỆU HỌC TẬP CỦA NGƯỜI DÙNG:\n"
+                context_text += f"- Tuần qua: {study_context['week_minutes']} phút ({study_context['week_sessions_count']} phiên học)\n"
+                context_text += f"- Tháng qua: {study_context['month_minutes']} phút\n"
+                
+                if study_context.get('session_type_stats'):
+                    context_text += "- Phân bố theo loại:\n"
+                    for session_type, minutes in study_context['session_type_stats'].items():
+                        type_name = {
+                            'pomodoro': 'Pomodoro',
+                            'free_study': 'Tự học',
+                            'quiz': 'Quiz'
+                        }.get(session_type, session_type)
+                        context_text += f"  + {type_name}: {minutes} phút\n"
+                
+                if study_context.get('best_hour') is not None:
+                    context_text += f"- Giờ học hiệu quả nhất: {study_context['best_hour']}:00\n"
+                
+                if study_context.get('daily_stats'):
+                    context_text += "- Thống kê theo ngày (7 ngày qua):\n"
+                    for day_stat in study_context['daily_stats'][-7:]:
+                        context_text += f"  + {day_stat['date']}: {day_stat['minutes']} phút ({day_stat['sessions']} phiên)\n"
+                
+                context_text += (
+                    "\nHãy sử dụng dữ liệu này để đưa ra phân tích, nhận xét và lời khuyên cụ thể, "
+                    "cá nhân hóa cho người dùng. So sánh với các tuần/tháng trước nếu có thể, "
+                    "và đưa ra gợi ý cải thiện dựa trên xu hướng học tập."
+                )
+                
+                system_instruction += context_text
             
             # Nếu step-by-step mode được bật, thêm hướng dẫn đặc biệt
             if step_by_step_mode:
@@ -244,6 +387,9 @@ class AIChatService:
                             reply_parts.append(part_text)
             reply = "\n".join(reply_parts).strip() or "Xin lỗi, tôi chưa có câu trả lời phù hợp."
             
+            # Loại bỏ markdown khỏi reply
+            reply = self._clean_markdown(reply)
+            
             # Gemini không trả về token count trực tiếp, ước tính
             tokens_used = max(len(reply) // 4, 1)
             
@@ -261,6 +407,35 @@ class AIChatService:
             )
             tokens_used = max(len(reply) // 4, 1)
             return reply, tokens_used
+
+    def _clean_markdown(self, text: str) -> str:
+        """
+        Loại bỏ các ký hiệu markdown khỏi text.
+        """
+        import re
+        # Loại bỏ ** (bold) - phải có ít nhất 1 ký tự giữa **
+        text = re.sub(r'\*\*([^*\n]+)\*\*', r'\1', text)
+        # Loại bỏ * (italic) - nhưng không phải * đơn lẻ
+        text = re.sub(r'(?<!\*)\*([^*\n\*]+)\*(?!\*)', r'\1', text)
+        # Loại bỏ # (headings) - giữ lại text sau #
+        text = re.sub(r'^#+\s+', '', text, flags=re.MULTILINE)
+        # Loại bỏ ` (inline code)
+        text = re.sub(r'`([^`\n]+)`', r'\1', text)
+        # Loại bỏ ``` (code blocks)
+        text = re.sub(r'```[^\n]*\n([^`]*)```', r'\1', text, flags=re.DOTALL)
+        # Loại bỏ __ (bold/underline)
+        text = re.sub(r'__([^_\n]+)__', r'\1', text)
+        # Loại bỏ _ (italic) - nhưng không phải _ đơn lẻ
+        text = re.sub(r'(?<!_)_([^_\n_]+)_(?!_)', r'\1', text)
+        # Loại bỏ []() links nhưng giữ text
+        text = re.sub(r'\[([^\]]+)\]\([^\)]+\)', r'\1', text)
+        # Loại bỏ các ký tự markdown còn sót lại (chỉ khi đứng đơn lẻ hoặc lặp lại)
+        text = re.sub(r'\*\*+', '', text)  # Loại bỏ ** hoặc ***
+        text = re.sub(r'__+', '', text)    # Loại bỏ __ hoặc ___
+        # Loại bỏ * hoặc _ đơn lẻ ở đầu/cuối từ (nhưng giữ trong từ)
+        text = re.sub(r'\s+\*\s+', ' ', text)  # * đơn lẻ với khoảng trắng
+        text = re.sub(r'\s+_\s+', ' ', text)   # _ đơn lẻ với khoảng trắng
+        return text.strip()
 
     def _get_predefined_reply(self, message: str) -> str | None:
         """Return predefined reply for specific prompts."""

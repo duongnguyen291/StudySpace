@@ -121,7 +121,7 @@ export function useQuiz() {
 
   const submitQuizAttempt = useCallback(async (
     attemptId: string,
-    answers: { question_id: string; user_answer: string }[],
+    answers: { question_id: string; selected_option_index: number }[],
     timeSpentSeconds?: number
   ): Promise<QuizAttemptResult | null> => {
     setLoading(true)

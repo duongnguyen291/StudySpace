@@ -185,9 +185,8 @@ CREATE TABLE quiz_questions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     quiz_set_id UUID NOT NULL REFERENCES quiz_sets(id) ON DELETE CASCADE,
     question_text TEXT NOT NULL,
-    question_type VARCHAR(20) DEFAULT 'multiple_choice', -- 'multiple_choice', 'true_false', 'short_answer'
-    options JSONB, -- For multiple choice: ["Option A", "Option B", "Option C", "Option D"]
-    correct_answer TEXT NOT NULL,
+    options JSONB NOT NULL, -- Exactly 4 options: ["Option A", "Option B", "Option C", "Option D"]
+    correct_answer_index INTEGER NOT NULL, -- Index of correct answer (0-3)
     explanation TEXT,
     order_index INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

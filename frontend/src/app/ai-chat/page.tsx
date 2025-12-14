@@ -9,15 +9,8 @@ export default function AIChatPage() {
     useChat()
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-50 px-4 py-6 md:ml-0">
-      <div className="max-w-6xl mx-auto space-y-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-50">AI Learning Assistant</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Hỏi bài, giải thích khái niệm, tạo quiz/flashcards… Tất cả trong một không gian học tập.
-          </p>
-        </div>
-
+    <main className="min-h-screen bg-slate-950 text-slate-50 md:ml-0">
+      <div className="px-4 py-6">
         <ChatLayout
           conversations={conversations}
           currentConversationId={currentConversation?.id}

@@ -39,7 +39,7 @@ export default function StudyTimeChart({ data }: StudyTimeChartProps) {
         labels: data.labels,
         datasets: [
           {
-            label: "Study Minute",
+            label: "Phút học tập",
             data: data.values,
             borderColor: "#3b82f6",
             backgroundColor: "rgba(59,130,246,0.25)",

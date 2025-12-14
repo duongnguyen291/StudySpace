@@ -37,20 +37,26 @@ async def create_quiz_set(
     current_user: User = Depends(get_current_user)
 ):
     """Create a new quiz set"""
-    quiz_set = quiz_service.create_quiz_set(db, current_user.id, data)
-    question_count = quiz_service.get_question_count(db, quiz_set.id)
-    
-    return QuizSetResponse(
-        id=quiz_set.id,
-        user_id=quiz_set.user_id,
-        category_id=quiz_set.category_id,
-        title=quiz_set.title,
-        description=quiz_set.description,
-        is_public=quiz_set.is_public,
-        question_count=question_count,
-        created_at=quiz_set.created_at,
-        updated_at=quiz_set.updated_at
-    )
+    try:
+        quiz_set = quiz_service.create_quiz_set(db, current_user.id, data)
+        # Ensure the quiz is accessible immediately by refreshing the session
+        db.refresh(quiz_set)
+        question_count = quiz_service.get_question_count(db, quiz_set.id)
+        
+        return QuizSetResponse(
+            id=quiz_set.id,
+            user_id=quiz_set.user_id,
+            category_id=quiz_set.category_id,
+            title=quiz_set.title,
+            description=quiz_set.description,
+            is_public=quiz_set.is_public,
+            question_count=question_count,
+            created_at=quiz_set.created_at,
+            updated_at=quiz_set.updated_at
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=400, detail=f"Failed to create quiz: {str(e)}")
 
 
 @router.get("/sets", response_model=List[QuizSetResponse])
@@ -100,7 +106,9 @@ async def get_quiz_set(
             id=q.id,
             quiz_set_id=q.quiz_set_id,
             question_text=q.question_text,
-            correct_answer=q.correct_answer,
+            options=q.options,
+            correct_answer_index=q.correct_answer_index,
+            explanation=q.explanation,
             order_index=q.order_index,
             created_at=q.created_at
         ) for q in sorted(quiz_set.questions, key=lambda x: x.order_index)]
@@ -171,7 +179,9 @@ async def add_question(
         id=question.id,
         quiz_set_id=question.quiz_set_id,
         question_text=question.question_text,
-        correct_answer=question.correct_answer,
+        options=question.options,
+        correct_answer_index=question.correct_answer_index,
+        explanation=question.explanation,
         order_index=question.order_index,
         created_at=question.created_at
     )
@@ -194,7 +204,9 @@ async def update_question(
         id=question.id,
         quiz_set_id=question.quiz_set_id,
         question_text=question.question_text,
-        correct_answer=question.correct_answer,
+        options=question.options,
+        correct_answer_index=question.correct_answer_index,
+        explanation=question.explanation,
         order_index=question.order_index,
         created_at=question.created_at
     )

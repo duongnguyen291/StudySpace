@@ -1,5 +1,5 @@
 // ============================================
-// Simple Quiz Types: just question and answer
+// Quiz Types: Multiple Choice (1 question + 4 options)
 // ============================================
 
 // Question Types
@@ -7,21 +7,24 @@ export interface QuizQuestion {
   id: string
   quiz_set_id: string
   question_text: string
-  correct_answer: string
+  options: string[]  // Exactly 4 options
+  correct_answer_index: number  // 0-3
+  explanation?: string | null
   order_index: number
   created_at: string
 }
 
 export interface QuizQuestionCreate {
   question_text: string
-  correct_answer: string
+  options: string[]  // Exactly 4 options
+  correct_answer_index: number  // 0-3
+  explanation?: string | null
 }
 
 export interface QuizQuestionForAttempt {
   id: string
   question_text: string
-  question_type: string
-  options?: string[] | null
+  options: string[]  // Exactly 4 options
   order_index: number
 }
 
@@ -50,6 +53,12 @@ export interface QuizSetCreate {
   questions?: QuizQuestionCreate[]
 }
 
+export interface QuizSetUpdate {
+  title?: string
+  description?: string | null
+  is_public?: boolean
+}
+
 // Attempt Types
 export interface QuizAttempt {
   id: string
@@ -70,7 +79,7 @@ export interface QuizAttemptCreate {
 
 export interface QuizAttemptAnswer {
   question_id: string
-  user_answer: string
+  selected_option_index: number  // 0-3
 }
 
 export interface QuizAttemptSubmit {
@@ -83,15 +92,17 @@ export interface QuizAttemptDetail extends QuizAttempt {
 }
 
 export interface QuizAttemptResult extends QuizAttempt {
-  answers?: Record<string, string> | null
+  answers?: Record<string, number> | null  // question_id -> selected_option_index
 }
 
 export interface QuizAttemptQuestionDetail {
   question_id: string
   question_text: string
-  correct_answer: string
-  user_answer?: string | null
+  options: string[]
+  correct_answer_index: number
+  selected_option_index?: number | null
   is_correct: boolean
+  explanation?: string | null
 }
 
 export interface QuizAttemptDetailWithAnswers extends QuizAttempt {
@@ -99,7 +110,7 @@ export interface QuizAttemptDetailWithAnswers extends QuizAttempt {
   questions: QuizAttemptQuestionDetail[]
 }
 
-// CSV Types
+// CSV Types (for future use)
 export interface CSVImportError {
   line: number
   message: string
@@ -108,7 +119,8 @@ export interface CSVImportError {
 export interface CSVPreviewRow {
   line: number
   question: string
-  answer: string
+  options: string[]
+  correct_index: number
   is_valid: boolean
   error?: string | null
 }
@@ -128,16 +140,7 @@ export interface CSVImportResult {
   errors: CSVImportError[]
 }
 
-// Legacy exports for compatibility
-export type Row = string[]
-export type ParsedResult = {
-  headers: string[]
-  rows: Row[]
-  errors?: CSVImportError[]
-}
-export type QuestionType = 'short_answer'
-export type QuizQuestionUpdate = Partial<QuizQuestionCreate>
-export type QuizSetUpdate = Partial<QuizSetCreate>
+// Component Props
 export type QuizPlayerProps = {
   quizSetId: string
   quizTitle: string

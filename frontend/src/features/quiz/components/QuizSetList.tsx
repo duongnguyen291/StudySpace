@@ -120,7 +120,7 @@ export default function QuizSetList({ onSelectQuiz, onCreateNew, refreshTrigger 
                   onClick={(e) => handleDelete(e, set.id)}
                   disabled={deletingId === set.id}
                   className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition opacity-0 group-hover:opacity-100"
-                  title="Delete quiz set"
+                  title="Xóa bộ quiz"
                 >
                   {deletingId === set.id ? '⏳' : '🗑️'}
                 </button>

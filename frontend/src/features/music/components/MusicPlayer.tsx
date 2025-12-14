@@ -187,7 +187,7 @@ export const MusicPlayer = ({
           className
         )}
       >
-        <p className="text-white/70 text-sm">No playlist selected</p>
+        <p className="text-white/70 text-sm">Chưa chọn playlist</p>
       </div>
     )
   }
@@ -234,7 +234,7 @@ export const MusicPlayer = ({
         )}
         {canNavigate && (
           <p className="text-xs text-white/50 mt-1">
-            {playlists.findIndex(p => p.id === playlist.id) + 1} of {playlists.length}
+            {playlists.findIndex(p => p.id === playlist.id) + 1} / {playlists.length}
           </p>
         )}
       </div>
@@ -278,7 +278,7 @@ export const MusicPlayer = ({
                 ? 'text-white/70 hover:text-white hover:bg-white/10'
                 : 'text-white/30 cursor-not-allowed'
             )}
-            title="Previous"
+            title="Trước"
           >
             <SkipBack className="w-5 h-5" />
           </button>
@@ -302,7 +302,7 @@ export const MusicPlayer = ({
                 ? 'text-white/70 hover:text-white hover:bg-white/10'
                 : 'text-white/30 cursor-not-allowed'
             )}
-            title="Next"
+            title="Tiếp"
           >
             <SkipForward className="w-5 h-5" />
           </button>
@@ -319,7 +319,7 @@ export const MusicPlayer = ({
                 ? 'text-white/70 hover:text-white hover:bg-white/10'
                 : 'text-white/30 cursor-not-allowed'
             )}
-            title="Previous"
+            title="Trước"
           >
             <SkipBack className="w-5 h-5" />
           </button>
@@ -343,7 +343,7 @@ export const MusicPlayer = ({
                 ? 'text-white/70 hover:text-white hover:bg-white/10'
                 : 'text-white/30 cursor-not-allowed'
             )}
-            title="Next"
+            title="Tiếp"
           >
             <SkipForward className="w-5 h-5" />
           </button>
@@ -381,7 +381,7 @@ export const MusicPlayer = ({
                   ? 'bg-white/20 text-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               )}
-              title={isLoop ? 'Loop enabled' : 'Loop disabled'}
+              title={isLoop ? 'Lặp lại đã bật' : 'Lặp lại đã tắt'}
             >
               {isLoop ? <Repeat1 className="w-5 h-5" /> : <Repeat className="w-5 h-5" />}
             </button>
@@ -397,7 +397,7 @@ export const MusicPlayer = ({
                     ? 'text-white/70 hover:text-white hover:bg-white/10'
                     : 'text-white/30 cursor-not-allowed'
                 )}
-                title="Previous"
+                title="Trước"
               >
                 <SkipBack className="w-5 h-5" />
               </button>
@@ -427,7 +427,7 @@ export const MusicPlayer = ({
                     ? 'text-white/70 hover:text-white hover:bg-white/10'
                     : 'text-white/30 cursor-not-allowed'
                 )}
-                title="Next"
+                title="Tiếp"
               >
                 <SkipForward className="w-5 h-5" />
               </button>
@@ -438,7 +438,7 @@ export const MusicPlayer = ({
               <button
                 onClick={toggleMute}
                 className="p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
-                title={isMuted ? 'Unmute' : 'Mute'}
+                title={isMuted ? 'Bật tiếng' : 'Tắt tiếng'}
               >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5" />

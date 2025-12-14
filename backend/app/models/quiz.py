@@ -33,15 +33,14 @@ class QuizSet(Base):
 
 
 class QuizQuestion(Base):
-    """Quiz Question model"""
+    """Quiz Question model - Multiple choice with 4 options"""
     __tablename__ = "quiz_questions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     quiz_set_id = Column(UUID(as_uuid=True), ForeignKey("quiz_sets.id", ondelete="CASCADE"), nullable=False, index=True)
     question_text = Column(Text, nullable=False)
-    question_type = Column(String(20), default="multiple_choice", nullable=False)  # multiple_choice, true_false, short_answer
-    options = Column(JSON, nullable=True)  # List of options for multiple choice
-    correct_answer = Column(Text, nullable=False)
+    options = Column(JSON, nullable=False)  # List of exactly 4 options: [option1, option2, option3, option4]
+    correct_answer_index = Column(Integer, nullable=False)  # Index of correct answer (0-3)
     explanation = Column(Text, nullable=True)
     order_index = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

@@ -20,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProvider>
           <Providers>
             <GlobalHeader />
-            {children}
+            <AppShell>
+              {children}
+            </AppShell>
           </Providers>
         </ThemeProvider>
       </body>

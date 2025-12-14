@@ -49,19 +49,23 @@ class QuizService:
                 question = QuizQuestion(
                     quiz_set_id=quiz_set.id,
                     question_text=q_data.question_text,
-                    correct_answer=q_data.correct_answer,
+                    options=q_data.options,
+                    correct_answer_index=q_data.correct_answer_index,
+                    explanation=q_data.explanation,
                     order_index=idx
                 )
                 db.add(question)
 
         db.commit()
         db.refresh(quiz_set)
+        # Ensure the quiz_set is fully loaded with all relationships
         return quiz_set
 
     @staticmethod
     def get_quiz_set(db: Session, quiz_set_id: UUID, user_id: Optional[UUID] = None) -> Optional[QuizSet]:
-        """Get a quiz set by ID"""
-        query = db.query(QuizSet).filter(QuizSet.id == quiz_set_id)
+        """Get a quiz set by ID with questions loaded"""
+        from sqlalchemy.orm import joinedload
+        query = db.query(QuizSet).options(joinedload(QuizSet.questions)).filter(QuizSet.id == quiz_set_id)
         if user_id:
             query = query.filter((QuizSet.user_id == user_id) | (QuizSet.is_public == True))
         return query.first()
@@ -136,7 +140,9 @@ class QuizService:
         question = QuizQuestion(
             quiz_set_id=quiz_set_id,
             question_text=data.question_text,
-            correct_answer=data.correct_answer,
+            options=data.options,
+            correct_answer_index=data.correct_answer_index,
+            explanation=data.explanation,
             order_index=max_order + 1
         )
         db.add(question)
@@ -156,7 +162,10 @@ class QuizService:
             return None
 
         question.question_text = data.question_text
-        question.correct_answer = data.correct_answer
+        question.options = data.options
+        question.correct_answer_index = data.correct_answer_index
+        if data.explanation is not None:
+            question.explanation = data.explanation
         db.commit()
         db.refresh(question)
         return question
@@ -182,7 +191,7 @@ class QuizService:
 
     @staticmethod
     def parse_csv(content: str) -> Tuple[List[str], List[List[str]], List[CSVImportError]]:
-        """Parse CSV content"""
+        """Parse CSV content for multiple choice format"""
         errors = []
         rows = []
         headers = []
@@ -197,10 +206,10 @@ class QuizService:
 
             headers = [h.strip().lower() for h in lines[0]]
 
-            if 'question' not in headers:
-                errors.append(CSVImportError(line=1, message="Missing 'question' column"))
-            if 'answer' not in headers:
-                errors.append(CSVImportError(line=1, message="Missing 'answer' column"))
+            required_cols = ['question', 'option1', 'option2', 'option3', 'option4', 'correct_index']
+            for col in required_cols:
+                if col not in headers:
+                    errors.append(CSVImportError(line=1, message=f"Missing '{col}' column"))
 
             for row in lines[1:]:
                 if not row or (len(row) == 1 and not row[0].strip()):
@@ -214,18 +223,19 @@ class QuizService:
 
     @staticmethod
     def preview_csv(content: str, limit: int = 10) -> CSVPreviewResponse:
-        """Preview CSV content with validation"""
+        """Preview CSV content with validation for multiple choice format"""
         headers, rows, parse_errors = QuizService.parse_csv(content)
 
         if parse_errors:
             return CSVPreviewResponse(
-                headers=headers or ['question', 'answer'],
+                headers=headers or ['question', 'option1', 'option2', 'option3', 'option4', 'correct_index'],
                 rows=[], total_rows=0, valid_rows=0, errors=parse_errors
             )
 
         col_map = {h: i for i, h in enumerate(headers)}
         q_idx = col_map.get('question')
-        a_idx = col_map.get('answer')
+        opt_indices = [col_map.get(f'option{i}') for i in range(1, 5)]
+        correct_idx = col_map.get('correct_index')
 
         preview_rows = []
         valid_count = 0
@@ -233,20 +243,48 @@ class QuizService:
 
         for line_num, row in enumerate(rows, start=2):
             question = row[q_idx] if q_idx is not None and q_idx < len(row) else ""
-            answer = row[a_idx] if a_idx is not None and a_idx < len(row) else ""
-
-            is_valid = bool(question and answer)
-            error_msg = None if is_valid else "Missing question or answer"
+            options = []
+            for opt_idx in opt_indices:
+                if opt_idx is not None and opt_idx < len(row):
+                    options.append(row[opt_idx])
+                else:
+                    options.append("")
+            
+            correct_index_str = row[correct_idx] if correct_idx is not None and correct_idx < len(row) else ""
+            
+            # Validation
+            is_valid = bool(question and all(options) and correct_index_str)
+            error_msg = None
+            
+            if not question:
+                error_msg = "Missing question"
+            elif not all(options):
+                error_msg = "Missing one or more options"
+            elif not correct_index_str:
+                error_msg = "Missing correct_index"
+            else:
+                try:
+                    correct_index = int(correct_index_str)
+                    if correct_index < 0 or correct_index > 3:
+                        error_msg = "correct_index must be 0-3"
+                        is_valid = False
+                except ValueError:
+                    error_msg = "correct_index must be a number (0-3)"
+                    is_valid = False
             
             if not is_valid:
-                all_errors.append(CSVImportError(line=line_num, message=error_msg))
+                all_errors.append(CSVImportError(line=line_num, message=error_msg or "Invalid row"))
             else:
                 valid_count += 1
 
             if len(preview_rows) < limit:
                 preview_rows.append(CSVPreviewRow(
-                    line=line_num, question=question, answer=answer,
-                    is_valid=is_valid, error=error_msg
+                    line=line_num, 
+                    question=question, 
+                    options=options,
+                    correct_index=int(correct_index_str) if correct_index_str.isdigit() else 0,
+                    is_valid=is_valid, 
+                    error=error_msg
                 ))
 
         return CSVPreviewResponse(
@@ -256,7 +294,7 @@ class QuizService:
 
     @staticmethod
     def import_csv(db: Session, user_id: UUID, content: str, title: str, description: Optional[str] = None) -> CSVImportResult:
-        """Import quiz questions from CSV"""
+        """Import quiz questions from CSV (multiple choice format)"""
         headers, rows, parse_errors = QuizService.parse_csv(content)
 
         if parse_errors:
@@ -264,10 +302,13 @@ class QuizService:
 
         col_map = {h: i for i, h in enumerate(headers)}
         q_idx = col_map.get('question')
-        a_idx = col_map.get('answer')
+        opt_indices = [col_map.get(f'option{i}') for i in range(1, 5)]
+        correct_idx = col_map.get('correct_index')
+        explanation_idx = col_map.get('explanation')
 
-        if q_idx is None or a_idx is None:
-            return CSVImportResult(success=False, errors=[CSVImportError(line=1, message="Missing columns")])
+        required_cols = [q_idx] + opt_indices + [correct_idx]
+        if any(idx is None for idx in required_cols):
+            return CSVImportResult(success=False, errors=[CSVImportError(line=1, message="Missing required columns")])
 
         quiz_set = QuizSet(user_id=user_id, title=title, description=description)
         db.add(quiz_set)
@@ -278,16 +319,40 @@ class QuizService:
 
         for line_num, row in enumerate(rows, start=2):
             question = row[q_idx] if q_idx < len(row) else ""
-            answer = row[a_idx] if a_idx < len(row) else ""
+            options = []
+            for opt_idx in opt_indices:
+                if opt_idx < len(row):
+                    options.append(row[opt_idx].strip())
+                else:
+                    options.append("")
+            
+            correct_index_str = row[correct_idx] if correct_idx < len(row) else ""
+            explanation = row[explanation_idx].strip() if explanation_idx is not None and explanation_idx < len(row) else None
 
-            if not question or not answer:
-                errors.append(CSVImportError(line=line_num, message="Missing question or answer"))
+            # Validation
+            if not question:
+                errors.append(CSVImportError(line=line_num, message="Missing question"))
+                continue
+            
+            if not all(options):
+                errors.append(CSVImportError(line=line_num, message="Missing one or more options"))
+                continue
+            
+            try:
+                correct_index = int(correct_index_str)
+                if correct_index < 0 or correct_index > 3:
+                    errors.append(CSVImportError(line=line_num, message="correct_index must be 0-3"))
+                    continue
+            except (ValueError, TypeError):
+                errors.append(CSVImportError(line=line_num, message="correct_index must be a number (0-3)"))
                 continue
 
             q = QuizQuestion(
                 quiz_set_id=quiz_set.id,
                 question_text=question,
-                correct_answer=answer,
+                options=options,
+                correct_answer_index=correct_index,
+                explanation=explanation,
                 order_index=imported
             )
             db.add(q)
@@ -303,7 +368,7 @@ class QuizService:
 
     @staticmethod
     def export_csv(db: Session, quiz_set_id: UUID, user_id: UUID) -> Optional[str]:
-        """Export quiz questions to CSV"""
+        """Export quiz questions to CSV (multiple choice format)"""
         quiz_set = db.query(QuizSet).filter(
             QuizSet.id == quiz_set_id,
             (QuizSet.user_id == user_id) | (QuizSet.is_public == True)
@@ -318,21 +383,30 @@ class QuizService:
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['question', 'answer'])
+        writer.writerow(['question', 'option1', 'option2', 'option3', 'option4', 'correct_index', 'explanation'])
 
         for q in questions:
-            writer.writerow([q.question_text, q.correct_answer])
+            writer.writerow([
+                q.question_text,
+                q.options[0] if len(q.options) > 0 else '',
+                q.options[1] if len(q.options) > 1 else '',
+                q.options[2] if len(q.options) > 2 else '',
+                q.options[3] if len(q.options) > 3 else '',
+                q.correct_answer_index,
+                q.explanation or ''
+            ])
 
         return output.getvalue()
 
     @staticmethod
     def get_csv_template() -> str:
-        """Get CSV template"""
+        """Get CSV template for multiple choice format"""
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(['question', 'answer'])
-        writer.writerow(['What is 2+2?', '4'])
-        writer.writerow(['Capital of France?', 'Paris'])
+        writer.writerow(['question', 'option1', 'option2', 'option3', 'option4', 'correct_index', 'explanation'])
+        writer.writerow(['What is 2+2?', '2', '3', '4', '5', '2', 'Basic addition: 2 plus 2 equals 4'])
+        writer.writerow(['Capital of France?', 'London', 'Berlin', 'Paris', 'Madrid', '2', 'Paris is the capital and largest city of France'])
+        writer.writerow(['What is the largest planet?', 'Earth', 'Mars', 'Jupiter', 'Saturn', '2', 'Jupiter is the largest planet in our solar system'])
         return output.getvalue()
 
     # ============================================
@@ -370,7 +444,7 @@ class QuizService:
             QuizQuestionForAttempt(
                 id=q.id,
                 question_text=q.question_text,
-                question_type="short_answer",
+                options=q.options,
                 order_index=q.order_index
             )
             for q in questions
@@ -401,11 +475,11 @@ class QuizService:
 
         for answer in data.answers:
             q_id = str(answer.question_id)
-            answers_dict[q_id] = answer.user_answer
+            answers_dict[q_id] = answer.selected_option_index
 
             if q_id in question_map:
                 q = question_map[q_id]
-                if answer.user_answer.strip().lower() == q.correct_answer.strip().lower():
+                if answer.selected_option_index == q.correct_answer_index:
                     correct_count += 1
 
         attempt.answers = answers_dict
@@ -447,10 +521,10 @@ class QuizService:
         correct_count = 0
 
         for q_id, question in question_map.items():
-            user_answer = answers.get(q_id)
+            selected_index = answers.get(q_id)
             is_correct = False
-            if user_answer is not None:
-                is_correct = user_answer.strip().lower() == question.correct_answer.strip().lower()
+            if selected_index is not None:
+                is_correct = selected_index == question.correct_answer_index
             if is_correct:
                 correct_count += 1
 
@@ -458,9 +532,11 @@ class QuizService:
                 QuizAttemptQuestionDetail(
                     question_id=question.id,
                     question_text=question.question_text,
-                    correct_answer=question.correct_answer,
-                    user_answer=user_answer,
-                    is_correct=is_correct
+                    options=question.options,
+                    correct_answer_index=question.correct_answer_index,
+                    selected_option_index=selected_index,
+                    is_correct=is_correct,
+                    explanation=question.explanation
                 )
             )
 

@@ -69,7 +69,7 @@ export function QuickTaskForm({ onSubmit, categories = [], loading = false }: Qu
         <div className="mt-2 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
           {/* Priority */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-white/60">Priority:</span>
+            <span className="text-xs text-white/60">Độ ưu tiên:</span>
             <div className="flex gap-1">
               {priorityOptions.map((opt) => (
                 <button

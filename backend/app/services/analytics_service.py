@@ -253,3 +253,163 @@ def get_long_term_progress(db: Session, user_id: str):
     values = [row_map.get(d, 0) for d in dates]
 
     return {"labels": labels, "values": values}
+
+
+def get_heatmap_data(db: Session, user_id: str, days: int = 365):
+    """
+    Get study time data for heatmap calendar (last N days, default 365).
+    Returns list of {date: "YYYY-MM-DD", value: minutes}
+    """
+    today = date.today()
+    start_date = today - timedelta(days=days - 1)
+    
+    # Get all study sessions in the range
+    day_col = func.date(StudySession.start_time).label("day")
+    rows = (
+        db.query(
+            day_col,
+            func.coalesce(func.sum(StudySession.duration_minutes), 0).label("minutes")
+        )
+        .filter(
+            StudySession.user_id == user_id,
+            StudySession.start_time >= start_date,
+            StudySession.start_time < today + timedelta(days=1),
+        )
+        .group_by(day_col)
+        .all()
+    )
+    
+    # Create map of date -> minutes
+    data_map = {r.day: int(r.minutes) for r in rows}
+    
+    # Generate all dates in range
+    result = []
+    current_date = start_date
+    while current_date <= today:
+        date_str = current_date.isoformat()
+        result.append({
+            "date": date_str,
+            "value": data_map.get(current_date, 0)
+        })
+        current_date += timedelta(days=1)
+    
+    return result
+
+
+def get_productivity_trends(db: Session, user_id: str):
+    """
+    Get productivity trends: weekly comparison, monthly comparison, and growth rate.
+    Returns:
+    - weekly_trend: {current: minutes, previous: minutes}
+    - monthly_trend: {current: minutes, previous: minutes}
+    - growth_rate: percentage based on last 30 days
+    """
+    today = date.today()
+    
+    # Calculate week boundaries
+    # Current week: Monday to Sunday
+    days_since_monday = today.weekday()
+    current_week_start = today - timedelta(days=days_since_monday)
+    current_week_end = current_week_start + timedelta(days=6)
+    previous_week_start = current_week_start - timedelta(days=7)
+    previous_week_end = current_week_start - timedelta(days=1)
+    
+    # Calculate month boundaries
+    current_month_start = date(today.year, today.month, 1)
+    if today.month == 12:
+        current_month_end = date(today.year, 12, 31)
+        previous_month_start = date(today.year, 11, 1)
+        previous_month_end = date(today.year, 11, 30)
+    else:
+        current_month_end = date(today.year, today.month + 1, 1) - timedelta(days=1)
+        previous_month_start = date(today.year, today.month - 1, 1)
+        previous_month_end = date(today.year, today.month, 1) - timedelta(days=1)
+    
+    # Get current week minutes
+    current_week_minutes = (
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+        .filter(
+            StudySession.user_id == user_id,
+            func.date(StudySession.start_time) >= current_week_start,
+            func.date(StudySession.start_time) <= current_week_end,
+        )
+        .scalar()
+    ) or 0
+    
+    # Get previous week minutes
+    previous_week_minutes = (
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+        .filter(
+            StudySession.user_id == user_id,
+            func.date(StudySession.start_time) >= previous_week_start,
+            func.date(StudySession.start_time) <= previous_week_end,
+        )
+        .scalar()
+    ) or 0
+    
+    # Get current month minutes (up to today)
+    current_month_minutes = (
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+        .filter(
+            StudySession.user_id == user_id,
+            func.date(StudySession.start_time) >= current_month_start,
+            func.date(StudySession.start_time) <= today,
+        )
+        .scalar()
+    ) or 0
+    
+    # Get previous month minutes
+    previous_month_minutes = (
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+        .filter(
+            StudySession.user_id == user_id,
+            func.date(StudySession.start_time) >= previous_month_start,
+            func.date(StudySession.start_time) <= previous_month_end,
+        )
+        .scalar()
+    ) or 0
+    
+    # Calculate growth rate based on last 30 days
+    thirty_days_ago = today - timedelta(days=29)
+    sixty_days_ago = today - timedelta(days=59)
+    
+    # Last 30 days
+    last_30_days_minutes = (
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+        .filter(
+            StudySession.user_id == user_id,
+            func.date(StudySession.start_time) >= thirty_days_ago,
+            func.date(StudySession.start_time) <= today,
+        )
+        .scalar()
+    ) or 0
+    
+    # Previous 30 days (30-60 days ago)
+    previous_30_days_minutes = (
+        db.query(func.coalesce(func.sum(StudySession.duration_minutes), 0))
+        .filter(
+            StudySession.user_id == user_id,
+            func.date(StudySession.start_time) >= sixty_days_ago,
+            func.date(StudySession.start_time) < thirty_days_ago,
+        )
+        .scalar()
+    ) or 0
+    
+    # Calculate growth rate
+    growth_rate = 0.0
+    if previous_30_days_minutes > 0:
+        growth_rate = ((last_30_days_minutes - previous_30_days_minutes) / previous_30_days_minutes) * 100
+    elif last_30_days_minutes > 0:
+        growth_rate = 100.0  # Infinite growth from 0
+    
+    return {
+        "weekly_trend": {
+            "current": int(current_week_minutes),
+            "previous": int(previous_week_minutes),
+        },
+        "monthly_trend": {
+            "current": int(current_month_minutes),
+            "previous": int(previous_month_minutes),
+        },
+        "growth_rate": round(growth_rate, 2),
+    }

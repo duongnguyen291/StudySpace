@@ -1,5 +1,6 @@
 import React from 'react'
 import type { ChatConversationSummary, ChatMessage } from '../types/chat.types'
+import { Suggestions } from './Suggestions'
 
 interface ChatLayoutProps {
   conversations: ChatConversationSummary[]
@@ -14,7 +15,7 @@ interface ChatLayoutProps {
   onToggleStepByStepMode?: (enabled: boolean) => void
   onCreateNewConversation?: () => void
 }
-
+//again
 export function ChatLayout({
   conversations,
   currentConversationId,
@@ -75,12 +76,12 @@ export function ChatLayout({
   }
 
   return (
-    <div className="flex h-[calc(100vh-120px)] rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl overflow-hidden">
+    <div className="flex h-[calc(100vh-120px)] w-full rounded-2xl border border-slate-800/80 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-slate-100 shadow-2xl overflow-hidden">
       {/* Sidebar conversations */}
       <aside className="w-72 border-r border-slate-800/70 bg-slate-950/70 backdrop-blur-sm flex flex-col">
         <div className="px-4 py-4 border-b border-slate-800/70 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">💬 Cuộc hội thoại</p>
+            <p className="text-sm uppercase tracking-[0.18em] text-slate-200 font-semibold">💬 Cuộc hội thoại</p>
             <p className="text-sm text-slate-300">Quản lý và tiếp tục chat</p>
           </div>
           <div className="h-8 w-px bg-slate-800/70" />
@@ -104,14 +105,15 @@ export function ChatLayout({
               {conversations.map((conv: ChatConversationSummary) => (
                 <li
                   key={conv.id}
-                  className={`px-4 py-3 text-sm cursor-pointer flex items-center justify-between group transition-colors ${
+                  className={`px-4 py-3 text-sm cursor-pointer flex items-center justify-between group transition-colors border-t border-slate-800/60 first:border-t-0 ${
                     currentConversationId === conv.id
                       ? 'bg-slate-800/80 border-l-2 border-blue-500'
                       : 'hover:bg-slate-800/50'
                   }`}
                   onClick={() => onSelectConversation(conv.id)}
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex items-center gap-3">
+                    <span className="h-2 w-2 rounded-[4px] bg-slate-600/80 flex-shrink-0" />
                     <span className="block truncate text-slate-100 font-medium">{conv.title || 'Cuộc hội thoại'}</span>
                   </div>
                   <button
@@ -169,24 +171,34 @@ export function ChatLayout({
           )}
         </header>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-slate-950">
+        <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-950/90 via-slate-950/70 to-slate-950">
           {error && (
-            <div className="text-xs text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2 inline-block">
-              {error}
-            </div>
-          )}
-
-          {messages.length === 0 && !error && (
-            <div className="text-center text-sm text-slate-400 mt-14 flex flex-col items-center gap-3">
-              <div className="text-3xl">✨</div>
-              <div className="max-w-xl leading-relaxed">
-                Bắt đầu bằng cách đặt câu hỏi cho AI về bài học, khái niệm, hoặc quiz của bạn. Hãy thử: <br />
-                <span className="text-slate-300">“Giải thích định luật Ohm từng bước”</span>
+            <div className="px-6 pt-5">
+              <div className="text-xs text-red-300 bg-red-950/50 border border-red-900 rounded-md px-3 py-2 inline-block">
+                {error}
               </div>
             </div>
           )}
 
-          {messages.map((msg: ChatMessage) => {
+          {messages.length === 0 && !error && (
+            <>
+              <div className="px-6 pt-5">
+                <div className="text-center text-sm text-slate-400 mt-14 flex flex-col items-center gap-3">
+                  <div className="text-3xl">✨</div>
+                  <div className="max-w-xl leading-relaxed">
+                    Bắt đầu bằng cách đặt câu hỏi cho AI về bài học, khái niệm, hoặc quiz của bạn. Hãy thử: <br />
+                    <span className="text-slate-300">"Giải thích định luật Ohm từng bước"</span>
+                  </div>
+                </div>
+              </div>
+              <Suggestions onSelect={onSendMessage} />
+            </>
+          )}
+
+          {messages.length > 0 && (
+            <div className="px-6 py-5 space-y-4">
+
+            {messages.map((msg: ChatMessage) => {
             const isAssistant = msg.role === 'assistant'
             const shouldRenderSteps = isAssistant && stepByStepMode
             const steps = shouldRenderSteps ? parseSteps(msg.content) : null
@@ -261,18 +273,35 @@ export function ChatLayout({
                       </ol>
                     </div>
                   ) : (
-                    <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
+                    <div className="relative group/message">
+                      <div className="whitespace-pre-wrap leading-relaxed pr-10">{msg.content}</div>
+                      <div className="flex justify-end">
+                        <button
+                          onClick={() => copyToClipboard(msg.content)}
+                          className={`mt-2 rounded-md px-2 py-1 text-[11px] font-medium border transition-opacity ${
+                            isAssistant
+                              ? 'bg-slate-800/90 border-slate-700 text-slate-200 hover:bg-slate-700/90'
+                              : 'bg-blue-700/90 border-blue-600 text-white hover:bg-blue-600/90'
+                          } opacity-0 group-hover/message:opacity-100`}
+                          title="Copy tin nhắn"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
             )
-          })}
+            })}
+            </div>
+          )}
         </div>
 
         {/* Composer */}
         <form
           onSubmit={(e: any) => handleSubmit(e)}
-          className="border-t border-slate-800/70 bg-slate-950/80 px-6 py-4 flex items-end gap-3 shadow-inner shadow-black/30"
+          className="border-t border-slate-800/70 bg-slate-950/80 px-6 py-4 flex items-center gap-3 shadow-inner shadow-black/30"
         >
           <textarea
             value={input}
@@ -280,12 +309,12 @@ export function ChatLayout({
             onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Nhập câu hỏi hoặc nội dung bạn muốn AI hỗ trợ..."
-            className="flex-1 min-h-[56px] resize-none rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3 text-base leading-relaxed text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent"
+            className="flex-1 h-14 resize-none rounded-xl border border-slate-800 bg-slate-900/80 px-4 py-3.5 text-base leading-normal text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-transparent"
           />
           <button
             type="submit"
             disabled={isSending || !input.trim()}
-            className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+            className="inline-flex h-14 items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
           >
             {isSending ? 'Đang gửi...' : 'Gửi'}
           </button>

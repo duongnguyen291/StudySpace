@@ -23,7 +23,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
   const [attempt, setAttempt] = useState<QuizAttemptDetail | null>(null)
   const [displayQuestions, setDisplayQuestions] = useState<QuizQuestionForAttempt[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [answers, setAnswers] = useState<Record<string, string>>({})
+  const [answers, setAnswers] = useState<Record<string, number>>({})  // question_id -> selected_option_index
   const [showAnswer, setShowAnswer] = useState(false)
   const [startTime, setStartTime] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(false)
@@ -49,17 +49,17 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
       setStartTime(Date.now())
       setState('playing')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start quiz')
+      setError(err instanceof Error ? err.message : 'Không thể bắt đầu quiz')
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleAnswer = (answer: string) => {
+  const handleAnswer = (optionIndex: number) => {
     if (!currentQuestion) return
     setAnswers(prev => ({
       ...prev,
-      [currentQuestion.id]: answer
+      [currentQuestion.id]: optionIndex
     }))
   }
 
@@ -85,9 +85,9 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
     
     try {
       const timeSpent = Math.floor((Date.now() - startTime) / 1000)
-      const answerList: QuizAttemptAnswer[] = Object.entries(answers).map(([questionId, answer]) => ({
+      const answerList: QuizAttemptAnswer[] = Object.entries(answers).map(([questionId, selectedIndex]) => ({
         question_id: questionId,
-        user_answer: answer
+        selected_option_index: selectedIndex
       }))
       
       const resultData = await submitAttempt(attempt.id, {
@@ -102,7 +102,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
         onComplete(resultData)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to submit quiz')
+      setError(err instanceof Error ? err.message : 'Không thể nộp quiz')
     } finally {
       setIsLoading(false)
     }
@@ -149,14 +149,14 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
       <div className="max-w-lg mx-auto">
         <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-700">
           <h2 className="text-2xl font-bold text-white mb-2">{quizTitle}</h2>
-          <p className="text-slate-400 mb-8">Configure your quiz session</p>
+          <p className="text-slate-400 mb-8">Cấu hình phiên làm quiz của bạn</p>
 
           {/* Shuffle Toggle */}
           <div className="bg-slate-900/50 rounded-xl p-5 mb-6 border border-slate-700">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-white">🔀 Shuffle Questions</h3>
-                <p className="text-sm text-slate-400 mt-1">Randomize question order</p>
+                <h3 className="font-semibold text-white">🔀 Xáo trộn câu hỏi</h3>
+                <p className="text-sm text-slate-400 mt-1">Sắp xếp câu hỏi ngẫu nhiên</p>
               </div>
               <button
                 onClick={() => setShuffleEnabled(!shuffleEnabled)}
@@ -176,7 +176,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
           <div className="flex gap-3">
             {onCancel && (
               <button onClick={onCancel} className="flex-1 py-3 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 transition font-medium">
-                Cancel
+                Hủy
               </button>
             )}
             <button
@@ -184,7 +184,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
               disabled={isLoading}
               className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 transition shadow-lg"
             >
-              {isLoading ? '⏳ Loading...' : '🚀 Start Quiz'}
+              {isLoading ? '⏳ Đang tải...' : '🚀 Bắt đầu Quiz'}
             </button>
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
           <div>
             <h2 className="text-lg font-semibold text-white">{quizTitle}</h2>
             <p className="text-sm text-slate-400">
-              Question {currentIndex + 1} of {totalQuestions}
+              Câu hỏi {currentIndex + 1} / {totalQuestions}
               {shuffleEnabled && <span className="ml-2 text-purple-400">🔀</span>}
             </p>
           </div>
@@ -220,20 +220,44 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
         <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden mb-6">
           {/* Question */}
           <div className="p-8">
-            <span className="text-xs text-slate-500 uppercase tracking-wider">Question</span>
+            <span className="text-xs text-slate-500 uppercase tracking-wider">Câu hỏi</span>
             <p className="text-xl text-white mt-2 leading-relaxed">{currentQuestion.question_text}</p>
           </div>
 
-          {/* Answer Input */}
+          {/* Answer Options */}
           <div className="p-6 bg-slate-900/50 border-t border-slate-700">
-            <label className="text-sm text-slate-400 mb-2 block">Your Answer</label>
-            <input
-              type="text"
-              value={answers[currentQuestion.id] || ''}
-              onChange={(e) => handleAnswer(e.target.value)}
-              placeholder="Type your answer..."
-              className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:border-emerald-500 outline-none transition"
-            />
+            <label className="text-sm text-slate-400 mb-4 block">Chọn câu trả lời của bạn:</label>
+            <div className="space-y-3">
+              {currentQuestion.options.map((option, index) => {
+                const isSelected = answers[currentQuestion.id] === index
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => handleAnswer(index)}
+                    className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all ${
+                      isSelected
+                        ? 'bg-emerald-500/20 border-emerald-500 text-white'
+                        : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-500 hover:bg-slate-700/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center font-semibold ${
+                        isSelected
+                          ? 'bg-emerald-500 text-white'
+                          : 'bg-slate-700 text-slate-400'
+                      }`}>
+                        {String.fromCharCode(65 + index)}
+                      </div>
+                      <span className="flex-1">{option}</span>
+                      {isSelected && (
+                        <span className="text-emerald-400">✓</span>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
 
@@ -244,7 +268,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
             disabled={currentIndex === 0}
             className="px-5 py-2.5 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            ← Previous
+            ← Trước
           </button>
 
           <div className="flex gap-1">
@@ -253,7 +277,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
                 key={idx}
                 onClick={() => { setCurrentIndex(idx); setShowAnswer(false) }}
                 className={`w-2.5 h-2.5 rounded-full transition ${
-                  idx === currentIndex ? 'bg-emerald-500' : answers[displayQuestions[idx].id] ? 'bg-emerald-500/40' : 'bg-slate-600'
+                  idx === currentIndex ? 'bg-emerald-500' : answers[displayQuestions[idx].id] !== undefined ? 'bg-emerald-500/40' : 'bg-slate-600'
                 }`}
               />
             ))}
@@ -262,17 +286,17 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
           {currentIndex === totalQuestions - 1 ? (
             <button
               onClick={handleSubmit}
-              disabled={isLoading || answeredCount < totalQuestions}
+              disabled={isLoading || answeredCount < totalQuestions || Object.keys(answers).length < totalQuestions}
               className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl disabled:opacity-50 transition shadow-lg"
             >
-              {isLoading ? '⏳' : '✅ Submit'}
+              {isLoading ? '⏳' : '✅ Nộp bài'}
             </button>
           ) : (
             <button
               onClick={handleNext}
               className="px-5 py-2.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition"
             >
-              Next →
+              Tiếp →
             </button>
           )}
         </div>
@@ -298,7 +322,7 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
             <span className="text-4xl">{isPassed ? '🎉' : '📚'}</span>
           </div>
 
-          <h2 className="text-2xl font-bold text-white mb-2">{isPassed ? 'Great Job!' : 'Keep Practicing!'}</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">{isPassed ? 'Làm tốt lắm!' : 'Tiếp tục luyện tập!'}</h2>
           
           <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl my-6 ${isPassed ? 'bg-emerald-500/20' : 'bg-orange-500/20'}`}>
             <span className="text-4xl font-bold text-white">{percentage.toFixed(0)}%</span>
@@ -306,17 +330,17 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
               <div className={`font-semibold ${isPassed ? 'text-emerald-400' : 'text-orange-400'}`}>
                 {result.correct_answers}/{result.total_questions}
               </div>
-              <div className="text-slate-400 text-sm">Correct</div>
+              <div className="text-slate-400 text-sm">Đúng</div>
             </div>
           </div>
 
           <div className="flex gap-3">
             <button onClick={handleRetry} className="flex-1 py-3 bg-slate-700 text-slate-300 rounded-xl hover:bg-slate-600 transition">
-              🔄 Try Again
+              🔄 Thử lại
             </button>
             {onCancel && (
               <button onClick={onCancel} className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl transition shadow-lg">
-                ✅ Done
+                ✅ Hoàn thành
               </button>
             )}
           </div>
@@ -325,5 +349,5 @@ export default function QuizPlayer({ quizSetId, quizTitle, onComplete, onCancel 
     )
   }
 
-  return <div className="text-center text-slate-400 py-12">Loading...</div>
+  return <div className="text-center text-slate-400 py-12">Đang tải...</div>
 }
