@@ -388,11 +388,107 @@ def run_migration(cursor):
     print()
     
     # ============================================
-    # STEP 5: Update tasks table
+    # STEP 5: Update daily_goals table
     # ============================================
-    print("Step 5: Updating tasks table...")
+    print("Step 5: Updating daily_goals table...")
     
-    # 5.1: Add start_date if it doesn't exist
+    # 5.1: Add target_quiz_count if it doesn't exist
+    cursor.execute("""
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'daily_goals' AND column_name = 'target_quiz_count'
+            ) THEN
+                ALTER TABLE daily_goals ADD COLUMN target_quiz_count INTEGER DEFAULT 0;
+                RAISE NOTICE 'Added target_quiz_count column';
+            END IF;
+        END $$;
+    """)
+    print("  ✓ target_quiz_count column checked")
+    
+    # 5.2: Add actual_quiz_count if it doesn't exist
+    cursor.execute("""
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'daily_goals' AND column_name = 'actual_quiz_count'
+            ) THEN
+                ALTER TABLE daily_goals ADD COLUMN actual_quiz_count INTEGER DEFAULT 0;
+                RAISE NOTICE 'Added actual_quiz_count column';
+            END IF;
+        END $$;
+    """)
+    print("  ✓ actual_quiz_count column checked")
+    
+    # 5.3: Update target_minutes default if needed
+    cursor.execute("""
+        DO $$ 
+        BEGIN
+            IF EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'daily_goals' 
+                AND column_name = 'target_minutes' 
+                AND column_default IS NULL
+            ) THEN
+                ALTER TABLE daily_goals 
+                ALTER COLUMN target_minutes SET DEFAULT 0;
+                RAISE NOTICE 'Set target_minutes default to 0';
+            END IF;
+        END $$;
+    """)
+    print("  ✓ target_minutes default checked")
+    
+    # 5.4: Add completed column if it doesn't exist
+    cursor.execute("""
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'daily_goals' AND column_name = 'completed'
+            ) THEN
+                ALTER TABLE daily_goals ADD COLUMN completed BOOLEAN DEFAULT FALSE;
+                RAISE NOTICE 'Added completed column';
+            END IF;
+        END $$;
+    """)
+    print("  ✓ completed column checked")
+    
+    # 5.5: Add UNIQUE constraint if it doesn't exist
+    cursor.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.table_constraints 
+                WHERE table_name = 'daily_goals' 
+                AND constraint_type = 'UNIQUE'
+                AND constraint_name LIKE '%user_id%goal_date%'
+            ) THEN
+                -- Check if constraint exists with different name
+                IF NOT EXISTS (
+                    SELECT 1 FROM pg_constraint 
+                    WHERE conrelid = 'daily_goals'::regclass 
+                    AND contype = 'u'
+                    AND array_length(conkey, 1) = 2
+                ) THEN
+                    ALTER TABLE daily_goals 
+                    ADD CONSTRAINT daily_goals_user_id_goal_date_unique 
+                    UNIQUE (user_id, goal_date);
+                    RAISE NOTICE 'Added UNIQUE constraint on (user_id, goal_date)';
+                END IF;
+            END IF;
+        END $$;
+    """)
+    print("  ✓ UNIQUE constraint checked")
+    print()
+    
+    # ============================================
+    # STEP 6: Update tasks table
+    # ============================================
+    print("Step 6: Updating tasks table...")
+    
+    # 6.1: Add start_date if it doesn't exist
     cursor.execute("""
         DO $$ 
         BEGIN
@@ -407,7 +503,7 @@ def run_migration(cursor):
     """)
     print("  ✓ start_date column checked")
     
-    # 5.2: Update priority default if needed
+    # 6.2: Update priority default if needed
     cursor.execute("""
         DO $$ 
         BEGIN
@@ -427,9 +523,9 @@ def run_migration(cursor):
     print()
     
     # ============================================
-    # STEP 6: Add missing indexes
+    # STEP 7: Add missing indexes
     # ============================================
-    print("Step 6: Adding missing indexes...")
+    print("Step 7: Adding missing indexes...")
     
     indexes = [
         ("idx_quiz_attempts_user_id", "quiz_attempts", "user_id"),
@@ -457,13 +553,14 @@ def run_migration(cursor):
     print()
     
     # ============================================
-    # STEP 7: Verify final schema
+    # STEP 8: Verify final schema
     # ============================================
-    print("Step 7: Verifying final schema...")
+    print("Step 8: Verifying final schema...")
     
     tables_to_check = [
         'quiz_questions',
         'quiz_attempts',
+        'daily_goals',
         'notes',
         'tasks'
     ]

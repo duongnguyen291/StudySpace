@@ -284,6 +284,68 @@ export const exportToDocx = async (data: ExportNoteData): Promise<void> => {
 }
 
 /**
+ * Convert oklch() and other modern color functions to rgb/hex
+ */
+const convertColorToSupported = (color: string): string => {
+  if (!color || typeof color !== 'string') return color
+  
+  // If it's already a supported format, return as-is
+  if (color.match(/^(#[0-9A-Fa-f]{3,8}|rgb|rgba|hsl|hsla|transparent|inherit|initial|unset)$/i)) {
+    return color
+  }
+  
+  // Try to convert oklch() to rgb using browser's computed style
+  if (color.includes('oklch') || color.includes('lch') || color.includes('lab')) {
+    try {
+      const tempEl = document.createElement('div')
+      tempEl.style.color = color
+      tempEl.style.position = 'absolute'
+      tempEl.style.visibility = 'hidden'
+      document.body.appendChild(tempEl)
+      const computed = window.getComputedStyle(tempEl).color
+      document.body.removeChild(tempEl)
+      return computed || '#000000'
+    } catch {
+      return '#000000'
+    }
+  }
+  
+  return color
+}
+
+/**
+ * Clean CSS styles to remove unsupported color functions
+ */
+const cleanStyles = (element: HTMLElement): void => {
+  // Process all elements recursively
+  const allElements = element.querySelectorAll('*')
+  allElements.forEach((el) => {
+    const htmlEl = el as HTMLElement
+    const style = htmlEl.style
+    
+    // Convert color properties
+    if (style.color) {
+      style.color = convertColorToSupported(style.color)
+    }
+    if (style.backgroundColor) {
+      style.backgroundColor = convertColorToSupported(style.backgroundColor)
+    }
+    if (style.borderColor) {
+      style.borderColor = convertColorToSupported(style.borderColor)
+    }
+    
+    // Process inline styles from style attribute
+    if (htmlEl.getAttribute('style')) {
+      const styleAttr = htmlEl.getAttribute('style') || ''
+      const cleaned = styleAttr.replace(/oklch\([^)]+\)/gi, (match) => {
+        return convertColorToSupported(match)
+      })
+      htmlEl.setAttribute('style', cleaned)
+    }
+  })
+}
+
+/**
  * Export note to PDF format
  */
 export const exportToPdf = async (data: ExportNoteData): Promise<void> => {
@@ -297,6 +359,7 @@ export const exportToPdf = async (data: ExportNoteData): Promise<void> => {
   const container = document.createElement('div')
   container.style.position = 'absolute'
   container.style.left = '-9999px'
+  container.style.top = '-9999px'
   container.style.width = '210mm' // A4 width
   container.style.padding = '20mm'
   container.style.backgroundColor = '#ffffff'
@@ -304,39 +367,97 @@ export const exportToPdf = async (data: ExportNoteData): Promise<void> => {
   container.style.fontFamily = 'Arial, sans-serif'
   container.style.fontSize = '12px'
   container.style.lineHeight = '1.6'
+  container.style.isolation = 'isolate' // Isolate from parent styles
+  container.style.all = 'initial' // Reset all styles
+  container.style.fontFamily = 'Arial, sans-serif' // Re-apply font
+  container.style.fontSize = '12px'
+  container.style.lineHeight = '1.6'
+  container.style.color = '#000000'
+  container.style.backgroundColor = '#ffffff'
 
-  // Build HTML content
+  // Build HTML content with explicit styles to override any global CSS
   let htmlContent = `
+    <style>
+      * {
+        color: inherit !important;
+        background-color: transparent !important;
+      }
+      body, div {
+        color: #000000 !important;
+        background-color: #ffffff !important;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        color: #000000 !important;
+        font-weight: bold !important;
+      }
+      a {
+        color: #0066cc !important;
+      }
+      code {
+        background-color: #f5f5f5 !important;
+        color: #000000 !important;
+      }
+      blockquote {
+        border-left: 3px solid #cccccc !important;
+        color: #666666 !important;
+      }
+    </style>
     <div style="margin-bottom: 20px;">
-      <h1 style="text-align: center; font-size: 24px; margin-bottom: 10px; color: #000;">
+      <h1 style="text-align: center; font-size: 24px; margin-bottom: 10px; color: #000000 !important;">
         ${title || 'Untitled Note'}
       </h1>
     </div>
   `
 
   if (createdAt || (tags && tags.length > 0)) {
-    htmlContent += '<div style="margin-bottom: 20px; color: #666; font-size: 11px;">'
+    htmlContent += '<div style="margin-bottom: 20px; color: #666666 !important; font-size: 11px;">'
     if (createdAt) {
-      htmlContent += `<p style="margin: 5px 0;">Created: ${new Date(createdAt).toLocaleString('vi-VN')}</p>`
+      htmlContent += `<p style="margin: 5px 0; color: #666666 !important;">Created: ${new Date(createdAt).toLocaleString('vi-VN')}</p>`
     }
     if (tags && tags.length > 0) {
-      htmlContent += `<p style="margin: 5px 0;">Tags: ${tags.join(', ')}</p>`
+      htmlContent += `<p style="margin: 5px 0; color: #666666 !important;">Tags: ${tags.join(', ')}</p>`
     }
     htmlContent += '</div>'
   }
 
-  htmlContent += `<div style="color: #000;">${sanitizeHtml(content)}</div>`
+  htmlContent += `<div style="color: #000000 !important;">${sanitizeHtml(content)}</div>`
 
   container.innerHTML = htmlContent
   document.body.appendChild(container)
 
+  // Clean styles to remove oklch() and other unsupported functions
+  cleanStyles(container)
+
   try {
-    // Convert to canvas
+    // Convert to canvas with onclone callback to fix colors
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      onclone: (clonedDoc: Document, element: HTMLElement) => {
+        // Clean styles in the cloned document
+        cleanStyles(element)
+        
+        // Force all colors to supported format
+        const allElements = element.querySelectorAll('*')
+        allElements.forEach((el) => {
+          const htmlEl = el as HTMLElement
+          try {
+            const computed = window.getComputedStyle(htmlEl)
+            
+            // Override color properties if they contain unsupported functions
+            if (computed.color && (computed.color.includes('oklch') || computed.color.includes('lch'))) {
+              htmlEl.style.color = '#000000'
+            }
+            if (computed.backgroundColor && (computed.backgroundColor.includes('oklch') || computed.backgroundColor.includes('lch'))) {
+              htmlEl.style.backgroundColor = htmlEl === element ? '#ffffff' : 'transparent'
+            }
+          } catch (e) {
+            // Ignore errors when accessing computed styles
+          }
+        })
+      },
     })
 
     // Create PDF
